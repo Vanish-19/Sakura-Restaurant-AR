@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+:root {
+  --font-heading: "Cormorant Garamond", ui-serif, Georgia, Cambria,
+    "Times New Roman", Times, serif;
+  --font-jp: "Noto Serif JP", ui-serif, Georgia, Cambria, "Times New Roman",
+    Times, serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #fafaf6;
+  color: #1f2937;
+}

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <defs>
+    <path id="petal" d="M0 -14 C 4 -10 4 -4 0 0 C -4 -4 -4 -10 0 -14 Z" />
+    <g id="sakura" fill="none" stroke="#7f1d1d" stroke-width="1.5" stroke-linejoin="round">
+      <use href="#petal" />
+      <use href="#petal" transform="rotate(72)" />
+      <use href="#petal" transform="rotate(144)" />
+      <use href="#petal" transform="rotate(216)" />
+      <use href="#petal" transform="rotate(288)" />
+      <circle cx="0" cy="0" r="2" fill="#7f1d1d" stroke="none" />
+    </g>
+  </defs>
+
+  <g opacity="0.35">
+    <g transform="translate(40 40)">
+      <use href="#sakura" />
+    </g>
+    <g transform="translate(120 60) scale(0.85)">
+      <use href="#sakura" />
+    </g>
+    <g transform="translate(70 120) scale(0.7)">
+      <use href="#sakura" />
+    </g>
+  </g>
+</svg>

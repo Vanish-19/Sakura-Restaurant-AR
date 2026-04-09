@@ -1,0 +1,37 @@
+import asyncHandler from 'express-async-handler';
+import {
+  getAllOrders as svcGetAllOrders,
+  getOrderById as svcGetOrderById,
+  updateOrderStatus as svcUpdateOrderStatus,
+  cancelOrder as svcCancelOrder,
+  getOrderStats as svcGetOrderStats
+} from '../services/adminOrderService.js';
+
+const getAllOrders = asyncHandler(async (req, res) => {
+  const result = await svcGetAllOrders(req.query);
+  res.status(200).json({ success: true, ...result });
+});
+
+const getOrderById = asyncHandler(async (req, res) => {
+  const order = await svcGetOrderById(req.params.id);
+  res.status(200).json({ success: true, data: order });
+});
+
+const updateOrderStatus = asyncHandler(async (req, res) => {
+  const order = await svcUpdateOrderStatus(req.params.id, req.body.status);
+  if (req.io) req.io.to('admin').emit('order_updated', order);
+  res.status(200).json({ success: true, data: order });
+});
+
+const cancelOrder = asyncHandler(async (req, res) => {
+  const order = await svcCancelOrder(req.params.id);
+  if (req.io) req.io.to('admin').emit('order_cancelled', order);
+  res.status(200).json({ success: true, message: 'Order cancelled', data: order });
+});
+
+const getOrderStats = asyncHandler(async (req, res) => {
+  const stats = await svcGetOrderStats();
+  res.status(200).json({ success: true, data: stats });
+});
+
+export { getAllOrders, getOrderById, updateOrderStatus, cancelOrder, getOrderStats };
