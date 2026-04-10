@@ -66,6 +66,24 @@ export default function AppHeader({ variant = 'desktop' }) {
             {orderSource.label}
           </div>
 
+          <Link to="/auth/login" className="hidden sm:inline-flex">
+            <Button
+              type="text"
+              className="!h-10 !rounded-full !border !border-white/30 !bg-transparent !px-4 !font-semibold !text-white !transition-all !duration-200 hover:!bg-white/15"
+            >
+              Login
+            </Button>
+          </Link>
+
+          <Link to="/auth/register" className="hidden sm:inline-flex">
+            <Button
+              type="text"
+              className="!h-10 !rounded-full !border-0 !bg-white !px-4 !font-semibold !text-[#900020] !transition-all !duration-200 hover:!bg-white/90"
+            >
+              Register
+            </Button>
+          </Link>
+
           <Link to={{ pathname: '/cart', search: location.search }}>
             <Badge count={totalItems} size="small" offset={[-6, 6]}>
               <Button

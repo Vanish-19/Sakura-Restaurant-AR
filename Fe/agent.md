@@ -32,11 +32,15 @@ src/
     molecules/
     organisms/
     templates/
+      admin/
   contexts/
   data/
+    admin/
   pages/
+    admin/
   services/
   utils/
+  styles/
   App.jsx
   main.jsx
 ```
@@ -78,13 +82,24 @@ Rule: if UI repeats 2+ times, extract it to `components/`.
 
 Define routes in `App.jsx` only.
 
-Current public routes:
+Current client routes:
 
 - `/` -> home (delivery mode)
 - `/order` -> home (dine-in QR entry)
 - `/cart` -> cart
 
+Current admin routes:
+
+- `/admin/dashboard`
+- `/admin/food`
+- `/admin/orders`
+- `/admin/content`
+- `/admin/users`
+- `/admin/admins`
+
 Order source is derived from query params (for example `?table=A12`).
+
+Rule: client and admin layouts must remain separated by route group.
 
 ## 7) API Integration Rules
 
@@ -105,6 +120,38 @@ Do not call `fetch` directly inside reusable UI components.
 - Table token is obtained from `/tables/scan`
 - Store table token per table in `sessionStorage`
 - For dine-in order API, always send `Authorization: Bearer <table_token>`
+
+### 7.4 FE-BE Contract Baseline
+
+Backend should keep response envelopes stable for frontend scaling:
+
+- List APIs: `{ data: [...] }`
+- Detail/Create APIs: `{ data: {...} }` or documented direct object
+- Error APIs: `{ message: string, code?: string, details?: any }`
+
+Recommended minimal backend fields for menu item:
+
+- `id` or `_id`
+- `name`
+- `price`
+- `category`
+- `description`
+- `assets.image_url`
+- `assets.ar_models.glb|usdz` (optional)
+
+Recommended minimal order creation contract:
+
+- Dine-in request item: `{ menu_item_id, quantity, note }`
+- Takeaway request: `{ customer_name, customer_phone, delivery_address, items[] }`
+
+Status codes FE expects:
+
+- `200/201` success
+- `400` validation input invalid
+- `401` token invalid/expired
+- `403` forbidden
+- `404` not found
+- `500` internal server error
 
 ## 8) State Management Rules
 
@@ -139,6 +186,12 @@ When adding new features, follow this flow:
 6. Add user feedback (loading/success/error)
 7. Run lint/build before merge
 
+Admin feature workflow adds:
+
+8. Build page-level section in `pages/admin/*`
+9. Reuse `AdminDataTable` and `AdminStatCard` before creating custom variants
+10. Keep responsive behavior for `< 992px` (tablet/mobile)
+
 ## 11) Code Quality Checklist
 
 Before finishing any task, verify:
@@ -160,6 +213,29 @@ Before finishing any task, verify:
 - Add form layer for checkout (replace `prompt`)
 - Add socket.io-client integration for real-time order updates
 - Add role-based route groups for admin/kitchen/cashier
+
+## 13) Admin UI Conventions
+
+- Sidebar and topbar use Ant Design components and custom style from `src/styles/admin.css`
+- Tables in admin pages must use Ant Design `Table` via shared wrapper `AdminDataTable`
+- Global admin palette:
+  - background: `#f5f5f6`
+  - panel: `#ffffff`
+  - accent red: `#900020` or `#bc1a2f`
+- Use compact stat cards and section headers to keep dashboards scannable
+
+## 14) Backend Collaboration Notes (For BE Team)
+
+When backend adds new modules, follow these rules so frontend can integrate quickly:
+
+1. Keep endpoint naming resource-first and versioned under `/api/v1`
+2. Avoid breaking field names in existing payloads
+3. Return machine-readable status transitions for orders (`pending`, `cooking`, `served`, `paid`)
+4. Emit socket events with stable event names and object payloads
+5. Include primary IDs in all rows for table rendering actions
+6. Document any auth changes and token expiry behavior
+
+If backend changes payload shape, update API docs and this file in the same PR.
 
 ---
 

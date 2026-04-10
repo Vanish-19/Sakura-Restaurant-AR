@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import 'antd/dist/reset.css'
 import './index.css'
+import './styles/admin.css'
+import './styles/auth.css'
 import App from './App.jsx'
 import { CartProvider } from './contexts/CartContext.jsx'
 
