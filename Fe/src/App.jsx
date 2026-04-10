@@ -10,6 +10,7 @@ import ContentManagementAdminPage from './pages/admin/ContentManagementAdminPage
 import DashboardAdminPage from './pages/admin/DashboardAdminPage.jsx'
 import FoodManagementAdminPage from './pages/admin/FoodManagementAdminPage.jsx'
 import OrderManagementAdminPage from './pages/admin/OrderManagementAdminPage.jsx'
+import TableManagementAdminPage from './pages/admin/TableManagementAdminPage.jsx'
 import UserManagementAdminPage from './pages/admin/UserManagementAdminPage.jsx'
 import AdminLoginPage from './pages/auth/AdminLoginPage.jsx'
 import ClientLoginPage from './pages/auth/ClientLoginPage.jsx'
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="dashboard" element={<DashboardAdminPage />} />
           <Route path="food" element={<FoodManagementAdminPage />} />
           <Route path="orders" element={<OrderManagementAdminPage />} />
+          <Route path="tables" element={<TableManagementAdminPage />} />
           <Route path="content" element={<ContentManagementAdminPage />} />
           <Route path="users" element={<UserManagementAdminPage />} />
           <Route path="admins" element={<AdminManagementAdminPage />} />
