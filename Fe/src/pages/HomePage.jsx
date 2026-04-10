@@ -1,14 +1,17 @@
 import { MobileOutlined, RestOutlined, ScanOutlined } from '@ant-design/icons'
 import { message } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import FeaturePill from '../components/molecules/FeaturePill.jsx'
+import ServiceTypeModal from '../components/organisms/ServiceTypeModal.jsx'
+import TableSelectionModal from '../components/organisms/TableSelectionModal.jsx'
 import MenuItemCard from '../components/molecules/MenuItemCard.jsx'
 import CategoryBar from '../components/organisms/CategoryBar.jsx'
 import { useCart } from '../contexts/CartContext.jsx'
 import { CATEGORIES } from '../data/categories.js'
 import { MENU_ITEMS } from '../data/menuItems.js'
 import { getMenuItems } from '../services/orderApi.js'
+import { getOrderSource } from '../utils/orderSource.js'
 
 function toCategoryLabel(key) {
   const value = String(key || '').toLowerCase()
@@ -20,8 +23,13 @@ export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState('all')
   const { addItem } = useCart()
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const location = useLocation()
   const isAndroidPreview = searchParams.get('preview') === 'android'
   const [menuItems, setMenuItems] = useState(MENU_ITEMS)
+  const [serviceModalOpen, setServiceModalOpen] = useState(false)
+  const [tableModalOpen, setTableModalOpen] = useState(false)
+  const orderSource = getOrderSource(searchParams)
 
   useEffect(() => {
     let isMounted = true
@@ -74,6 +82,44 @@ export default function HomePage() {
     const next = new URLSearchParams(searchParams)
     next.set('preview', 'android')
     setSearchParams(next, { replace: true })
+  }
+
+  useEffect(() => {
+    const hasTable = Boolean(searchParams.get('table'))
+
+    if (hasTable) return
+    setServiceModalOpen(true)
+  }, [searchParams])
+
+  const pickServiceType = (type) => {
+    if (type === 'dine-in') {
+      setServiceModalOpen(false)
+      setTableModalOpen(true)
+      return
+    }
+
+    const next = new URLSearchParams(searchParams)
+    next.delete('table')
+    next.delete('tableId')
+    next.delete('ban')
+    setSearchParams(next, { replace: true })
+    navigate('/', { replace: true })
+    setServiceModalOpen(false)
+  }
+
+  const handleConfirmTable = (tableNo) => {
+    const next = new URLSearchParams(searchParams)
+    next.set('table', tableNo)
+    setSearchParams(next, { replace: true })
+    navigate(
+      {
+        pathname: '/order',
+        search: `?${next.toString()}`,
+      },
+      { replace: location.pathname === '/order' },
+    )
+    setTableModalOpen(false)
+    message.success(`Da chon ban ${tableNo}`)
   }
 
   return (
@@ -129,6 +175,14 @@ export default function HomePage() {
         onChange={setActiveCategory}
       />
 
+      {orderSource.mode === 'dine-in' ? (
+        <div className="mx-auto mt-5 max-w-6xl px-6 md:px-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">
+            Calling for {orderSource.label}
+          </div>
+        </div>
+      ) : null}
+
       <section className="bg-[#fafaf6]">
         <div className="mx-auto max-w-6xl px-6 py-14 md:px-8 md:py-20">
           <div
@@ -155,6 +209,21 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <ServiceTypeModal
+        open={serviceModalOpen}
+        onClose={() => {}}
+        onSelect={pickServiceType}
+      />
+
+      <TableSelectionModal
+        open={tableModalOpen}
+        onCancel={() => {
+          setTableModalOpen(false)
+          setServiceModalOpen(true)
+        }}
+        onConfirm={handleConfirmTable}
+      />
     </div>
   )
 }
