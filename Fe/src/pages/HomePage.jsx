@@ -11,7 +11,12 @@ import { useCart } from '../contexts/CartContext.jsx'
 import { CATEGORIES } from '../data/categories.js'
 import { MENU_ITEMS } from '../data/menuItems.js'
 import { getMenuItems } from '../services/orderApi.js'
-import { getOrderSource } from '../utils/orderSource.js'
+import {
+  clearLockedTableCode,
+  getLockedTableCode,
+  getOrderSource,
+  lockTableCode,
+} from '../utils/orderSource.js'
 
 function toCategoryLabel(key) {
   const value = String(key || '').toLowerCase()
@@ -85,11 +90,33 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    const hasTable = Boolean(searchParams.get('table'))
+    const locked = getLockedTableCode()
 
-    if (hasTable) return
+    if (locked) {
+      const currentTable = searchParams.get('table')
+      if (currentTable !== locked) {
+        const next = new URLSearchParams(searchParams)
+        next.set('table', locked)
+        next.delete('tableId')
+        next.delete('ban')
+        setSearchParams(next, { replace: true })
+      }
+      return
+    }
+
+    const queryTable = searchParams.get('table')
+    if (queryTable) {
+      const normalized = lockTableCode(queryTable)
+      if (normalized && normalized !== queryTable) {
+        const next = new URLSearchParams(searchParams)
+        next.set('table', normalized)
+        setSearchParams(next, { replace: true })
+      }
+      return
+    }
+
     setServiceModalOpen(true)
-  }, [searchParams])
+  }, [searchParams, setSearchParams])
 
   const pickServiceType = (type) => {
     if (type === 'dine-in') {
@@ -102,14 +129,16 @@ export default function HomePage() {
     next.delete('table')
     next.delete('tableId')
     next.delete('ban')
+    clearLockedTableCode()
     setSearchParams(next, { replace: true })
     navigate('/', { replace: true })
     setServiceModalOpen(false)
   }
 
   const handleConfirmTable = (tableNo) => {
+    const lockedTable = lockTableCode(tableNo)
     const next = new URLSearchParams(searchParams)
-    next.set('table', tableNo)
+    next.set('table', lockedTable || tableNo)
     setSearchParams(next, { replace: true })
     navigate(
       {

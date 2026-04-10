@@ -1,18 +1,84 @@
 import { ArrowRightOutlined } from '@ant-design/icons'
-import { Button, Checkbox, Form, Input, message } from 'antd'
+import { Button, Checkbox, Form, Input, notification } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
+
+function parseSavedAccount() {
+  const raw = localStorage.getItem('client_register_draft')
+  if (!raw) return null
+
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,32}$/
+
+const identityRules = [
+  { required: true, message: 'Please enter your email or username' },
+  {
+    validator: (_, value) => {
+      const text = String(value || '').trim()
+      if (!text) return Promise.resolve()
+
+      const isEmail = EMAIL_REGEX.test(text)
+      const isUsername = USERNAME_REGEX.test(text)
+
+      if (isEmail || isUsername) return Promise.resolve()
+      return Promise.reject(new Error('Use a valid email or username (3-32 chars)'))
+    },
+  },
+]
+
+const passwordRules = [
+  { required: true, message: 'Please enter password' },
+  { min: 6, message: 'Password must be at least 6 characters' },
+]
 
 export default function ClientLoginPage() {
   const navigate = useNavigate()
 
   const onFinish = (values) => {
+    const savedAccount = parseSavedAccount()
+    const identity = values.identity?.trim()
+    const password = values.password || ''
+
+    if (savedAccount) {
+      const accountMatched =
+        identity === savedAccount.email || identity === savedAccount.fullName
+
+      if (!accountMatched) {
+        notification.error({
+          message: 'Login failed',
+          description: 'Wrong account. Please check email/username.',
+          placement: 'topRight',
+        })
+        return
+      }
+
+      if (password !== savedAccount.password) {
+        notification.error({
+          message: 'Login failed',
+          description: 'Wrong password. Please try again.',
+          placement: 'topRight',
+        })
+        return
+      }
+    }
+
     const payload = {
-      emailOrUsername: values.identity,
+      emailOrUsername: identity,
       loginAt: new Date().toISOString(),
     }
 
     localStorage.setItem('client_login_state', JSON.stringify(payload))
-    message.success('Dang nhap thanh cong')
+    notification.success({
+      message: 'Login successful',
+      description: 'Welcome back to Sakura Restaurant.',
+      placement: 'topRight',
+    })
     navigate('/')
   }
 
@@ -24,11 +90,11 @@ export default function ClientLoginPage() {
       </div>
 
       <Form layout="vertical" onFinish={onFinish} className="client-auth-form">
-        <Form.Item label="EMAIL OR USERNAME" name="identity" rules={[{ required: true, message: 'Please enter your email or username' }]}>
+        <Form.Item label="EMAIL OR USERNAME" name="identity" rules={identityRules}>
           <Input placeholder="Enter your credentials" />
         </Form.Item>
 
-        <Form.Item label="PASSWORD" name="password" rules={[{ required: true, message: 'Please enter password' }]}>
+        <Form.Item label="PASSWORD" name="password" rules={passwordRules}>
           <Input.Password placeholder="........" />
         </Form.Item>
 

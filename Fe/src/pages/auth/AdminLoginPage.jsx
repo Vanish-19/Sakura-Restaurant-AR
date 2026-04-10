@@ -1,8 +1,28 @@
 import { EyeInvisibleOutlined, EyeTwoTone, SafetyCertificateOutlined } from '@ant-design/icons'
-import { Alert, Button, Card, Form, Input, message } from 'antd'
+import { Alert, Button, Card, Form, Input, notification } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import AuthBrand from '../../components/molecules/auth/AuthBrand.jsx'
 import { adminLogin } from '../../services/authApi.js'
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,32}$/
+
+const identityRules = [
+  { required: true, message: 'Please enter email or username' },
+  {
+    validator: (_, value) => {
+      const text = String(value || '').trim()
+      if (!text) return Promise.resolve()
+      if (EMAIL_REGEX.test(text) || USERNAME_REGEX.test(text)) return Promise.resolve()
+      return Promise.reject(new Error('Use a valid email or username (3-32 chars)'))
+    },
+  },
+]
+
+const passwordRules = [
+  { required: true, message: 'Please enter password' },
+  { min: 8, message: 'Password must be at least 8 characters' },
+]
 
 export default function AdminLoginPage() {
   const navigate = useNavigate()
@@ -14,10 +34,22 @@ export default function AdminLoginPage() {
       if (token) {
         localStorage.setItem('admin_access_token', token)
       }
-      message.success('Admin login successful')
+      notification.success({
+        message: 'Admin login successful',
+        description: 'Access granted. Redirecting to dashboard.',
+        placement: 'topRight',
+      })
       navigate('/admin/dashboard')
     } catch (error) {
-      message.error(error?.message || 'Admin login failed')
+      const isInvalidCredentials = error?.status === 401 || error?.status === 403
+
+      notification.error({
+        message: 'Admin login failed',
+        description: isInvalidCredentials
+          ? 'Wrong account or password.'
+          : error?.message || 'Unable to login right now.',
+        placement: 'topRight',
+      })
     }
   }
 
@@ -31,10 +63,10 @@ export default function AdminLoginPage() {
           <p className="admin-login-card__subtitle">Access your editorial management terminal</p>
 
           <Form layout="vertical" onFinish={onFinish} className="admin-login-form">
-            <Form.Item label="EMAIL OR USERNAME" name="identity" rules={[{ required: true, message: 'Please enter email or username' }]}>
+            <Form.Item label="EMAIL OR USERNAME" name="identity" rules={identityRules}>
               <Input placeholder="Enter your credentials" />
             </Form.Item>
-            <Form.Item label="PASSWORD" name="password" rules={[{ required: true, message: 'Please enter password' }]}>
+            <Form.Item label="PASSWORD" name="password" rules={passwordRules}>
               <Input.Password iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} placeholder="........" />
             </Form.Item>
 
