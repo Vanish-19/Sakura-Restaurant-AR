@@ -1,6 +1,7 @@
 import { BellFilled, PlusOutlined, SearchOutlined, TeamOutlined } from '@ant-design/icons'
-import { Badge, Button, Card, Input, Tag } from 'antd'
-import { useMemo, useState } from 'react'
+import { Badge, Button, Card, Input, Tag, message, Spin } from 'antd'
+import { useMemo, useState, useEffect } from 'react'
+import { getAllTables } from '../../services/adminTableApi.js'
 
 const floorOptions = [
   { label: 'All Floors', value: 'all' },
@@ -9,16 +10,7 @@ const floorOptions = [
   { label: 'Terrace', value: 'terrace' },
 ]
 
-const tableSlots = [
-  { code: '01', zone: 'Main Hall', state: 'occupied', note: '2/4' },
-  { code: '02', zone: 'Window', state: 'available', note: 'CAP 2' },
-  { code: '03', zone: 'Main Hall', state: 'reserved', note: '19:30' },
-  { code: '04', zone: 'Main Hall', state: 'occupied', note: 'MERGED' },
-  { code: '07', zone: 'Main Hall', state: 'occupied', note: 'IN SERVICE' },
-  { code: '08', zone: 'Window', state: 'available', note: 'CAP 2' },
-  { code: '09', zone: 'Terrace', state: 'reserved', note: '20:00' },
-  { code: '10', zone: 'Main Hall', state: 'occupied', note: 'CHECK OUT' },
-]
+// Tables data is now fetched from backend
 
 const arrivals = [
   { id: 1, time: 'IN 15 MINS', name: 'Mr. Saturo Gojo', guests: '6 Guests', table: 'Table 03 · VIP', at: '19:30', highlight: true },
@@ -34,11 +26,46 @@ function tableStateStyle(state) {
 export default function TableManagementAdminPage() {
   const [activeFloor, setActiveFloor] = useState('all')
   const [query, setQuery] = useState('')
+  const [tables, setTables] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchTables = async () => {
+    try {
+      setLoading(true)
+      const res = await getAllTables()
+      if (res?.success && Array.isArray(res.data)) {
+        const mapped = res.data.map(t => {
+          let state = 'available'
+          let note = `CAP ${t.capacity}`
+          if (t.status === 'dining') { state = 'occupied'; note = 'IN SERVICE' }
+          if (t.status === 'reserved') { state = 'reserved'; note = 'RESERVED' }
+
+          return {
+            id: t._id,
+            code: t.name.replace('T', ''),
+            zone: t.zone || 'Main Hall',
+            state,
+            note
+          }
+        })
+        setTables(mapped)
+      }
+    } catch (err) {
+      console.error(err)
+      message.error('Failed to load tables')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchTables()
+  }, [])
 
   const visibleSlots = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
 
-    return tableSlots.filter((slot) => {
+    return tables.filter((slot) => {
       const passFloor = activeFloor === 'all' || slot.zone.toLowerCase() === activeFloor
       const passQuery =
         normalizedQuery.length === 0 ||
@@ -47,11 +74,11 @@ export default function TableManagementAdminPage() {
 
       return passFloor && passQuery
     })
-  }, [activeFloor, query])
+  }, [activeFloor, query, tables])
 
-  const availableCount = tableSlots.filter((slot) => slot.state === 'available').length
-  const reservedCount = tableSlots.filter((slot) => slot.state === 'reserved').length
-  const occupiedCount = tableSlots.filter((slot) => slot.state === 'occupied').length
+  const availableCount = tables.filter((slot) => slot.state === 'available').length
+  const reservedCount = tables.filter((slot) => slot.state === 'reserved').length
+  const occupiedCount = tables.filter((slot) => slot.state === 'occupied').length
 
   return (
     <div className="space-y-4 pb-20">
@@ -155,26 +182,32 @@ export default function TableManagementAdminPage() {
             <p className="mt-1 mb-0 text-xs text-zinc-500">Section A · Ground Floor</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 bg-[radial-gradient(#efefef_1px,transparent_1px)] bg-[size:16px_16px] p-5 sm:grid-cols-3 xl:grid-cols-4">
-            {visibleSlots.map((slot) => (
-              <div key={slot.code} className="space-y-2">
-                <div className={`relative flex h-[74px] items-center justify-center rounded-xl border-2 text-center ${tableStateStyle(slot.state)}`}>
-                  <div>
-                    <div className="text-[34px] leading-none font-black tracking-tight">{slot.code}</div>
-                    <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide">{slot.note}</div>
+          <div className="min-h-[400px] bg-[radial-gradient(#efefef_1px,transparent_1px)] bg-[size:16px_16px] p-5">
+            {loading ? (
+              <div className="flex justify-center py-20"><Spin /></div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                {visibleSlots.map((slot) => (
+                  <div key={slot.id} className="space-y-2">
+                    <div className={`relative flex h-[74px] items-center justify-center rounded-xl border-2 text-center ${tableStateStyle(slot.state)}`}>
+                      <div>
+                        <div className="text-[34px] leading-none font-black tracking-tight">{slot.code}</div>
+                        <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide">{slot.note}</div>
+                      </div>
+
+                      {slot.state === 'occupied' ? (
+                        <span className="absolute -right-2 -top-2 rounded-full bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white">OCC</span>
+                      ) : null}
+
+                      {slot.state === 'reserved' ? (
+                        <span className="absolute -right-2 -top-2 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">R</span>
+                      ) : null}
+                    </div>
+                    <div className="text-center text-[10px] uppercase tracking-[0.12em] text-zinc-400">{slot.zone}</div>
                   </div>
-
-                  {slot.note === '2/4' ? (
-                    <span className="absolute -right-2 -top-2 rounded-full bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold text-white">2/4</span>
-                  ) : null}
-
-                  {slot.note === '19:30' ? (
-                    <span className="absolute -right-2 -top-2 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">6</span>
-                  ) : null}
-                </div>
-                <div className="text-center text-[10px] uppercase tracking-[0.12em] text-zinc-400">{slot.zone}</div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-6 border-t border-zinc-100 px-5 py-4 text-[11px] uppercase tracking-[0.12em] text-zinc-500">
