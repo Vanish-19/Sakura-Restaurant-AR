@@ -10,11 +10,11 @@ export async function getOrderById(id) {
 }
 
 export async function updateOrderStatus(id, status) {
-  return apiRequest(`/admin/orders/${id}/status`, { method: 'PUT', body: { status } });
+  return apiRequest(`/admin/orders/${id}`, { method: 'PATCH', body: { status } });
 }
 
 export async function cancelOrder(id) {
-  return apiRequest(`/admin/orders/${id}/cancel`, { method: 'PUT' });
+  return apiRequest(`/admin/orders/${id}`, { method: 'DELETE' });
 }
 
 export async function getOrderStats() {

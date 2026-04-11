@@ -14,6 +14,12 @@ import adminOrderRoutes from './routes/adminOrderRoutes.js';
 import adminTableRoutes from './routes/adminTableRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import takeawayRoutes from './routes/takeawayRoutes.js';
+import adminFoodRoutes from './routes/adminFoodRoutes.js';
+import adminArticleRoutes from './routes/adminArticleRoutes.js';
+import adminUserRoutes from './routes/adminUserRoutes.js';
+import adminAccountRoutes from './routes/adminAccountRoutes.js';
+import adminDashboardRoutes from './routes/adminDashboardRoutes.js';
+import { handleVnpayIpnEvent, buildVnpayReturnRedirectUrl } from './services/vnpayPaymentService.js';
 
 // Khởi tạo Database MongoDB
 connectDB();
@@ -30,12 +36,38 @@ const io = new Server(httpServer, {
 });
 
 app.use(cors());
-app.use(express.json());
 
 // Middleware to inject the Socket.io instance into requests
 app.use((req, res, next) => {
   req.io = io;
   next();
+});
+
+app.use(express.json());
+
+app.get('/api/v1/payments/vnpay/return', async (req, res) => {
+  try {
+    const redirectUrl = buildVnpayReturnRedirectUrl(req.query);
+    return res.redirect(302, redirectUrl);
+  } catch (error) {
+    console.error('VNPAY return error:', error.message);
+    return res.redirect(302, 'http://localhost:5173/cart?payment=cancelled');
+  }
+});
+
+app.get('/api/v1/payments/vnpay/ipn', async (req, res) => {
+  try {
+    const result = await handleVnpayIpnEvent(req.query);
+
+    if (req.io && result?.payment) {
+      req.io.to('admin').emit('payment_completed', result.payment);
+    }
+
+    return res.status(200).json({ RspCode: result.rspCode || '00', Message: result.message || 'Confirm Success' });
+  } catch (error) {
+    console.error('VNPAY IPN error:', error.message);
+    return res.status(200).json({ RspCode: '99', Message: error.message || 'Unknown error' });
+  }
 });
 
 // Socket.io connection handling
@@ -63,6 +95,11 @@ app.use('/api/v1/admin/auth', adminAuthRoutes);       // Login/Register
 app.use('/api/v1/admin/orders', adminOrderRoutes);    // Order management
 app.use('/api/v1/admin/tables', adminTableRoutes);    // Table management
 app.use('/api/v1/admin/payments', paymentRoutes);     // Payment management
+app.use('/api/v1/admin/foods', adminFoodRoutes);      // Food/Menu management
+app.use('/api/v1/admin/articles', adminArticleRoutes); // Content management
+app.use('/api/v1/admin/users', adminUserRoutes);      // Customer management
+app.use('/api/v1/admin/accounts', adminAccountRoutes);   // Admin account management
+app.use('/api/v1/admin/dashboard', adminDashboardRoutes); // Dashboard stats
 
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {

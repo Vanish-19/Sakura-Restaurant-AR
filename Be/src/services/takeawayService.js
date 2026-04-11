@@ -1,7 +1,8 @@
 import Order from '../models/Order.js';
 import MenuItem from '../models/MenuItem.js';
+import { createVnpayPaymentLinkForOrder } from './vnpayPaymentService.js';
 
-const createTakeawayOrder = async ({ customer_name, customer_phone, delivery_address, items }) => {
+const createTakeawayOrder = async ({ customer_name, customer_phone, delivery_address, payment_method = 'cod', items }, options = {}) => {
   let total_amount = 0;
   const processedItems = [];
 
@@ -30,8 +31,23 @@ const createTakeawayOrder = async ({ customer_name, customer_phone, delivery_add
   });
 
   const saved = await order.save();
-  return await Order.findById(saved._id)
+  const createdOrder = await Order.findById(saved._id)
     .populate('items.menu_item', 'name image_url category');
+
+  if (payment_method === 'online') {
+    try {
+      const { checkoutUrl } = await createVnpayPaymentLinkForOrder(createdOrder, options.clientIp);
+      const result = createdOrder.toObject();
+      result.checkout_url = checkoutUrl;
+      result.payment_method = 'online';
+      return result;
+    } catch (error) {
+      await Order.findByIdAndDelete(saved._id);
+      throw error;
+    }
+  }
+
+  return createdOrder;
 };
 
 const getTakeawayOrdersByPhone = async (phone) => {

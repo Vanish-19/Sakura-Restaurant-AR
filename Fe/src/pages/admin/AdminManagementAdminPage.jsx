@@ -7,6 +7,12 @@ import {
   Table,
   Tag,
   Tooltip,
+  message,
+  Popconfirm,
+  Modal,
+  Form,
+  Input,
+  Select,
 } from 'antd'
 import {
   FilterOutlined,
@@ -16,23 +22,24 @@ import {
   UserAddOutlined,
   UsergroupAddOutlined,
 } from '@ant-design/icons'
-import { useMemo, useState } from 'react'
-import { adminAccounts, adminStats } from '../../data/admin/adminMockData.js'
+import { useEffect, useMemo, useState } from 'react'
+import { getAllAdmins, getAdminStats, toggleAdminStatus, registerAdmin } from '../../services/adminAccountApi.js'
 
 const viewModes = [
+  { label: 'All', value: 'all' },
   { label: 'Admin', value: 'admin' },
   { label: 'Staff', value: 'staff' },
 ]
 
 const roleMeta = {
-  'Super Admin': { level: 'L-1', tone: 'text-rose-700 bg-rose-50 border-rose-100' },
-  'Floor Manager': { level: 'L-2', tone: 'text-sky-700 bg-sky-50 border-sky-100' },
-  Chef: { level: 'L-3', tone: 'text-violet-700 bg-violet-50 border-violet-100' },
+  'admin': { label: 'Admin', level: 'L-1', tone: 'text-rose-700 bg-rose-50 border-rose-100' },
+  'staff': { label: 'Staff', level: 'L-2', tone: 'text-sky-700 bg-sky-50 border-sky-100' },
 }
 
 function getInitials(name) {
   return String(name || '')
     .split(' ')
+    .filter(Boolean)
     .map((part) => part[0])
     .join('')
     .slice(0, 2)
@@ -40,12 +47,59 @@ function getInitials(name) {
 }
 
 export default function AdminManagementAdminPage() {
-  const [viewMode, setViewMode] = useState('admin')
+  const [viewMode, setViewMode] = useState('all')
+  const [admins, setAdmins] = useState([])
+  const [stats, setStats] = useState({ total: 0, active: 0, alerts: 0 })
+  const [loading, setLoading] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [form] = Form.useForm()
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const res = await getAllAdmins()
+      const statsRes = await getAdminStats()
+      if (res?.success) setAdmins(res.data)
+      if (statsRes?.success) setStats(statsRes.data)
+    } catch (err) {
+      message.error('Failed to load admin accounts')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const handleToggleStatus = async (id) => {
+    try {
+      await toggleAdminStatus(id)
+      message.success('Account status toggled')
+      fetchData()
+    } catch (err) {
+      message.error('Failed to update status')
+    }
+  }
+
+  const handleRegister = async () => {
+    try {
+      const values = await form.validateFields()
+      await registerAdmin(values)
+      message.success('New admin account created')
+      setIsModalOpen(false)
+      form.resetFields()
+      fetchData()
+    } catch (err) {
+      if (err.errorFields) return
+      message.error(err.message || 'Creation failed')
+    }
+  }
 
   const filteredAccounts = useMemo(() => {
-    if (viewMode === 'admin') return adminAccounts.filter((item) => item.role === 'Super Admin' || item.role === 'Floor Manager')
-    return adminAccounts.filter((item) => item.role !== 'Super Admin')
-  }, [viewMode])
+    if (viewMode === 'all') return admins
+    return admins.filter((item) => item.role === viewMode)
+  }, [viewMode, admins])
 
   const columns = [
     {
@@ -69,11 +123,11 @@ export default function AdminManagementAdminPage() {
       dataIndex: 'role',
       key: 'role',
       render: (role) => {
-        const meta = roleMeta[role] || { level: 'L-4', tone: 'text-zinc-700 bg-zinc-50 border-zinc-200' }
+        const meta = roleMeta[role] || { label: role, level: 'N/A', tone: 'text-zinc-700 bg-zinc-50 border-zinc-200' }
         return (
           <div className="space-y-1">
             <Tag className={`!m-0 !rounded-full !border !px-2 !py-0.5 !text-[10px] !font-semibold ${meta.tone}`}>
-              {role}
+              {meta.label.toUpperCase()}
             </Tag>
             <div className="text-[10px] uppercase tracking-wider text-zinc-400">{meta.level}</div>
           </div>
@@ -100,29 +154,39 @@ export default function AdminManagementAdminPage() {
       title: 'LAST LOGIN',
       dataIndex: 'lastLogin',
       key: 'lastLogin',
-      render: (value) => <span className="text-[12px] font-medium text-zinc-600">{value}</span>,
+      render: (value) => <span className="text-[12px] font-medium text-zinc-600">{value ? new Date(value).toLocaleString() : 'Never'}</span>,
     },
     {
       title: 'ACTION',
-      dataIndex: 'status',
       key: 'action',
-      render: (status) => (
-        <Button
-          size="small"
-          className={`!h-7 !rounded-md !px-3 !text-[10px] !font-semibold !uppercase !tracking-wide ${
-            status === 'Active'
-              ? '!border-zinc-900 !bg-zinc-900 !text-white hover:!border-zinc-800 hover:!bg-zinc-800'
-              : '!border-rose-600 !bg-rose-600 !text-white hover:!border-rose-500 hover:!bg-rose-500'
-          }`}
+      render: (_, row) => (
+        <Popconfirm
+          title={`${row.status === 'Active' ? 'Deactivate' : 'Reactivate'} this account?`}
+          onConfirm={() => handleToggleStatus(row._id)}
         >
-          {status === 'Active' ? 'Manage' : 'Reactivate'}
-        </Button>
+          <Button
+            size="small"
+            className={`!h-7 !rounded-md !px-3 !text-[10px] !font-semibold !uppercase !tracking-wide ${
+              row.status === 'Active'
+                ? '!border-rose-600 !bg-white !text-rose-600 hover:!bg-rose-50'
+                : '!border-emerald-600 !bg-emerald-600 !text-white hover:!bg-emerald-500'
+            }`}
+          >
+            {row.status === 'Active' ? 'Deactivate' : 'Reactivate'}
+          </Button>
+        </Popconfirm>
       ),
     },
   ]
 
+  const statsItems = [
+    { key: 'admins', label: 'TOTAL ACCOUNTS', value: stats.total, note: 'Platform users' },
+    { key: 'sessions', label: 'ACTIVE NOW', value: stats.active, note: 'Available staff' },
+    { key: 'alerts', label: 'SECURITY ALERTS', value: stats.alerts, note: 'System secure & verified' },
+  ]
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 pb-20">
       <section className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-[44px] leading-[0.95] font-black tracking-[-0.03em] text-zinc-900">Admin Management</h1>
@@ -134,7 +198,7 @@ export default function AdminManagementAdminPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {adminStats.map((stat, idx) => (
+        {statsItems.map((stat, idx) => (
           <Card
             key={stat.key}
             bordered={false}
@@ -153,18 +217,15 @@ export default function AdminManagementAdminPage() {
         <Card className="!rounded-2xl !border !border-zinc-200 !shadow-none 2xl:col-span-9" bodyStyle={{ padding: 0 }}>
           <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
             <Space size={10}>
-              <h3 className="m-0 text-[22px] leading-none font-extrabold tracking-tight text-zinc-900">Active Admin Accounts</h3>
+              <h3 className="m-0 text-[22px] leading-none font-extrabold tracking-tight text-zinc-900">Admin Accounts</h3>
               <Tag className="!rounded-full !border-rose-200 !bg-rose-50 !px-2 !py-0.5 !text-[10px] !font-bold !tracking-wide !text-rose-600">
-                LIVE UPDATE
+                LIVE
               </Tag>
             </Space>
 
             <Space size={10}>
-              <Tooltip title="Filter">
-                <Button shape="circle" icon={<FilterOutlined />} className="!border-zinc-200 !text-zinc-600" />
-              </Tooltip>
               <Tooltip title="Refresh">
-                <Button shape="circle" icon={<ReloadOutlined />} className="!border-zinc-200 !text-zinc-600" />
+                <Button onClick={fetchData} shape="circle" icon={<ReloadOutlined />} className="!border-zinc-200 !text-zinc-600" />
               </Tooltip>
             </Space>
           </div>
@@ -173,7 +234,9 @@ export default function AdminManagementAdminPage() {
             <Table
               columns={columns}
               dataSource={filteredAccounts}
-              pagination={false}
+              rowKey="_id"
+              loading={loading}
+              pagination={{ pageSize: 15 }}
               scroll={{ x: 920 }}
               rowClassName={() => 'hover:!bg-zinc-50'}
             />
@@ -199,12 +262,12 @@ export default function AdminManagementAdminPage() {
           </div>
 
           <div className="mt-5 rounded-xl border border-rose-900/40 bg-rose-950/50 p-3">
-            <div className="text-[10px] uppercase tracking-[0.14em] text-rose-200">Live Security Team</div>
+            <div className="text-[10px] uppercase tracking-[0.14em] text-rose-200">Active Operators</div>
             <div className="mt-2 flex items-center gap-2">
-              <Avatar size={26} className="!bg-rose-700">A</Avatar>
-              <Avatar size={26} className="!bg-zinc-700">K</Avatar>
-              <Avatar size={26} className="!bg-zinc-700">R</Avatar>
-              <Tag className="!m-0 !rounded-full !border-zinc-700 !bg-zinc-900 !text-zinc-200">+2</Tag>
+              {admins.slice(0, 3).map(a => (
+                  <Avatar key={a._id} size={26} className="!bg-rose-700">{getInitials(a.name)}</Avatar>
+              ))}
+              {admins.length > 3 && <Tag className="!m-0 !rounded-full !border-zinc-700 !bg-zinc-900 !text-zinc-200">+{admins.length - 3}</Tag>}
             </div>
           </div>
         </Card>
@@ -217,17 +280,8 @@ export default function AdminManagementAdminPage() {
         >
           <p className="m-0 text-[34px] leading-none font-black tracking-tight">"Control is the foundation of trust."</p>
           <p className="mt-2 mb-0 max-w-2xl text-sm text-rose-100">
-            Admin security score is currently at 96%. Keep account reviews weekly and enforce role-based permissions.
+            Keep account reviews weekly and enforce role-based permissions to ensure operational safety.
           </p>
-
-          <div className="mt-6 flex flex-wrap gap-2">
-            <Button className="!h-9 !rounded-md !border-0 !bg-white !px-4 !text-[11px] !font-bold !uppercase !tracking-wide !text-rose-700">
-              Manage Workload
-            </Button>
-            <Button className="!h-9 !rounded-md !border-0 !bg-rose-700 !px-4 !text-[11px] !font-bold !uppercase !tracking-wide !text-white">
-              View Analytics
-            </Button>
-          </div>
         </Card>
 
         <Card className="!rounded-2xl !border !border-zinc-200 !shadow-none" bodyStyle={{ padding: 22 }}>
@@ -239,27 +293,44 @@ export default function AdminManagementAdminPage() {
           <Button
             block
             icon={<PlusOutlined />}
-            className="!mt-4 !h-10 !rounded-md !border-0 !bg-zinc-900 !text-[11px] !font-bold !uppercase !tracking-wide !text-white"
+            onClick={() => setIsModalOpen(true)}
+            className="!mt-4 !h-10 !rounded-md !border-0 !bg-zinc-900 !text-[11px] !font-bold !uppercase !tracking-wide !text-white hover:!bg-zinc-800"
           >
             Quick Create
           </Button>
         </Card>
       </section>
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Card className="!rounded-xl !border !border-zinc-200 !shadow-none" bodyStyle={{ padding: 14 }}>
-          <Space>
-            <SafetyOutlined className="text-zinc-500" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Security</span>
-          </Space>
-        </Card>
-        <Card className="!rounded-xl !border !border-zinc-200 !shadow-none" bodyStyle={{ padding: 14 }}>
-          <Space>
-            <UsergroupAddOutlined className="text-zinc-500" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Support</span>
-          </Space>
-        </Card>
-      </section>
+      <Modal
+        title="Create New Admin Account"
+        open={isModalOpen}
+        onOk={handleRegister}
+        onCancel={() => setIsModalOpen(false)}
+        okText="Create"
+      >
+        <Form form={form} layout="vertical" className="mt-4">
+          <Form.Item name="name" label="Full Name" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="email" label="Email Address" rules={[{ required: true, type: 'email' }]}>
+            <Input />
+          </Form.Item>
+          <div className="grid grid-cols-2 gap-4">
+             <Form.Item name="username" label="Username" rules={[{ required: true }]}>
+                <Input />
+             </Form.Item>
+             <Form.Item name="role" label="Role" rules={[{ required: true }]}>
+                <Select>
+                    <Select.Option value="admin">Admin</Select.Option>
+                    <Select.Option value="staff">Staff</Select.Option>
+                </Select>
+             </Form.Item>
+          </div>
+          <Form.Item name="password" label="Password" rules={[{ required: true }]}>
+             <Input.Password />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   )
 }

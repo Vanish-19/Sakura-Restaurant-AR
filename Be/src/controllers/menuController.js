@@ -18,12 +18,15 @@ const getMenuItems = asyncHandler(async (req, res) => {
     description: item.description,
     price: item.price,
     category: item.category,
+    is_best_seller: Boolean(item.is_best_seller),
     assets: {
       image_url: item.image_url,
-      ar_models: {
-        glb: item.ar_models?.glb_url,
-        usdz: item.ar_models?.usdz_url,
-      }
+      ar_models: item.is_best_seller
+        ? {
+            glb: item.ar_models?.glb_url,
+            usdz: item.ar_models?.usdz_url,
+          }
+        : null
     }
   }));
 

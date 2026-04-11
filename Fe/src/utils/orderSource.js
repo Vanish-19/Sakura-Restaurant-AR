@@ -49,21 +49,6 @@ export function getOrderSource(searchParams) {
         }
     }
 
-    const tableRaw =
-        searchParams.get('table') ||
-        searchParams.get('tableId') ||
-        searchParams.get('ban')
-
-    const tableCode = normalizeTableCode(tableRaw)
-
-    if (tableCode) {
-        return {
-            mode: 'dine-in',
-            tableCode,
-            label: `Bàn ${tableCode}`,
-        }
-    }
-
     return {
         mode: 'delivery',
         tableCode: null,

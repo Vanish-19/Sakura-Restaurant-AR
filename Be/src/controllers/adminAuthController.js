@@ -11,8 +11,8 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const register = asyncHandler(async (req, res) => {
-  const { username, password, role } = req.body;
-  const admin = await serviceRegister(username, password, role);
+  const { username, password, name, email, role } = req.body;
+  const admin = await serviceRegister(username, password, name, email, role);
   res.status(201).json({ message: 'Admin created', data: admin });
 });
 

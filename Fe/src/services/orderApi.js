@@ -27,7 +27,13 @@ export async function getMenuItems(category) {
         price: Number(item.price || 0),
         category: (item.category || 'all').toLowerCase(),
         imageUrl,
-        arModels: item?.assets?.ar_models || null,
+        arModels: item?.assets?.ar_models
+          ? {
+              glb_url: item.assets.ar_models.glb || '',
+              usdz_url: item.assets.ar_models.usdz || '',
+            }
+          : null,
+        isBestSeller: Boolean(item?.is_best_seller),
       }
     })
     .filter(Boolean)

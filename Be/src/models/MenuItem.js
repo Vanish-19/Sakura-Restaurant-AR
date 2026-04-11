@@ -10,6 +10,7 @@ const menuItemSchema = new mongoose.Schema({
     glb_url: { type: String },
     usdz_url: { type: String }
   },
+  is_best_seller: { type: Boolean, default: false },
   is_available: { type: Boolean, default: true },
 }, { timestamps: true });
 

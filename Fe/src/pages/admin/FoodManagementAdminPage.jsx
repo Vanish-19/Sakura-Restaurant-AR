@@ -1,133 +1,187 @@
-import { PlusOutlined } from '@ant-design/icons'
-import { Avatar, Button, Card, Segmented, Space, Table, Tag } from 'antd'
-import { useMemo, useState } from 'react'
-import { dishes } from '../../data/admin/adminMockData.js'
-
-const menuModes = [
-  { label: 'Dine-in', value: 'dine-in' },
-  { label: 'Delivery', value: 'delivery' },
-]
-
-const stats = [
-  { key: 'live', title: 'LIVE DISHES', value: '24', note: '+ 12% from last hour', tone: 'text-rose-600', bar: 'bg-rose-600' },
-  { key: 'prep', title: 'AVG PREP TIME', value: '18 min', note: 'Target: 15 min', tone: 'text-zinc-400', bar: 'bg-rose-600' },
-  { key: 'revenue', title: 'REVENUE TODAY', value: '¥84.2k', note: 'Peak period active', tone: 'text-zinc-400', bar: 'bg-zinc-900' },
-]
-
-function getInitials(name) {
-  return String(name || '')
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
-}
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
+import { Button, Card, Space, Table, Tag, message, Avatar, Popconfirm, Modal, Form, Input, InputNumber, Switch, Select } from 'antd'
+import { useEffect, useState } from 'react'
+import { getAllFoods, createFood, updateFood, deleteFood } from '../../services/adminFoodApi.js'
 
 export default function FoodManagementAdminPage() {
-  const [mode, setMode] = useState('dine-in')
+  const [foods, setFoods] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [form] = Form.useForm()
 
-  const tableData = useMemo(
-    () =>
-      dishes.slice(0, 3).map((dish, index) => ({
-        key: dish.key,
-        dishId: `#FD-${dish.sku.replace('RAM-', '').replace('SUS-', '').replace('DES-', '')}`,
-        dishName: dish.dish,
-        chef: ['Yuki Sato', 'Hiroshi Kondo', 'Maki Asakawa'][index],
-        station: ['B-12', 'A-04', 'C-01'][index],
-        amount: dish.price,
-        status: ['Preparing', 'Pending', 'Served'][index],
-        action: ['Process', 'Accept', 'Details'][index],
-      })),
-    [],
-  )
+  const fetchFoods = async () => {
+    try {
+      setLoading(true)
+      const res = await getAllFoods()
+      if (res?.success) {
+        setFoods(res.data || [])
+      }
+    } catch (err) {
+      console.error(err)
+      message.error('Failed to fetch food items')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchFoods()
+  }, [])
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteFood(id)
+      message.success('Item deleted')
+      fetchFoods()
+    } catch (err) {
+      message.error('Failed to delete item')
+    }
+  }
+
+  const handleOpenModal = (record = null) => {
+    if (record) {
+      setEditingId(record._id)
+      form.setFieldsValue({
+        name: record.name,
+        price: record.price,
+        category: record.category,
+        is_available: record.is_available,
+        is_best_seller: record.is_best_seller,
+        image_url: record.image_url,
+        glb_url: record.ar_models?.glb_url,
+        usdz_url: record.ar_models?.usdz_url,
+        description: record.description,
+      })
+    } else {
+      setEditingId(null)
+      form.resetFields()
+      form.setFieldsValue({ is_available: true, is_best_seller: false, category: 'sushi' })
+    }
+    setIsModalOpen(true)
+  }
+
+  const handleModalOk = async () => {
+    try {
+      const values = await form.validateFields()
+      const payload = {
+        name: values.name,
+        price: values.price,
+        category: values.category,
+        is_available: values.is_available,
+        is_best_seller: values.is_best_seller,
+        image_url: values.image_url,
+        description: values.description,
+        ar_models: {
+          glb_url: values.glb_url,
+          usdz_url: values.usdz_url,
+        }
+      }
+
+      if (editingId) {
+        await updateFood(editingId, payload)
+        message.success('Item updated successfully')
+      } else {
+        await createFood(payload)
+        message.success('Item created successfully')
+      }
+      setIsModalOpen(false)
+      fetchFoods()
+    } catch (err) {
+      if (err.errorFields) return // Validation error
+      message.error(err.message || 'Action failed')
+    }
+  }
 
   const columns = [
     {
-      title: 'DISH ID',
-      dataIndex: 'dishId',
-      key: 'dishId',
-      render: (value) => <span className="text-[22px] font-black tracking-tight text-zinc-900">{value}</span>,
-    },
-    {
       title: 'DISH',
-      dataIndex: 'dishName',
-      key: 'dishName',
+      key: 'dish',
       render: (_, row) => (
         <div className="flex items-center gap-3">
-          <Avatar size={30} className="!bg-zinc-100 !text-zinc-600">{getInitials(row.chef)}</Avatar>
+          <Avatar src={row.image_url} shape="square" size={40} className="!bg-zinc-100 border border-zinc-200" />
           <div>
-            <p className="m-0 text-[12px] font-semibold text-zinc-900">{row.chef}</p>
-            <p className="m-0 text-[11px] text-zinc-500">{row.dishName}</p>
+            <p className="m-0 text-[13px] font-bold text-zinc-900">{row.name}</p>
+            <p className="m-0 text-[11px] text-zinc-500 w-48 truncate">{row.description}</p>
           </div>
         </div>
       ),
     },
     {
-      title: 'STATION',
-      dataIndex: 'station',
-      key: 'station',
-      render: (value) => <Tag className="!rounded-md !border-zinc-200 !bg-zinc-100 !px-2 !py-0.5 !font-semibold">{value}</Tag>,
+      title: 'CATEGORY',
+      dataIndex: 'category',
+      key: 'category',
+      render: (value) => <Tag className="!rounded-md !border-zinc-200 !bg-zinc-100 !px-2 !py-0.5 !font-semibold uppercase">{value}</Tag>,
     },
-    { title: 'AMOUNT', dataIndex: 'amount', key: 'amount' },
+    { 
+      title: 'PRICE', 
+      dataIndex: 'price', 
+      key: 'price',
+      render: (price) => <span className="font-semibold">${Number(price).toFixed(2)}</span>
+    },
+    {
+      title: 'AR STATUS',
+      key: 'arStatus',
+      render: (_, row) => {
+        const hasGlb = !!row.ar_models?.glb_url
+        const hasUsdz = !!row.ar_models?.usdz_url
+        if (hasGlb || hasUsdz) return <Tag color="blue">Enabled</Tag>
+        return <Tag color="default">Missing</Tag>
+      },
+    },
+    {
+      title: 'BEST SELLER',
+      dataIndex: 'is_best_seller',
+      key: 'bestSeller',
+      render: (isBestSeller) => (
+        isBestSeller ? <Tag color="gold">Best Seller</Tag> : <Tag>Standard</Tag>
+      ),
+    },
     {
       title: 'STATUS',
-      dataIndex: 'status',
+      dataIndex: 'is_available',
       key: 'status',
-      render: (status) => {
-        const classes =
-          status === 'Preparing'
-            ? '!border-amber-200 !bg-amber-50 !text-amber-700'
-            : status === 'Pending'
-              ? '!border-rose-200 !bg-rose-50 !text-rose-600'
-              : '!border-emerald-200 !bg-emerald-50 !text-emerald-700'
-
-        return <Tag className={`!rounded-full !px-2 !py-0 !text-[10px] !font-bold ${classes}`}>{status.toUpperCase()}</Tag>
-      },
+      render: (is_available) => (
+        is_available ? <Tag color="green">Available</Tag> : <Tag color="red">Hidden</Tag>
+      ),
     },
     {
       title: 'ACTION',
-      dataIndex: 'action',
       key: 'action',
-      render: (action) => {
-        const classes =
-          action === 'Process'
-            ? '!bg-rose-600 hover:!bg-rose-500'
-            : action === 'Accept'
-              ? '!bg-zinc-900 hover:!bg-zinc-800'
-              : '!bg-zinc-200 hover:!bg-zinc-300 !text-zinc-700'
-        return (
-          <Button className={`!h-7 !rounded-md !border-0 !px-3 !text-[10px] !font-bold !uppercase ${classes}`}>
-            {action}
-          </Button>
-        )
-      },
+      render: (_, record) => (
+        <Space size="small">
+          <Button size="small" type="text" icon={<EditOutlined />} onClick={() => handleOpenModal(record)} />
+          <Popconfirm title="Are you sure?" onConfirm={() => handleDelete(record._id)}>
+            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
+      ),
     },
   ]
 
+  const stats = [
+    { key: 'total', title: 'TOTAL DISHES', value: foods.length, note: 'In catalog', tone: 'text-zinc-600', bar: 'bg-zinc-900' },
+    { key: 'best', title: 'BEST SELLER', value: foods.filter(f => f.is_best_seller).length, note: 'Priority dish list', tone: 'text-amber-600', bar: 'bg-amber-500' },
+    { key: 'ar', title: 'AR ENABLED', value: foods.filter(f => f.ar_models?.glb_url || f.ar_models?.usdz_url).length, note: 'Has 3D models', tone: 'text-blue-600', bar: 'bg-blue-600' },
+    { key: 'active', title: 'AVAILABLE', value: foods.filter(f => f.is_available).length, note: 'Ready to order', tone: 'text-emerald-600', bar: 'bg-emerald-600' },
+  ]
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 pb-20">
       <section className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-[44px] leading-[0.96] font-black tracking-[-0.03em] text-zinc-900">Food Management</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-            Real-time control over your kitchen's pulse. Manage floor and logistics from one central inkstone.
+            Manage your restaurant's digital catalog, update pricing, and upload AR models.
           </p>
         </div>
 
-        <Space>
-          <Segmented
-            options={menuModes}
-            value={mode}
-            onChange={setMode}
-            className="!rounded-lg !bg-zinc-100 !p-1"
-          />
-          <Button icon={<PlusOutlined />} className="!h-9 !rounded-lg !border-0 !bg-rose-600 !px-4 !text-xs !font-bold !uppercase !text-white">
-            New Dish
-          </Button>
-        </Space>
+        <Button onClick={() => handleOpenModal()} icon={<PlusOutlined />} className="!h-9 !rounded-lg !border-0 !bg-rose-600 !px-4 !text-xs !font-bold !uppercase !text-white">
+          New Dish
+        </Button>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.key} className="!rounded-xl !border !border-zinc-200 !shadow-none" bodyStyle={{ padding: 20 }}>
             <div className={`mb-4 h-1 w-8 rounded-full ${stat.bar}`} />
@@ -141,40 +195,78 @@ export default function FoodManagementAdminPage() {
       <Card className="!rounded-2xl !border !border-zinc-200 !shadow-none" bodyStyle={{ padding: 0 }}>
         <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
           <Space size={10}>
-            <h3 className="m-0 text-2xl font-extrabold tracking-tight text-zinc-900">Active Kitchen Orders</h3>
-            <Tag className="!rounded-full !border-rose-200 !bg-rose-50 !px-2 !py-0.5 !text-[10px] !font-bold !tracking-wide !text-rose-600">LIVE UPDATE</Tag>
+            <h3 className="m-0 text-2xl font-extrabold tracking-tight text-zinc-900">Menu Catalog</h3>
           </Space>
-          <span className="text-xs text-zinc-400">{mode === 'dine-in' ? 'Dine-in queue active' : 'Delivery queue active'}</span>
         </div>
 
         <div className="px-3 pb-3 pt-1">
-          <Table columns={columns} dataSource={tableData} pagination={false} scroll={{ x: 940 }} rowClassName={() => 'hover:!bg-zinc-50'} />
+          <Table 
+            columns={columns} 
+            dataSource={foods} 
+            rowKey="_id"
+            loading={loading}
+            pagination={{ pageSize: 15 }} 
+            scroll={{ x: 940 }} 
+            rowClassName={() => 'hover:!bg-zinc-50'} 
+          />
         </div>
       </Card>
 
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <Card className="!rounded-2xl !border-none !bg-rose-600 !text-white !shadow-none xl:col-span-2" bodyStyle={{ padding: 24 }}>
-          <p className="m-0 text-[38px] leading-none font-black italic tracking-tight">"Precision is the ingredient of perfection."</p>
-          <p className="mt-3 mb-0 max-w-2xl text-sm text-rose-100">
-            Kitchen backlog is currently at 85%. Consider slowing down delivery intakes to maintain dine-in quality standards.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-2">
-            <Button className="!h-9 !rounded-md !border-0 !bg-white !px-4 !text-[11px] !font-bold !uppercase !tracking-wide !text-rose-700">Manage Workload</Button>
-            <Button className="!h-9 !rounded-md !border-0 !bg-rose-700 !px-4 !text-[11px] !font-bold !uppercase !tracking-wide !text-white">View Analytics</Button>
+      <Modal
+        title={editingId ? "Update Dish" : "Create New Dish"}
+        open={isModalOpen}
+        onOk={handleModalOk}
+        onCancel={() => setIsModalOpen(false)}
+        okText="Save"
+        width={600}
+      >
+        <Form form={form} layout="vertical" className="mt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="name" label="Dish Name" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="category" label="Category" rules={[{ required: true }]}>
+              <Select>
+                <Select.Option value="sushi">Sushi</Select.Option>
+                <Select.Option value="ramen">Ramen</Select.Option>
+                <Select.Option value="appetizers">Appetizers</Select.Option>
+                <Select.Option value="dessert">Dessert</Select.Option>
+                <Select.Option value="drinks">Drinks</Select.Option>
+              </Select>
+            </Form.Item>
           </div>
-        </Card>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="price" label="Price ($)" rules={[{ required: true }]}>
+              <InputNumber className="w-full" min={0} step={0.01} />
+            </Form.Item>
+            <Form.Item name="is_available" label="Status" valuePropName="checked">
+              <Switch checkedChildren="Available" unCheckedChildren="Hidden" />
+            </Form.Item>
+          </div>
 
-        <Card className="!rounded-2xl !border !border-zinc-200 !shadow-none" bodyStyle={{ padding: 24 }}>
-          <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700">
-            <PlusOutlined />
+          <Form.Item name="is_best_seller" label="Best Seller" valuePropName="checked">
+            <Switch checkedChildren="Yes" unCheckedChildren="No" />
+          </Form.Item>
+
+          <Form.Item name="description" label="Description">
+            <Input.TextArea rows={2} />
+          </Form.Item>
+
+          <Form.Item name="image_url" label="Image URL">
+            <Input />
+          </Form.Item>
+
+          <div className="grid grid-cols-2 gap-4 border-t pt-4 mt-2">
+            <Form.Item name="glb_url" label="AR Model (.glb) - Android/Web">
+              <Input placeholder="https://..." />
+            </Form.Item>
+            <Form.Item name="usdz_url" label="AR Model (.usdz) - iOS">
+              <Input placeholder="https://..." />
+            </Form.Item>
           </div>
-          <h4 className="m-0 text-xl font-bold text-zinc-900">New Manual Dish</h4>
-          <p className="mt-2 text-xs text-zinc-500">Click below to create quick dish order for phone bookings or walk-ins.</p>
-          <Button block className="!mt-6 !h-10 !rounded-md !border-0 !bg-zinc-200 !text-[11px] !font-bold !uppercase !tracking-wide !text-zinc-700">
-            Quick Create
-          </Button>
-        </Card>
-      </section>
+        </Form>
+      </Modal>
     </div>
   )
 }

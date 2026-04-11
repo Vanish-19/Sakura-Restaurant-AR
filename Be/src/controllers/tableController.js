@@ -14,7 +14,13 @@ const scanTable = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'qr_hash is required' });
   }
 
-  const table = await Table.findOne({ qr_hash });
+  const normalizedQrHash = String(qr_hash).trim();
+
+  const table =
+    (await Table.findOne({ qr_hash: normalizedQrHash })) ||
+    (await Table.findOne({ qr_hash: normalizedQrHash.toLowerCase() })) ||
+    (await Table.findOne({ qr_hash: normalizedQrHash.toUpperCase() }));
+
   if (!table) {
     return res.status(404).json({ error: 'Table not found' });
   }

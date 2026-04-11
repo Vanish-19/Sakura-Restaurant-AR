@@ -21,10 +21,15 @@ async function parseBody(response) {
 }
 
 export async function apiRequest(path, { method = 'GET', headers, body } = {}) {
+  const isAdminApi = String(path || '').startsWith('/admin')
+  const adminToken =
+    typeof window !== 'undefined' ? window.localStorage.getItem('admin_access_token') : null
+
   const requestInit = {
     method,
     headers: {
       'Content-Type': 'application/json',
+      ...(isAdminApi && adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
       ...(headers ?? {}),
     },
     body: body ? JSON.stringify(body) : undefined,

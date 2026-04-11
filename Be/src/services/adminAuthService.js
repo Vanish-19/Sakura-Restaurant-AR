@@ -18,18 +18,30 @@ const login = async (username, password) => {
     { expiresIn: '24h' }
   );
 
-  return { token, admin: { id, username, role } };
+  admin.lastLogin = new Date();
+  await admin.save({ validateBeforeSave: false });
+
+  return {
+    token,
+    admin: {
+      id,
+      username,
+      role,
+      name: admin.name || '',
+      email: admin.email || '',
+    },
+  };
 };
 
-const register = async (username, password, role = 'staff') => {
-  const existing = await Admin.findOne({ username });
-  if (existing) throw new Error('Username already exists');
+const register = async (username, password, name, email, role = 'staff') => {
+  const existing = await Admin.findOne({ $or: [{ username }, { email }] });
+  if (existing) throw new Error('Username or email already exists');
 
-  const admin = new Admin({ username, password, role });
+  const admin = new Admin({ username, password, name, email, role });
   const saved = await admin.save();
   
   const { _id: id } = saved;
-  return { id, username, role };
+  return { id, username, role, name, email };
 };
 
 // ======= MODULE EXPORTS =======

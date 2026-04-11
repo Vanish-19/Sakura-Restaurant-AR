@@ -1,4 +1,4 @@
-import { MobileOutlined, RestOutlined, ScanOutlined } from '@ant-design/icons'
+import { RestOutlined, ScanOutlined } from '@ant-design/icons'
 import { message } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
@@ -8,9 +8,8 @@ import TableSelectionModal from '../components/organisms/TableSelectionModal.jsx
 import MenuItemCard from '../components/molecules/MenuItemCard.jsx'
 import CategoryBar from '../components/organisms/CategoryBar.jsx'
 import { useCart } from '../contexts/CartContext.jsx'
-import { CATEGORIES } from '../data/categories.js'
-import { MENU_ITEMS } from '../data/menuItems.js'
 import { getMenuItems } from '../services/orderApi.js'
+import { ensureTableToken } from '../utils/tableSession.js'
 import {
   clearLockedTableCode,
   getLockedTableCode,
@@ -31,9 +30,9 @@ export default function HomePage() {
   const navigate = useNavigate()
   const location = useLocation()
   const isAndroidPreview = searchParams.get('preview') === 'android'
-  const [menuItems, setMenuItems] = useState(MENU_ITEMS)
+  const [menuItems, setMenuItems] = useState([])
   const [serviceModalOpen, setServiceModalOpen] = useState(false)
-  const [tableModalOpen, setTableModalOpen] = useState(false)
+  const [isScanningQr, setIsScanningQr] = useState(false)
   const orderSource = getOrderSource(searchParams)
 
   useEffect(() => {
@@ -42,10 +41,11 @@ export default function HomePage() {
     const load = async () => {
       try {
         const fromApi = await getMenuItems()
-        if (!isMounted || fromApi.length === 0) return
+        if (!isMounted) return
         setMenuItems(fromApi)
       } catch {
-        // Keep local fallback menu when API is unavailable.
+        if (!isMounted) return
+        setMenuItems([])
       }
     }
 
@@ -66,11 +66,7 @@ export default function HomePage() {
       ),
     ).map((key) => ({ key, label: toCategoryLabel(key) }))
 
-    if (fromMenu.length > 0) {
-      return [{ key: 'all', label: 'All' }, ...fromMenu]
-    }
-
-    return CATEGORIES
+    return fromMenu.length > 0 ? [{ key: 'all', label: 'All' }, ...fromMenu] : []
   }, [menuItems])
 
   const categoryLabelByKey = useMemo(() => {
@@ -83,45 +79,79 @@ export default function HomePage() {
     return menuItems.filter((item) => item.category === activeCategory)
   }, [activeCategory, menuItems])
 
-  const toggleAndroidPreview = () => {
-    const next = new URLSearchParams(searchParams)
-    next.set('preview', 'android')
-    setSearchParams(next, { replace: true })
-  }
-
   useEffect(() => {
-    const locked = getLockedTableCode()
+    let cancelled = false
 
-    if (locked) {
-      const currentTable = searchParams.get('table')
-      if (currentTable !== locked) {
+    const normalizeTableCode = (value) => {
+      if (value === null || value === undefined) return null
+      const cleaned = String(value).trim().toUpperCase().replace(/\s+/g, '-')
+      return cleaned || null
+    }
+
+    const syncOrderSource = async () => {
+      const locked = getLockedTableCode()
+
+      if (locked) {
+        const currentTable = searchParams.get('table')
+        if (currentTable !== locked) {
+          const next = new URLSearchParams(searchParams)
+          next.set('table', locked)
+          next.delete('tableId')
+          next.delete('ban')
+          setSearchParams(next, { replace: true })
+        }
+        setServiceModalOpen(false)
+        return
+      }
+
+      const queryTable =
+        searchParams.get('table') ||
+        searchParams.get('tableId') ||
+        searchParams.get('ban')
+      const normalized = normalizeTableCode(queryTable)
+
+      if (!normalized) {
+        setServiceModalOpen(false)
+        return
+      }
+
+      try {
+        setIsScanningQr(true)
+        await ensureTableToken(normalized)
+        if (cancelled) return
+
+        lockTableCode(normalized)
         const next = new URLSearchParams(searchParams)
-        next.set('table', locked)
+        next.set('table', normalized)
         next.delete('tableId')
         next.delete('ban')
         setSearchParams(next, { replace: true })
-      }
-      return
-    }
-
-    const queryTable = searchParams.get('table')
-    if (queryTable) {
-      const normalized = lockTableCode(queryTable)
-      if (normalized && normalized !== queryTable) {
+        setServiceModalOpen(false)
+        message.success(`Da kich hoat phien tai ban ${normalized}`)
+      } catch {
+        if (cancelled) return
+        clearLockedTableCode()
         const next = new URLSearchParams(searchParams)
-        next.set('table', normalized)
+        next.delete('table')
+        next.delete('tableId')
+        next.delete('ban')
         setSearchParams(next, { replace: true })
+        message.error('Khong xac thuc duoc ban. Vui long quet lai QR tai nha hang.')
+      } finally {
+        if (!cancelled) setIsScanningQr(false)
       }
-      return
     }
 
-    setServiceModalOpen(true)
+    syncOrderSource()
+
+    return () => {
+      cancelled = true
+    }
   }, [searchParams, setSearchParams])
 
   const pickServiceType = (type) => {
     if (type === 'dine-in') {
-      setServiceModalOpen(false)
-      setTableModalOpen(true)
+      message.info('Dine-in chi kich hoat khi quet QR tai ban.')
       return
     }
 
@@ -133,22 +163,6 @@ export default function HomePage() {
     setSearchParams(next, { replace: true })
     navigate('/', { replace: true })
     setServiceModalOpen(false)
-  }
-
-  const handleConfirmTable = (tableNo) => {
-    const lockedTable = lockTableCode(tableNo)
-    const next = new URLSearchParams(searchParams)
-    next.set('table', lockedTable || tableNo)
-    setSearchParams(next, { replace: true })
-    navigate(
-      {
-        pathname: '/order',
-        search: `?${next.toString()}`,
-      },
-      { replace: location.pathname === '/order' },
-    )
-    setTableModalOpen(false)
-    message.success(`Da chon ban ${tableNo}`)
   }
 
   return (
@@ -182,13 +196,6 @@ export default function HomePage() {
 
           <div className="mt-12 flex flex-wrap justify-center gap-4">
             <FeaturePill
-              icon={<MobileOutlined />}
-              text="Mobile Optimized"
-              onClick={toggleAndroidPreview}
-              isActive={isAndroidPreview}
-              variant="light"
-            />
-            <FeaturePill
               icon={<RestOutlined />}
               text="Authentic Japanese"
               variant="light"
@@ -208,6 +215,14 @@ export default function HomePage() {
         <div className="mx-auto mt-5 max-w-6xl px-6 md:px-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">
             Calling for {orderSource.label}
+          </div>
+        </div>
+      ) : null}
+
+      {isScanningQr ? (
+        <div className="mx-auto mt-5 max-w-6xl px-6 md:px-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700">
+            Dang xac thuc phien ban tu QR...
           </div>
         </div>
       ) : null}
@@ -243,15 +258,6 @@ export default function HomePage() {
         open={serviceModalOpen}
         onClose={() => {}}
         onSelect={pickServiceType}
-      />
-
-      <TableSelectionModal
-        open={tableModalOpen}
-        onCancel={() => {
-          setTableModalOpen(false)
-          setServiceModalOpen(true)
-        }}
-        onConfirm={handleConfirmTable}
       />
     </div>
   )

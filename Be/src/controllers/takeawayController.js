@@ -6,7 +6,8 @@ import {
 } from '../services/takeawayService.js';
 
 const createTakeawayOrder = asyncHandler(async (req, res) => {
-  const order = await svcCreateTakeawayOrder(req.body);
+  const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || req.socket?.remoteAddress || '127.0.0.1';
+  const order = await svcCreateTakeawayOrder(req.body, { clientIp });
   if (req.io) req.io.to('admin').emit('new_takeaway_order', order);
   res.status(201).json({ success: true, data: order });
 });
