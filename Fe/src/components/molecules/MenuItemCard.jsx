@@ -3,9 +3,10 @@ import { Button, Card } from 'antd'
 import ArExperienceBadge from '../atoms/ArExperienceBadge.jsx'
 import TagBadge from '../atoms/TagBadge.jsx'
 
-const currency = new Intl.NumberFormat('en-US', {
+const currency = new Intl.NumberFormat('vi-VN', {
   style: 'currency',
-  currency: 'USD',
+  currency: 'VND',
+  maximumFractionDigits: 0,
 })
 
 export default function MenuItemCard({

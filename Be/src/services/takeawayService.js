@@ -1,8 +1,9 @@
 import Order from '../models/Order.js';
 import MenuItem from '../models/MenuItem.js';
-import { createVnpayPaymentLinkForOrder } from './vnpayPaymentService.js';
+import Payment from '../models/Payment.js';
+import { createSepayPaymentLinkForOrder } from './sepayPaymentService.js';
 
-const createTakeawayOrder = async ({ customer_name, customer_phone, delivery_address, payment_method = 'cod', items }, options = {}) => {
+const createTakeawayOrder = async ({ customer_name, customer_phone, delivery_address, payment_method = 'cod', items }) => {
   let total_amount = 0;
   const processedItems = [];
 
@@ -36,10 +37,14 @@ const createTakeawayOrder = async ({ customer_name, customer_phone, delivery_add
 
   if (payment_method === 'online') {
     try {
-      const { checkoutUrl } = await createVnpayPaymentLinkForOrder(createdOrder, options.clientIp);
+      const { checkoutUrl } = await createSepayPaymentLinkForOrder(createdOrder);
       const result = createdOrder.toObject();
       result.checkout_url = checkoutUrl;
       result.payment_method = 'online';
+      result.payment = {
+        checkout_url: checkoutUrl,
+        status: 'pending',
+      };
       return result;
     } catch (error) {
       await Order.findByIdAndDelete(saved._id);
@@ -60,7 +65,41 @@ const getTakeawayOrderById = async (id) => {
   const order = await Order.findOne({ _id: id, order_type: 'takeaway' })
     .populate('items.menu_item', 'name image_url price category');
   if (!order) throw new Error('Takeaway order not found');
-  return order;
+
+  const payment = await Payment.findOne({ order: order._id, method: 'online' });
+  const orderObject = order.toObject();
+
+  return {
+    ...orderObject,
+    payment: payment
+      ? {
+          id: payment._id,
+          status: payment.status,
+          checkout_url: payment.checkout_url,
+          provider: payment.provider,
+          amount: payment.amount,
+          currency: payment.currency,
+          paid_at: payment.paid_at,
+          provider_ref: payment.provider_ref,
+        }
+      : null,
+    checkout_url: payment?.checkout_url || '',
+  };
 };
 
-export { createTakeawayOrder, getTakeawayOrdersByPhone, getTakeawayOrderById };
+const cancelTakeawayOrder = async (id) => {
+  const order = await Order.findOne({ _id: id, order_type: 'takeaway' });
+  if (!order) throw new Error('Takeaway order not found');
+
+  if (order.status === 'paid') {
+    throw new Error('Cannot cancel a paid order');
+  }
+
+  order.status = 'cancelled';
+  const cancelledOrder = await order.save();
+
+  return await Order.findById(cancelledOrder._id)
+    .populate('items.menu_item', 'name image_url price category');
+};
+
+export { createTakeawayOrder, getTakeawayOrdersByPhone, getTakeawayOrderById, cancelTakeawayOrder };

@@ -4,7 +4,8 @@ import { createTakeawaySchema, getTakeawayByPhoneSchema, getTakeawayByIdSchema }
 import {
   createTakeawayOrder,
   getTakeawayOrdersByPhone,
-  getTakeawayOrderById
+  getTakeawayOrderById,
+  cancelTakeawayOrder
 } from '../controllers/takeawayController.js';
 
 const router = express.Router();
@@ -13,5 +14,6 @@ const router = express.Router();
 router.post('/orders', validateParams(createTakeawaySchema), createTakeawayOrder);
 router.get('/orders', validateParams(getTakeawayByPhoneSchema), getTakeawayOrdersByPhone);
 router.get('/orders/:id', validateParams(getTakeawayByIdSchema), getTakeawayOrderById);
+router.patch('/orders/:id/cancel', validateParams(getTakeawayByIdSchema), cancelTakeawayOrder);
 
 export default router;

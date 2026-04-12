@@ -12,7 +12,11 @@ import { message, Spin } from 'antd'
 import { getDashboardStats } from '../../services/adminDashboardApi.js'
 
 function formatCurrency(num) {
-  return `$${Number(num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  }).format(Number(num || 0))
 }
 
 function statusClassName(status) {

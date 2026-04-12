@@ -7,9 +7,10 @@ import { createDineInOrder, createTakeawayOrder, getMenuItems } from '../service
 import { ensureTableToken } from '../utils/tableSession.js'
 import { getOrderSource } from '../utils/orderSource.js'
 
-const currency = new Intl.NumberFormat('en-US', {
+const currency = new Intl.NumberFormat('vi-VN', {
   style: 'currency',
-  currency: 'USD',
+  currency: 'VND',
+  maximumFractionDigits: 0,
 })
 
 export default function CartPage() {
@@ -58,7 +59,7 @@ export default function CartPage() {
     orderSource.mode === 'dine-in'
       ? `Gọi món cho ${orderSource.label}`
       : paymentMethod === 'online'
-        ? 'Đặt hàng và thanh toán VNPAY'
+        ? 'Đặt hàng và thanh toán SePay'
         : 'Đặt hàng COD'
 
   useEffect(() => {
@@ -98,12 +99,12 @@ export default function CartPage() {
         name: line.item.name,
         unitPrice: line.item.price,
         quantity: line.quantity,
-        lineTotal: Number((line.item.price * line.quantity).toFixed(2)),
+        lineTotal: Math.round(line.item.price * line.quantity),
       })),
       pricing: {
-        subtotal: Number(subtotal.toFixed(2)),
-        tax: Number(tax.toFixed(2)),
-        total: Number(total.toFixed(2)),
+        subtotal: Math.round(subtotal),
+        tax: Math.round(tax),
+        total: Math.round(total),
       },
       createdAt: new Date().toISOString(),
     }
@@ -147,13 +148,22 @@ export default function CartPage() {
           })
 
           if (paymentMethod === 'online') {
+            const orderId = response?.data?._id
             const checkoutUrl = response?.data?.checkout_url
 
-            if (!checkoutUrl) {
-              throw new Error('Không tạo được liên kết thanh toán online')
+            if (!orderId) {
+              throw new Error('Không tạo được đơn thanh toán online')
             }
 
-            window.location.href = checkoutUrl
+            navigate(
+              {
+                pathname: `/payment/${orderId}`,
+              },
+              {
+                replace: true,
+                state: checkoutUrl ? { checkoutUrl } : undefined,
+              },
+            )
             return
           }
 
@@ -296,7 +306,7 @@ export default function CartPage() {
         showIcon
         message={
           paymentMethod === 'online'
-            ? 'Bạn sẽ được chuyển sang VNPAY sau khi tạo đơn.'
+            ? 'Bạn sẽ được chuyển sang SePay sau khi tạo đơn.'
             : 'Đơn COD sẽ được ghi nhận và xác nhận thanh toán sau.'
         }
       />

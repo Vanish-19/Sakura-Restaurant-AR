@@ -62,3 +62,13 @@ export async function createTakeawayOrder(payload) {
     body: payload,
   })
 }
+
+export async function getTakeawayOrderById(id) {
+  return apiRequest(`/takeaway/orders/${id}`)
+}
+
+export async function cancelTakeawayOrder(id) {
+  return apiRequest(`/takeaway/orders/${id}/cancel`, {
+    method: 'PATCH',
+  })
+}

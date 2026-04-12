@@ -19,7 +19,7 @@ import adminArticleRoutes from './routes/adminArticleRoutes.js';
 import adminUserRoutes from './routes/adminUserRoutes.js';
 import adminAccountRoutes from './routes/adminAccountRoutes.js';
 import adminDashboardRoutes from './routes/adminDashboardRoutes.js';
-import { handleVnpayIpnEvent, buildVnpayReturnRedirectUrl } from './services/vnpayPaymentService.js';
+import { handleSepayWebhookEvent, buildSepayReturnRedirectUrl } from './services/sepayPaymentService.js';
 
 // Khởi tạo Database MongoDB
 connectDB();
@@ -45,28 +45,33 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-app.get('/api/v1/payments/vnpay/return', async (req, res) => {
+app.get('/api/v1/payments/sepay/return', async (req, res) => {
   try {
-    const redirectUrl = buildVnpayReturnRedirectUrl(req.query);
+    const redirectUrl = buildSepayReturnRedirectUrl(req.query);
     return res.redirect(302, redirectUrl);
   } catch (error) {
-    console.error('VNPAY return error:', error.message);
+    console.error('SePay return error:', error.message);
     return res.redirect(302, 'http://localhost:5173/cart?payment=cancelled');
   }
 });
 
-app.get('/api/v1/payments/vnpay/ipn', async (req, res) => {
+app.post('/api/v1/payments/sepay/webhook', async (req, res) => {
   try {
-    const result = await handleVnpayIpnEvent(req.query);
+    const authorization = req.headers.authorization || '';
+    const result = await handleSepayWebhookEvent(req.body || {}, authorization);
 
     if (req.io && result?.payment) {
       req.io.to('admin').emit('payment_completed', result.payment);
     }
 
-    return res.status(200).json({ RspCode: result.rspCode || '00', Message: result.message || 'Confirm Success' });
+    return res.status(result.handled ? 200 : 400).json({
+      success: Boolean(result.handled),
+      code: result.rspCode || '00',
+      message: result.message || 'Confirm Success',
+    });
   } catch (error) {
-    console.error('VNPAY IPN error:', error.message);
-    return res.status(200).json({ RspCode: '99', Message: error.message || 'Unknown error' });
+    console.error('SePay webhook error:', error.message);
+    return res.status(200).json({ success: false, code: '99', message: error.message || 'Unknown error' });
   }
 });
 

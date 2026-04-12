@@ -3,6 +3,8 @@ import { Button, Card, Space, Table, Tag, message, Avatar, Popconfirm, Modal, Fo
 import { useEffect, useState } from 'react'
 import { getAllFoods, createFood, updateFood, deleteFood } from '../../services/adminFoodApi.js'
 
+const formatVnd = (value) => new Intl.NumberFormat('vi-VN').format(Number(value || 0))
+
 export default function FoodManagementAdminPage() {
   const [foods, setFoods] = useState([])
   const [loading, setLoading] = useState(true)
@@ -117,7 +119,7 @@ export default function FoodManagementAdminPage() {
       title: 'PRICE', 
       dataIndex: 'price', 
       key: 'price',
-      render: (price) => <span className="font-semibold">${Number(price).toFixed(2)}</span>
+      render: (price) => <span className="font-semibold">{formatVnd(price)} VNĐ</span>
     },
     {
       title: 'AR STATUS',
@@ -237,8 +239,16 @@ export default function FoodManagementAdminPage() {
           </div>
           
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="price" label="Price ($)" rules={[{ required: true }]}>
-              <InputNumber className="w-full" min={0} step={0.01} />
+            <Form.Item name="price" label="Giá (VNĐ)" rules={[{ required: true }]}>
+              <InputNumber
+                className="w-full"
+                min={0}
+                step={1000}
+                precision={0}
+                addonAfter="VNĐ"
+                formatter={(value) => formatVnd(value)}
+                parser={(value) => String(value || '').replace(/\D/g, '')}
+              />
             </Form.Item>
             <Form.Item name="is_available" label="Status" valuePropName="checked">
               <Switch checkedChildren="Available" unCheckedChildren="Hidden" />

@@ -6,7 +6,11 @@ import AdminStatCard from '../../components/molecules/admin/AdminStatCard.jsx'
 import { getAllOrders, getOrderStats, updateOrderStatus } from '../../services/adminOrderApi.js'
 
 function formatPrice(num) {
-  return `$${Number(num || 0).toFixed(2)}`
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  }).format(Number(num || 0))
 }
 
 export default function OrderManagementAdminPage() {
@@ -63,6 +67,26 @@ export default function OrderManagementAdminPage() {
     return <Tag color={color}>{status.toUpperCase()}</Tag>
   }
 
+  const renderPaidStatus = (paidStatus, orderStatus, record) => {
+    const paid = paidStatus === 'paid' || orderStatus === 'paid'
+    const canMarkPaid =
+      record?.order_type === 'takeaway' &&
+      record?.payment_method !== 'online' &&
+      !paid &&
+      orderStatus === 'picked_up'
+
+    return (
+      <Space size="small">
+        <Tag color={paid ? 'green' : 'default'}>{paid ? 'ĐÃ TRẢ' : 'CHƯA TRẢ'}</Tag>
+        {canMarkPaid && (
+          <Button size="small" type="primary" onClick={() => handleStatusChange(record._id, 'paid')}>
+            Mark Paid
+          </Button>
+        )}
+      </Space>
+    )
+  }
+
   const dineInColumns = [
     { title: 'ORDER ID', dataIndex: '_id', key: 'id', render: (id) => <span className="text-xs text-zinc-500">...{id.slice(-6)}</span> },
     { title: 'TABLE', dataIndex: 'table', key: 'table', render: (table) => <Tag>{table?.name || 'Unknown'}</Tag> },
@@ -117,6 +141,7 @@ export default function OrderManagementAdminPage() {
         )
     },
     { title: 'AMOUNT', dataIndex: 'total_amount', key: 'amount', render: (val) => formatPrice(val) },
+    { title: 'PAID STATUS', dataIndex: 'paid_status', key: 'paid_status', render: (value, record) => renderPaidStatus(value, record.status, record) },
     { title: 'STATUS', dataIndex: 'status', key: 'status', render: renderStatus },
     {
       title: 'ACTION',
@@ -128,7 +153,6 @@ export default function OrderManagementAdminPage() {
             {status === 'pending' && <Button size="small" onClick={() => handleStatusChange(record._id, 'cooking')}>Cook</Button>}
             {status === 'cooking' && <Button size="small" onClick={() => handleStatusChange(record._id, 'ready')}>Ready</Button>}
             {status === 'ready' && <Button size="small" onClick={() => handleStatusChange(record._id, 'picked_up')}>Pickup</Button>}
-            {status === 'picked_up' && <Button size="small" type="primary" onClick={() => handleStatusChange(record._id, 'paid')}>Pay</Button>}
           </Space>
         )
       },

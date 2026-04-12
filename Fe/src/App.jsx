@@ -5,6 +5,7 @@ import AdminLayout from './components/templates/admin/AdminLayout.jsx'
 import AppLayout from './components/templates/AppLayout.jsx'
 import CartPage from './pages/CartPage.jsx'
 import HomePage from './pages/HomePage.jsx'
+import PaymentPage from './pages/PaymentPage.jsx'
 import AdminManagementAdminPage from './pages/admin/AdminManagementAdminPage.jsx'
 import ContentManagementAdminPage from './pages/admin/ContentManagementAdminPage.jsx'
 import DashboardAdminPage from './pages/admin/DashboardAdminPage.jsx'
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/order" element={<HomePage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/payment/:orderId" element={<PaymentPage />} />
       </Route>
 
       <Route path="/auth" element={<ClientAuthLayout />}>
