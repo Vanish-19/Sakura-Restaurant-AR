@@ -23,7 +23,7 @@ export const update = asyncHandler(async (req, res) => {
 
 export const remove = asyncHandler(async (req, res) => {
   await adminUserService.deleteUser(req.params.id);
-  res.status(200).json({ success: true, message: 'Deleted successfully' });
+  res.status(200).json({ success: true, message: 'Xóa thành công' });
 });
 
 export const getStats = asyncHandler(async (req, res) => {

@@ -7,14 +7,14 @@ import {
 } from '../services/takeawayService.js';
 
 const createTakeawayOrder = asyncHandler(async (req, res) => {
-  const order = await svcCreateTakeawayOrder(req.body);
+  const order = await svcCreateTakeawayOrder(req.body, req.user?.id);
   if (req.io) req.io.to('admin').emit('new_takeaway_order', order);
   res.status(201).json({ success: true, data: order });
 });
 
 const getTakeawayOrdersByPhone = asyncHandler(async (req, res) => {
   const { phone } = req.query;
-  const orders = await svcGetTakeawayOrdersByPhone(phone);
+  const orders = await svcGetTakeawayOrdersByPhone(phone, req.user?.id);
   res.status(200).json({ success: true, count: orders.length, data: orders });
 });
 
@@ -26,7 +26,7 @@ const getTakeawayOrderById = asyncHandler(async (req, res) => {
 
 const cancelTakeawayOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const order = await svcCancelTakeawayOrder(id);
+  const order = await svcCancelTakeawayOrder(id, req.user?.id);
   res.status(200).json({ success: true, data: order });
 });
 

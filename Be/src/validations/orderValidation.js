@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const createOrderSchema = z.object({
   body: z.object({
+    customer_phone: z.string().min(8, 'Phone number is invalid').optional(),
     items: z.array(
       z.object({
         menu_item_id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid menu item ID (MongoDB ObjectId error)'),

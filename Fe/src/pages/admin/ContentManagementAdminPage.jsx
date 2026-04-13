@@ -21,7 +21,7 @@ export default function ContentManagementAdminPage() {
       if (res?.success) setArticles(res.data)
       if (statsRes?.success) setStats(statsRes.data)
     } catch (err) {
-      message.error('Failed to load articles')
+      message.error('Không thể tải danh sách bài viết')
     } finally {
       setLoading(false)
     }
@@ -34,10 +34,10 @@ export default function ContentManagementAdminPage() {
   const handleDelete = async (id) => {
     try {
       await deleteArticle(id)
-      message.success('Article deleted')
+      message.success('Đã xóa bài viết')
       fetchData()
     } catch (err) {
-      message.error('Failed to delete')
+      message.error('Không thể xóa bài viết')
     }
   }
 
@@ -65,16 +65,16 @@ export default function ContentManagementAdminPage() {
       const values = await form.validateFields()
       if (editingId) {
         await updateArticle(editingId, values)
-        message.success('Article updated')
+        message.success('Đã cập nhật bài viết')
       } else {
         await createArticle(values)
-        message.success('Article created')
+        message.success('Đã tạo bài viết mới')
       }
       setIsModalOpen(false)
       fetchData()
     } catch (err) {
       if (err.errorFields) return
-      message.error('Action failed')
+      message.error('Thao tác thất bại')
     }
   }
 
@@ -92,12 +92,12 @@ export default function ContentManagementAdminPage() {
         key: 'date',
         render: (date) => <span className="text-xs text-zinc-500">{new Date(date).toLocaleDateString()}</span>
     },
-    { title: 'AUTHOR', dataIndex: 'author', key: 'author' },
+    { title: 'TÁC GIẢ', dataIndex: 'author', key: 'author' },
     {
       title: 'STATUS',
       dataIndex: 'is_published',
       key: 'status',
-      render: (pub) => (pub ? <Tag color="green">Published</Tag> : <Tag color="default">Draft</Tag>)
+      render: (pub) => (pub ? <Tag color="green">Đã đăng</Tag> : <Tag color="default">Bản nháp</Tag>)
     },
     {
       title: 'ACTION',
@@ -105,7 +105,7 @@ export default function ContentManagementAdminPage() {
       render: (_, record) => (
         <Space size="small">
           <Button size="small" type="text" icon={<EditOutlined />} onClick={() => handleOpenModal(record)} />
-          <Popconfirm title="Delete this article?" onConfirm={() => handleDelete(record._id)}>
+          <Popconfirm title="Bạn có chắc muốn xóa bài viết này?" onConfirm={() => handleDelete(record._id)}>
             <Button size="small" type="text" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
@@ -114,9 +114,9 @@ export default function ContentManagementAdminPage() {
   ]
 
   const statItems = [
-    { key: 'published', label: 'PUBLISHED ARTICLES', value: stats.published },
-    { key: 'drafts', label: 'DRAFTS PENDING', value: stats.drafts },
-    { key: 'views', label: 'TOTAL VIEWS', value: articles.reduce((acc, curr) => acc + (curr.views || 0), 0) }
+    { key: 'published', label: 'BÀI ĐÃ ĐĂNG', value: stats.published },
+    { key: 'drafts', label: 'BẢN NHÁP', value: stats.drafts },
+    { key: 'views', label: 'TỔNG LƯỢT XEM', value: articles.reduce((acc, curr) => acc + (curr.views || 0), 0) }
   ]
 
   const trendingArticle = articles.find(a => a.is_published) || articles[0]
@@ -124,21 +124,21 @@ export default function ContentManagementAdminPage() {
   return (
     <div className="admin-page pb-20">
       <AdminSectionHeader
-        eyebrow="Editorial Studio"
-        title="Blog Management"
-        subtitle="Curate and publish stories that define Sakura experience"
-        action={<Button onClick={() => handleOpenModal()} className="admin-primary-btn" type="primary" icon={<PlusOutlined />}>Create New Post</Button>}
+        eyebrow="Phòng biên tập"
+        title="Quản lý bài viết"
+        subtitle="Biên soạn và xuất bản nội dung truyền tải trải nghiệm Sakura"
+        action={<Button onClick={() => handleOpenModal()} className="admin-primary-btn" type="primary" icon={<PlusOutlined />}>Tạo bài viết mới</Button>}
       />
 
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={14}>
           <Card className="admin-panel-card h-full">
-            <Tag color="red">Trending Now</Tag>
+            <Tag color="red">Nổi bật hiện tại</Tag>
             <h3 className="mt-3 text-3xl font-semibold">
-              {trendingArticle ? trendingArticle.title : 'Welcome to the Editorial Studio'}
+              {trendingArticle ? trendingArticle.title : 'Chào mừng đến khu biên tập nội dung'}
             </h3>
             <p className="mt-3 text-slate-500">
-              {trendingArticle ? `Author: ${trendingArticle.author} • ${trendingArticle.views || 0} views` : 'Begin publishing stories.'}
+              {trendingArticle ? `Tác giả: ${trendingArticle.author} • ${trendingArticle.views || 0} lượt xem` : 'Bắt đầu xuất bản nội dung mới.'}
             </p>
           </Card>
         </Col>
@@ -154,7 +154,7 @@ export default function ContentManagementAdminPage() {
         </Col>
       </Row>
 
-      <Card className="admin-panel-card mt-4" title="All Posts" bodyStyle={{ padding: 0 }}>
+      <Card className="admin-panel-card mt-4" title="Tất cả bài viết" bodyStyle={{ padding: 0 }}>
         <div className="px-5 pb-5 pt-3">
           <Table 
             columns={columns} 
@@ -167,36 +167,36 @@ export default function ContentManagementAdminPage() {
       </Card>
 
       <Modal
-        title={editingId ? "Edit Article" : "New Article"}
+        title={editingId ? 'Chỉnh sửa bài viết' : 'Bài viết mới'}
         open={isModalOpen}
         onOk={handleModalOk}
         onCancel={() => setIsModalOpen(false)}
         width={700}
       >
         <Form form={form} layout="vertical" className="mt-4">
-          <Form.Item name="title" label="Title" rules={[{ required: true }]}>
+          <Form.Item name="title" label="Tiêu đề" rules={[{ required: true }]}>
              <Input />
           </Form.Item>
           
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="category" label="Category">
-               <Input placeholder="News, Promotion, Editorial" />
+            <Form.Item name="category" label="Danh mục">
+              <Input placeholder="Tin tức, khuyến mãi, chia sẻ" />
             </Form.Item>
-            <Form.Item name="author" label="Author">
+            <Form.Item name="author" label="Tác giả">
                <Input />
             </Form.Item>
           </div>
 
-          <Form.Item name="image_url" label="Cover Image URL">
+          <Form.Item name="image_url" label="Đường dẫn ảnh bìa">
             <Input />
           </Form.Item>
 
-          <Form.Item name="content" label="Content" rules={[{ required: true }]}>
+          <Form.Item name="content" label="Nội dung" rules={[{ required: true }]}>
             <Input.TextArea rows={6} />
           </Form.Item>
 
-          <Form.Item name="is_published" label="Publish Status" valuePropName="checked">
-            <Switch checkedChildren="Published" unCheckedChildren="Draft" />
+          <Form.Item name="is_published" label="Trạng thái xuất bản" valuePropName="checked">
+            <Switch checkedChildren="Đã đăng" unCheckedChildren="Nháp" />
           </Form.Item>
         </Form>
       </Modal>

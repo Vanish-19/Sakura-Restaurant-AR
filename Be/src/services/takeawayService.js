@@ -3,14 +3,18 @@ import MenuItem from '../models/MenuItem.js';
 import Payment from '../models/Payment.js';
 import { createSepayPaymentLinkForOrder } from './sepayPaymentService.js';
 
-const createTakeawayOrder = async ({ customer_name, customer_phone, delivery_address, payment_method = 'cod', items }) => {
+const createTakeawayOrder = async ({ customer_name, customer_phone, delivery_address, payment_method = 'cod', items }, userId) => {
+  if (!userId) {
+    throw new Error('Cần đăng nhập để đặt đơn giao tận nơi');
+  }
+
   let total_amount = 0;
   const processedItems = [];
 
   for (const item of items) {
     const menuItem = await MenuItem.findById(item.menu_item_id);
     if (!menuItem || !menuItem.is_available) {
-      throw new Error(`Menu item ${item.menu_item_id} is unavailable or does not exist`);
+      throw new Error(`Món ${item.menu_item_id} không tồn tại hoặc đang tạm hết`);
     }
 
     total_amount += menuItem.price * item.quantity;
@@ -24,6 +28,7 @@ const createTakeawayOrder = async ({ customer_name, customer_phone, delivery_add
 
   const order = new Order({
     order_type: 'takeaway',
+    user: userId,
     customer_name,
     customer_phone,
     delivery_address,
@@ -55,8 +60,12 @@ const createTakeawayOrder = async ({ customer_name, customer_phone, delivery_add
   return createdOrder;
 };
 
-const getTakeawayOrdersByPhone = async (phone) => {
-  return await Order.find({ order_type: 'takeaway', customer_phone: phone })
+const getTakeawayOrdersByPhone = async (phone, userId) => {
+  const query = userId
+    ? { order_type: 'takeaway', user: userId }
+    : { order_type: 'takeaway', customer_phone: phone };
+
+  return await Order.find(query)
     .populate('items.menu_item', 'name image_url price')
     .sort({ createdAt: -1 });
 };
@@ -64,7 +73,7 @@ const getTakeawayOrdersByPhone = async (phone) => {
 const getTakeawayOrderById = async (id) => {
   const order = await Order.findOne({ _id: id, order_type: 'takeaway' })
     .populate('items.menu_item', 'name image_url price category');
-  if (!order) throw new Error('Takeaway order not found');
+  if (!order) throw new Error('Không tìm thấy đơn giao tận nơi');
 
   const payment = await Payment.findOne({ order: order._id, method: 'online' });
   const orderObject = order.toObject();
@@ -87,12 +96,15 @@ const getTakeawayOrderById = async (id) => {
   };
 };
 
-const cancelTakeawayOrder = async (id) => {
-  const order = await Order.findOne({ _id: id, order_type: 'takeaway' });
-  if (!order) throw new Error('Takeaway order not found');
+const cancelTakeawayOrder = async (id, userId) => {
+  const orderQuery = { _id: id, order_type: 'takeaway' };
+  if (userId) orderQuery.user = userId;
+
+  const order = await Order.findOne(orderQuery);
+  if (!order) throw new Error('Không tìm thấy đơn giao tận nơi');
 
   if (order.status === 'paid') {
-    throw new Error('Cannot cancel a paid order');
+    throw new Error('Không thể hủy đơn đã thanh toán');
   }
 
   order.status = 'cancelled';

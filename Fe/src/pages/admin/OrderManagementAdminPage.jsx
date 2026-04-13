@@ -1,9 +1,9 @@
-import { Card, Col, Row, Tag, message, Button, Space, Tabs } from 'antd'
+import { Card, Col, Row, Tag, message, Button, Space, Tabs, Popconfirm } from 'antd'
 import { useEffect, useState } from 'react'
 import AdminDataTable from '../../components/molecules/admin/AdminDataTable.jsx'
 import AdminSectionHeader from '../../components/molecules/admin/AdminSectionHeader.jsx'
 import AdminStatCard from '../../components/molecules/admin/AdminStatCard.jsx'
-import { getAllOrders, getOrderStats, updateOrderStatus } from '../../services/adminOrderApi.js'
+import { cancelOrder, deleteOrder, getAllOrders, getOrderStats, updateOrderStatus } from '../../services/adminOrderApi.js'
 
 function formatPrice(num) {
   return new Intl.NumberFormat('vi-VN', {
@@ -11,6 +11,20 @@ function formatPrice(num) {
     currency: 'VND',
     maximumFractionDigits: 0,
   }).format(Number(num || 0))
+}
+
+function formatDateTime(value) {
+  if (!value) return '--'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '--'
+
+  return new Intl.DateTimeFormat('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date)
 }
 
 export default function OrderManagementAdminPage() {
@@ -37,7 +51,7 @@ export default function OrderManagementAdminPage() {
       }
     } catch (err) {
       console.error(err)
-      message.error('Failed to load orders')
+      message.error('Không thể tải danh sách đơn hàng')
     } finally {
       setLoading(false)
     }
@@ -50,11 +64,33 @@ export default function OrderManagementAdminPage() {
   const handleStatusChange = async (id, newStatus) => {
     try {
       await updateOrderStatus(id, newStatus)
-      message.success(`Status updated to ${newStatus}`)
+      message.success(`Đã cập nhật trạng thái: ${newStatus}`)
       fetchOrders()
     } catch (err) {
       console.error(err)
-      message.error(err.message || 'Failed to update status')
+      message.error(err.message || 'Không thể cập nhật trạng thái')
+    }
+  }
+
+  const handleCancelOrder = async (id) => {
+    try {
+      await cancelOrder(id)
+      message.success('Đã hủy đơn hàng')
+      fetchOrders()
+    } catch (err) {
+      console.error(err)
+      message.error(err.message || 'Không thể hủy đơn hàng')
+    }
+  }
+
+  const handleDeleteOrder = async (id) => {
+    try {
+      await deleteOrder(id)
+      message.success('Đã xóa đơn hàng')
+      fetchOrders()
+    } catch (err) {
+      console.error(err)
+      message.error(err.message || 'Không thể xóa đơn hàng')
     }
   }
 
@@ -80,7 +116,7 @@ export default function OrderManagementAdminPage() {
         <Tag color={paid ? 'green' : 'default'}>{paid ? 'ĐÃ TRẢ' : 'CHƯA TRẢ'}</Tag>
         {canMarkPaid && (
           <Button size="small" type="primary" onClick={() => handleStatusChange(record._id, 'paid')}>
-            Mark Paid
+            Đánh dấu đã trả
           </Button>
         )}
       </Space>
@@ -89,7 +125,8 @@ export default function OrderManagementAdminPage() {
 
   const dineInColumns = [
     { title: 'ORDER ID', dataIndex: '_id', key: 'id', render: (id) => <span className="text-xs text-zinc-500">...{id.slice(-6)}</span> },
-    { title: 'TABLE', dataIndex: 'table', key: 'table', render: (table) => <Tag>{table?.name || 'Unknown'}</Tag> },
+    { title: 'THỜI GIAN TẠO', dataIndex: 'createdAt', key: 'createdAt', render: (value) => <span className="text-xs text-zinc-600">{formatDateTime(value)}</span> },
+    { title: 'BÀN', dataIndex: 'table', key: 'table', render: (table) => <Tag>{table?.name || 'Không rõ'}</Tag> },
     { 
       title: 'ITEMS', 
       dataIndex: 'items', 
@@ -107,11 +144,24 @@ export default function OrderManagementAdminPage() {
       key: 'action',
       render: (_, record) => {
         const { status } = record
+        const canCancel = !['cancelled', 'paid', 'picked_up'].includes(status)
+        const canDelete = status === 'cancelled'
+
         return (
           <Space size="small">
-            {status === 'pending' && <Button size="small" onClick={() => handleStatusChange(record._id, 'cooking')}>Cook</Button>}
-            {status === 'cooking' && <Button size="small" onClick={() => handleStatusChange(record._id, 'served')}>Serve</Button>}
-            {status === 'served' && <Button size="small" type="primary" onClick={() => handleStatusChange(record._id, 'paid')}>Pay</Button>}
+            {status === 'pending' && <Button size="small" onClick={() => handleStatusChange(record._id, 'cooking')}>Nấu</Button>}
+            {status === 'cooking' && <Button size="small" onClick={() => handleStatusChange(record._id, 'served')}>Phục vụ</Button>}
+            {status === 'served' && <Button size="small" type="primary" onClick={() => handleStatusChange(record._id, 'paid')}>Thanh toán</Button>}
+            {canCancel && (
+              <Popconfirm title="Bạn có chắc muốn hủy đơn này?" onConfirm={() => handleCancelOrder(record._id)}>
+                <Button size="small" danger>Hủy đơn</Button>
+              </Popconfirm>
+            )}
+            {canDelete && (
+              <Popconfirm title="Bạn có chắc muốn xóa vĩnh viễn?" onConfirm={() => handleDeleteOrder(record._id)}>
+                <Button size="small" type="default">Xóa</Button>
+              </Popconfirm>
+            )}
           </Space>
         )
       },
@@ -120,12 +170,13 @@ export default function OrderManagementAdminPage() {
 
   const takeawayColumns = [
     { title: 'ORDER ID', dataIndex: '_id', key: 'id', render: (id) => <span className="text-xs text-zinc-500">...{id.slice(-6)}</span> },
+    { title: 'THỜI GIAN TẠO', dataIndex: 'createdAt', key: 'createdAt', render: (value) => <span className="text-xs text-zinc-600">{formatDateTime(value)}</span> },
     { 
       title: 'CUSTOMER', 
       key: 'customer', 
       render: (_, row) => (
         <div>
-          <div className="font-medium text-xs">{row.customer_name || 'Walk-in'}</div>
+          <div className="font-medium text-xs">{row.customer_name || 'Khách lẻ'}</div>
           <div className="text-[10px] text-zinc-500">{row.customer_phone || ''}</div>
         </div>
       )
@@ -148,11 +199,24 @@ export default function OrderManagementAdminPage() {
       key: 'action',
       render: (_, record) => {
         const { status } = record
+        const canCancel = !['cancelled', 'paid', 'picked_up'].includes(status)
+        const canDelete = status === 'cancelled'
+
         return (
           <Space size="small">
-            {status === 'pending' && <Button size="small" onClick={() => handleStatusChange(record._id, 'cooking')}>Cook</Button>}
-            {status === 'cooking' && <Button size="small" onClick={() => handleStatusChange(record._id, 'ready')}>Ready</Button>}
-            {status === 'ready' && <Button size="small" onClick={() => handleStatusChange(record._id, 'picked_up')}>Pickup</Button>}
+            {status === 'pending' && <Button size="small" onClick={() => handleStatusChange(record._id, 'cooking')}>Nấu</Button>}
+            {status === 'cooking' && <Button size="small" onClick={() => handleStatusChange(record._id, 'ready')}>Sẵn sàng</Button>}
+            {status === 'ready' && <Button size="small" onClick={() => handleStatusChange(record._id, 'picked_up')}>Đã lấy</Button>}
+            {canCancel && (
+              <Popconfirm title="Bạn có chắc muốn hủy đơn này?" onConfirm={() => handleCancelOrder(record._id)}>
+                <Button size="small" danger>Hủy đơn</Button>
+              </Popconfirm>
+            )}
+            {canDelete && (
+              <Popconfirm title="Bạn có chắc muốn xóa vĩnh viễn?" onConfirm={() => handleDeleteOrder(record._id)}>
+                <Button size="small" type="default">Xóa</Button>
+              </Popconfirm>
+            )}
           </Space>
         )
       },
@@ -160,16 +224,16 @@ export default function OrderManagementAdminPage() {
   ]
 
   const statItems = [
-    { key: 't_orders', label: 'TODAY ORDERS', value: stats?.today_orders || 0, note: 'Since opening' },
-    { key: 't_rev', label: 'REVENUE', value: formatPrice(stats?.today_revenue), note: 'Only paid orders' },
-    { key: 'act_orders', label: 'IN PROGRESS', value: (stats?.by_status?.pending || 0) + (stats?.by_status?.cooking || 0), note: 'Kitchen workload' },
+    { key: 't_orders', label: 'ĐƠN HÔM NAY', value: stats?.today_orders || 0, note: 'Từ lúc mở cửa' },
+    { key: 't_rev', label: 'DOANH THU', value: formatPrice(stats?.today_revenue), note: 'Chỉ tính đơn đã thanh toán' },
+    { key: 'act_orders', label: 'ĐANG XỬ LÝ', value: (stats?.by_status?.pending || 0) + (stats?.by_status?.cooking || 0), note: 'Khối lượng bếp' },
   ]
 
   return (
     <div className="admin-page pb-20">
       <AdminSectionHeader
-        title="Order Management"
-        subtitle="Real-time control over kitchen pulse and dine-in/takeaway floor logistics"
+        title="Quản lý đơn hàng"
+        subtitle="Theo dõi trạng thái bếp và vận hành ăn tại chỗ/giao hàng theo thời gian thực"
       />
 
       <Row gutter={[16, 16]}>
@@ -187,12 +251,12 @@ export default function OrderManagementAdminPage() {
            items={[
              {
                key: '1',
-               label: <span className="font-semibold px-2">DINE-IN ORDERS</span>,
+               label: <span className="font-semibold px-2">ĐƠN ĂN TẠI CHỖ</span>,
                children: <AdminDataTable rowKey="_id" loading={loading} columns={dineInColumns} dataSource={dineInOrders} />
              },
              {
                key: '2',
-               label: <span className="font-semibold px-2">TAKEAWAY / DELIVERY</span>,
+               label: <span className="font-semibold px-2">ĐƠN MANG ĐI / GIAO HÀNG</span>,
                children: <AdminDataTable rowKey="_id" loading={loading} columns={takeawayColumns} dataSource={takeawayOrders} />
              }
            ]}
@@ -203,13 +267,13 @@ export default function OrderManagementAdminPage() {
         <Col xs={24} lg={16}>
           <Card className="admin-panel-card admin-warning-card h-full">
             <div className="admin-warning-card__quote">"Precision is the ingredient of perfection."</div>
-            <p>Ensure that all takeaway pickups are verified before handing over the bags.</p>
+            <p>Hãy xác minh đầy đủ thông tin trước khi giao đơn mang đi cho khách.</p>
           </Card>
         </Col>
         <Col xs={24} lg={8}>
-          <Card className="admin-panel-card h-full" title="New Manual Order">
-            <p>Click below to create quick order for phone bookings or walk-ins.</p>
-            <button type="button" className="admin-neutral-btn">Quick Create</button>
+          <Card className="admin-panel-card h-full" title="Tạo đơn thủ công">
+            <p>Nhấn bên dưới để tạo nhanh đơn đặt qua điện thoại hoặc khách lẻ.</p>
+            <button type="button" className="admin-neutral-btn">Tạo nhanh</button>
           </Card>
         </Col>
       </Row>

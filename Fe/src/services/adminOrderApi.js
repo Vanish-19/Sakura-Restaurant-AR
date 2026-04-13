@@ -14,6 +14,10 @@ export async function updateOrderStatus(id, status) {
 }
 
 export async function cancelOrder(id) {
+  return apiRequest(`/admin/orders/${id}/cancel`, { method: 'PATCH' });
+}
+
+export async function deleteOrder(id) {
   return apiRequest(`/admin/orders/${id}`, { method: 'DELETE' });
 }
 

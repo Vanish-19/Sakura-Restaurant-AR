@@ -20,7 +20,7 @@ export const createTakeawaySchema = z.object({
 
 export const getTakeawayByPhoneSchema = z.object({
   query: z.object({
-    phone: z.string().min(8, 'Phone number is required'),
+    phone: z.string().min(8, 'Phone number is required').optional(),
   })
 });
 

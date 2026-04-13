@@ -45,7 +45,7 @@ export default function DashboardAdminPage() {
       }
     } catch (err) {
       console.error(err)
-      message.error('Failed to load dashboard data')
+      message.error('Không thể tải dữ liệu bảng điều khiển')
     } finally {
       setLoading(false)
     }
@@ -69,18 +69,18 @@ export default function DashboardAdminPage() {
   const trendTotal = revenueTrend.reduce((sum, point) => sum + Number(point?.revenue || 0), 0)
 
   const statsDisplay = [
-    { key: 'revenue', title: 'Total Revenue', value: formatCurrency(s.revenue), delta: '+Real-time', icon: <WalletOutlined />, tone: 'red' },
-    { key: 'orders', title: 'Total Orders', value: s.totalOrders, delta: 'Lifetime', icon: <FireOutlined />, tone: 'dark' },
-    { key: 'newCustomers', title: 'New Today', value: s.newCustomers, delta: 'Joined', icon: <TeamOutlined />, tone: 'slate' },
-    { key: 'topDish', title: 'Top Dish', value: s.topDish.name, delta: `${s.topDish.count} Sold`, icon: <TrophyOutlined />, tone: 'ruby' },
+    { key: 'revenue', title: 'Tổng doanh thu', value: formatCurrency(s.revenue), delta: '+Thời gian thực', icon: <WalletOutlined />, tone: 'red' },
+    { key: 'orders', title: 'Tổng đơn hàng', value: s.totalOrders, delta: 'Toàn thời gian', icon: <FireOutlined />, tone: 'dark' },
+    { key: 'newCustomers', title: 'Khách mới hôm nay', value: s.newCustomers, delta: 'Đã tham gia', icon: <TeamOutlined />, tone: 'slate' },
+    { key: 'topDish', title: 'Món nổi bật', value: s.topDish.name, delta: `Đã bán ${s.topDish.count}`, icon: <TrophyOutlined />, tone: 'ruby' },
   ]
 
   return (
     <section className="space-y-5 pb-20">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-4xl font-bold leading-tight tracking-tight text-[#171717]">Daily Summary</h1>
-          <p className="mt-1.5 text-sm text-[#6d6f75]">{new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })} - Kitchen Pulse</p>
+          <h1 className="text-4xl font-bold leading-tight tracking-tight text-[#171717]">Tổng quan trong ngày</h1>
+          <p className="mt-1.5 text-sm text-[#6d6f75]">{new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })} - Nhịp bếp</p>
         </div>
         <button
           onClick={fetchData}
@@ -88,7 +88,7 @@ export default function DashboardAdminPage() {
           type="button"
         >
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-white" />
-          Refresh Stats
+          Làm mới số liệu
         </button>
       </header>
 
@@ -116,11 +116,11 @@ export default function DashboardAdminPage() {
         <article className="rounded-2xl border border-[#ebebed] bg-[#fcfcfd] p-5 shadow-[0_2px_12px_rgba(16,24,40,0.03)]">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-[28px] font-semibold leading-tight text-[#191a1b]">Revenue Performance</h2>
-              <p className="text-sm text-[#8a8d95]">Last 7 days revenue from paid orders</p>
+              <h2 className="text-[28px] font-semibold leading-tight text-[#191a1b]">Hiệu suất doanh thu</h2>
+              <p className="text-sm text-[#8a8d95]">Doanh thu 7 ngày gần nhất từ các đơn đã thanh toán</p>
             </div>
             <div className="rounded-lg border border-[#ececef] bg-white px-3 py-2 text-right">
-              <p className="text-[10px] uppercase tracking-[0.12em] text-[#8a8d95]">7-Day Total</p>
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[#8a8d95]">Tổng 7 ngày</p>
               <p className="text-sm font-semibold text-[#1a1b1d]">{formatCurrency(trendTotal)}</p>
             </div>
           </div>
@@ -130,7 +130,7 @@ export default function DashboardAdminPage() {
               <div className="flex h-full items-center justify-center text-center">
                 <div>
                   <WalletOutlined className="text-3xl text-zinc-300" />
-                  <p className="mt-2 text-xs font-medium uppercase tracking-widest text-zinc-400">No revenue data yet</p>
+                  <p className="mt-2 text-xs font-medium uppercase tracking-widest text-zinc-400">Chưa có dữ liệu doanh thu</p>
                 </div>
               </div>
             ) : (
@@ -160,27 +160,27 @@ export default function DashboardAdminPage() {
         </article>
 
         <aside className="rounded-2xl bg-gradient-to-b from-[#111111] to-[#2e1015] p-5 text-white shadow-[0_14px_28px_rgba(17,17,17,0.32)]">
-          <h3 className="text-[28px] font-semibold leading-tight">Kitchen Pulse</h3>
-          <p className="mt-1 text-xs text-white/60">Optimal operational windows</p>
+          <h3 className="text-[28px] font-semibold leading-tight">Trạng thái bếp</h3>
+          <p className="mt-1 text-xs text-white/60">Khung vận hành tối ưu</p>
 
           <div className="mt-6 space-y-3">
             <div className="rounded-xl bg-white/5 p-3.5 ring-1 ring-white/10">
-              <p className="text-[10px] uppercase tracking-[0.11em] text-white/65">Status</p>
+              <p className="text-[10px] uppercase tracking-[0.11em] text-white/65">Trạng thái</p>
               <p className="mt-2 flex items-center gap-2 text-lg font-semibold text-emerald-400">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                System Live
+                Hệ thống ổn định
               </p>
             </div>
             <div className="rounded-xl bg-white/5 p-3.5 ring-1 ring-white/10">
-              <p className="text-[10px] uppercase tracking-[0.11em] text-white/65">Wait Time Avg</p>
-              <p className="mt-2 text-lg font-semibold">14 Minutes</p>
+              <p className="text-[10px] uppercase tracking-[0.11em] text-white/65">Thời gian chờ trung bình</p>
+              <p className="mt-2 text-lg font-semibold">14 phút</p>
             </div>
           </div>
 
           <div className="mt-6 rounded-xl bg-gradient-to-r from-[#4c090f] to-[#740f1b] p-3.5 ring-1 ring-white/10">
-            <p className="text-[10px] uppercase tracking-[0.12em] text-white/65">Live Monitoring</p>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-white/65">Giám sát trực tiếp</p>
             <div className="mt-3 flex items-center gap-2">
-                <p className="text-[11px] text-white/80">Real-time data aggregation enabled from MongoDB Atlas cluster.</p>
+                <p className="text-[11px] text-white/80">Đang tổng hợp dữ liệu thời gian thực từ cụm MongoDB Atlas.</p>
             </div>
           </div>
         </aside>
@@ -189,8 +189,8 @@ export default function DashboardAdminPage() {
       <article className="rounded-2xl border border-[#e9e9eb] bg-[#fcfcfd] shadow-[0_2px_12px_rgba(16,24,40,0.03)]">
         <div className="flex items-start justify-between gap-4 border-b border-[#efeff1] px-5 py-4">
           <div>
-            <h3 className="text-[28px] font-semibold leading-tight text-[#191a1b]">Recent Orders</h3>
-            <p className="text-sm text-[#8a8d95]">Latest transactions across all service types</p>
+            <h3 className="text-[28px] font-semibold leading-tight text-[#191a1b]">Đơn hàng gần đây</h3>
+            <p className="text-sm text-[#8a8d95]">Các giao dịch mới nhất theo mọi hình thức phục vụ</p>
           </div>
         </div>
 
@@ -198,12 +198,12 @@ export default function DashboardAdminPage() {
           <table className="min-w-full">
             <thead>
               <tr className="text-left text-[10px] uppercase tracking-[0.12em] text-[#9699a2]">
-                <th className="px-5 py-3">Order Id</th>
-                <th className="px-5 py-3">Customer</th>
-                <th className="px-5 py-3">Items</th>
-                <th className="px-5 py-3">Time</th>
-                <th className="px-5 py-3">Amount</th>
-                <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3">Mã đơn</th>
+                <th className="px-5 py-3">Khách hàng</th>
+                <th className="px-5 py-3">Món</th>
+                <th className="px-5 py-3">Thời gian</th>
+                <th className="px-5 py-3">Số tiền</th>
+                <th className="px-5 py-3">Trạng thái</th>
               </tr>
             </thead>
             <tbody>
@@ -211,7 +211,7 @@ export default function DashboardAdminPage() {
                 <tr key={row.id} className="border-t border-[#efeff1] text-sm text-[#2a2b30]">
                   <td className="px-5 py-4 font-semibold text-xs">...{row.id.slice(-8).toUpperCase()}</td>
                   <td className="px-5 py-4">{row.customer}</td>
-                  <td className="px-5 py-4 text-[#656870]">{row.items_count} Product(s)</td>
+                  <td className="px-5 py-4 text-[#656870]">{row.items_count} món</td>
                   <td className="px-5 py-4 text-[#656870]">{new Date(row.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                   <td className="px-5 py-4 font-semibold">{formatCurrency(row.amount)}</td>
                   <td className="px-5 py-4">

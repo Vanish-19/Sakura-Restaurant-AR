@@ -21,7 +21,7 @@ export default function FoodManagementAdminPage() {
       }
     } catch (err) {
       console.error(err)
-      message.error('Failed to fetch food items')
+      message.error('Không thể tải danh sách món ăn')
     } finally {
       setLoading(false)
     }
@@ -34,10 +34,10 @@ export default function FoodManagementAdminPage() {
   const handleDelete = async (id) => {
     try {
       await deleteFood(id)
-      message.success('Item deleted')
+      message.success('Đã xóa món ăn')
       fetchFoods()
     } catch (err) {
-      message.error('Failed to delete item')
+      message.error('Không thể xóa món ăn')
     }
   }
 
@@ -82,16 +82,16 @@ export default function FoodManagementAdminPage() {
 
       if (editingId) {
         await updateFood(editingId, payload)
-        message.success('Item updated successfully')
+        message.success('Cập nhật món ăn thành công')
       } else {
         await createFood(payload)
-        message.success('Item created successfully')
+        message.success('Tạo món ăn thành công')
       }
       setIsModalOpen(false)
       fetchFoods()
     } catch (err) {
       if (err.errorFields) return // Validation error
-      message.error(err.message || 'Action failed')
+      message.error(err.message || 'Thao tác thất bại')
     }
   }
 
@@ -127,8 +127,8 @@ export default function FoodManagementAdminPage() {
       render: (_, row) => {
         const hasGlb = !!row.ar_models?.glb_url
         const hasUsdz = !!row.ar_models?.usdz_url
-        if (hasGlb || hasUsdz) return <Tag color="blue">Enabled</Tag>
-        return <Tag color="default">Missing</Tag>
+        if (hasGlb || hasUsdz) return <Tag color="blue">Đã bật</Tag>
+        return <Tag color="default">Thiếu</Tag>
       },
     },
     {
@@ -136,7 +136,7 @@ export default function FoodManagementAdminPage() {
       dataIndex: 'is_best_seller',
       key: 'bestSeller',
       render: (isBestSeller) => (
-        isBestSeller ? <Tag color="gold">Best Seller</Tag> : <Tag>Standard</Tag>
+        isBestSeller ? <Tag color="gold">Bán chạy</Tag> : <Tag>Thường</Tag>
       ),
     },
     {
@@ -144,7 +144,7 @@ export default function FoodManagementAdminPage() {
       dataIndex: 'is_available',
       key: 'status',
       render: (is_available) => (
-        is_available ? <Tag color="green">Available</Tag> : <Tag color="red">Hidden</Tag>
+        is_available ? <Tag color="green">Đang bán</Tag> : <Tag color="red">Đã ẩn</Tag>
       ),
     },
     {
@@ -153,7 +153,7 @@ export default function FoodManagementAdminPage() {
       render: (_, record) => (
         <Space size="small">
           <Button size="small" type="text" icon={<EditOutlined />} onClick={() => handleOpenModal(record)} />
-          <Popconfirm title="Are you sure?" onConfirm={() => handleDelete(record._id)}>
+          <Popconfirm title="Bạn có chắc muốn xóa món này?" onConfirm={() => handleDelete(record._id)}>
             <Button size="small" type="text" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
@@ -162,24 +162,24 @@ export default function FoodManagementAdminPage() {
   ]
 
   const stats = [
-    { key: 'total', title: 'TOTAL DISHES', value: foods.length, note: 'In catalog', tone: 'text-zinc-600', bar: 'bg-zinc-900' },
-    { key: 'best', title: 'BEST SELLER', value: foods.filter(f => f.is_best_seller).length, note: 'Priority dish list', tone: 'text-amber-600', bar: 'bg-amber-500' },
-    { key: 'ar', title: 'AR ENABLED', value: foods.filter(f => f.ar_models?.glb_url || f.ar_models?.usdz_url).length, note: 'Has 3D models', tone: 'text-blue-600', bar: 'bg-blue-600' },
-    { key: 'active', title: 'AVAILABLE', value: foods.filter(f => f.is_available).length, note: 'Ready to order', tone: 'text-emerald-600', bar: 'bg-emerald-600' },
+    { key: 'total', title: 'TỔNG MÓN ĂN', value: foods.length, note: 'Trong thực đơn', tone: 'text-zinc-600', bar: 'bg-zinc-900' },
+    { key: 'best', title: 'MÓN BÁN CHẠY', value: foods.filter(f => f.is_best_seller).length, note: 'Danh sách ưu tiên', tone: 'text-amber-600', bar: 'bg-amber-500' },
+    { key: 'ar', title: 'CÓ AR', value: foods.filter(f => f.ar_models?.glb_url || f.ar_models?.usdz_url).length, note: 'Có mô hình 3D', tone: 'text-blue-600', bar: 'bg-blue-600' },
+    { key: 'active', title: 'ĐANG BÁN', value: foods.filter(f => f.is_available).length, note: 'Sẵn sàng phục vụ', tone: 'text-emerald-600', bar: 'bg-emerald-600' },
   ]
 
   return (
     <div className="space-y-5 pb-20">
       <section className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-[44px] leading-[0.96] font-black tracking-[-0.03em] text-zinc-900">Food Management</h1>
+          <h1 className="text-[44px] leading-[0.96] font-black tracking-[-0.03em] text-zinc-900">Quản lý món ăn</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-            Manage your restaurant's digital catalog, update pricing, and upload AR models.
+            Quản lý thực đơn số, cập nhật giá bán và mô hình AR.
           </p>
         </div>
 
         <Button onClick={() => handleOpenModal()} icon={<PlusOutlined />} className="!h-9 !rounded-lg !border-0 !bg-rose-600 !px-4 !text-xs !font-bold !uppercase !text-white">
-          New Dish
+          Thêm món mới
         </Button>
       </section>
 
@@ -197,7 +197,7 @@ export default function FoodManagementAdminPage() {
       <Card className="!rounded-2xl !border !border-zinc-200 !shadow-none" bodyStyle={{ padding: 0 }}>
         <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
           <Space size={10}>
-            <h3 className="m-0 text-2xl font-extrabold tracking-tight text-zinc-900">Menu Catalog</h3>
+            <h3 className="m-0 text-2xl font-extrabold tracking-tight text-zinc-900">Danh mục món ăn</h3>
           </Space>
         </div>
 
@@ -215,25 +215,25 @@ export default function FoodManagementAdminPage() {
       </Card>
 
       <Modal
-        title={editingId ? "Update Dish" : "Create New Dish"}
+        title={editingId ? 'Cập nhật món ăn' : 'Tạo món ăn mới'}
         open={isModalOpen}
         onOk={handleModalOk}
         onCancel={() => setIsModalOpen(false)}
-        okText="Save"
+        okText="Lưu"
         width={600}
       >
         <Form form={form} layout="vertical" className="mt-4">
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="name" label="Dish Name" rules={[{ required: true }]}>
+            <Form.Item name="name" label="Tên món" rules={[{ required: true }]}>
               <Input />
             </Form.Item>
-            <Form.Item name="category" label="Category" rules={[{ required: true }]}>
+            <Form.Item name="category" label="Danh mục" rules={[{ required: true }]}>
               <Select>
                 <Select.Option value="sushi">Sushi</Select.Option>
                 <Select.Option value="ramen">Ramen</Select.Option>
-                <Select.Option value="appetizers">Appetizers</Select.Option>
-                <Select.Option value="dessert">Dessert</Select.Option>
-                <Select.Option value="drinks">Drinks</Select.Option>
+                <Select.Option value="appetizers">Khai vị</Select.Option>
+                <Select.Option value="dessert">Tráng miệng</Select.Option>
+                <Select.Option value="drinks">Đồ uống</Select.Option>
               </Select>
             </Form.Item>
           </div>
@@ -250,28 +250,28 @@ export default function FoodManagementAdminPage() {
                 parser={(value) => String(value || '').replace(/\D/g, '')}
               />
             </Form.Item>
-            <Form.Item name="is_available" label="Status" valuePropName="checked">
-              <Switch checkedChildren="Available" unCheckedChildren="Hidden" />
+            <Form.Item name="is_available" label="Trạng thái" valuePropName="checked">
+              <Switch checkedChildren="Đang bán" unCheckedChildren="Ẩn" />
             </Form.Item>
           </div>
 
-          <Form.Item name="is_best_seller" label="Best Seller" valuePropName="checked">
-            <Switch checkedChildren="Yes" unCheckedChildren="No" />
+          <Form.Item name="is_best_seller" label="Món bán chạy" valuePropName="checked">
+            <Switch checkedChildren="Có" unCheckedChildren="Không" />
           </Form.Item>
 
-          <Form.Item name="description" label="Description">
+          <Form.Item name="description" label="Mô tả">
             <Input.TextArea rows={2} />
           </Form.Item>
 
-          <Form.Item name="image_url" label="Image URL">
+          <Form.Item name="image_url" label="Đường dẫn ảnh">
             <Input />
           </Form.Item>
 
           <div className="grid grid-cols-2 gap-4 border-t pt-4 mt-2">
-            <Form.Item name="glb_url" label="AR Model (.glb) - Android/Web">
+            <Form.Item name="glb_url" label="Mô hình AR (.glb) - Android/Web">
               <Input placeholder="https://..." />
             </Form.Item>
-            <Form.Item name="usdz_url" label="AR Model (.usdz) - iOS">
+            <Form.Item name="usdz_url" label="Mô hình AR (.usdz) - iOS">
               <Input placeholder="https://..." />
             </Form.Item>
           </div>

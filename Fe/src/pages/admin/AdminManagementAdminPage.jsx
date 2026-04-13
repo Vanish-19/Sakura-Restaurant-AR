@@ -24,16 +24,17 @@ import {
 } from '@ant-design/icons'
 import { useEffect, useMemo, useState } from 'react'
 import { getAllAdmins, getAdminStats, toggleAdminStatus, registerAdmin } from '../../services/adminAccountApi.js'
+import { getAdminProfile } from '../../utils/authSession.js'
 
 const viewModes = [
-  { label: 'All', value: 'all' },
+  { label: 'Tất cả', value: 'all' },
   { label: 'Admin', value: 'admin' },
-  { label: 'Staff', value: 'staff' },
+  { label: 'Super Admin', value: 'super_admin' },
 ]
 
 const roleMeta = {
   'admin': { label: 'Admin', level: 'L-1', tone: 'text-rose-700 bg-rose-50 border-rose-100' },
-  'staff': { label: 'Staff', level: 'L-2', tone: 'text-sky-700 bg-sky-50 border-sky-100' },
+  'super_admin': { label: 'Super Admin', level: 'L-0', tone: 'text-purple-700 bg-purple-50 border-purple-100' },
 }
 
 function getInitials(name) {
@@ -47,12 +48,16 @@ function getInitials(name) {
 }
 
 export default function AdminManagementAdminPage() {
+  const [currentAdmin, setCurrentAdmin] = useState(() => getAdminProfile())
   const [viewMode, setViewMode] = useState('all')
   const [admins, setAdmins] = useState([])
   const [stats, setStats] = useState({ total: 0, active: 0, alerts: 0 })
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [form] = Form.useForm()
+
+  const currentRole = currentAdmin?.role === 'superAdmin' ? 'super_admin' : currentAdmin?.role
+  const isSuperAdmin = currentRole === 'super_admin'
 
   const fetchData = async () => {
     try {
@@ -62,37 +67,48 @@ export default function AdminManagementAdminPage() {
       if (res?.success) setAdmins(res.data)
       if (statsRes?.success) setStats(statsRes.data)
     } catch (err) {
-      message.error('Failed to load admin accounts')
+      message.error('Không thể tải danh sách tài khoản quản trị')
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
+    setCurrentAdmin(getAdminProfile())
     fetchData()
   }, [])
 
   const handleToggleStatus = async (id) => {
+    if (!isSuperAdmin) {
+      message.warning('Chỉ super admin mới được khóa hoặc mở tài khoản admin')
+      return
+    }
+
     try {
       await toggleAdminStatus(id)
-      message.success('Account status toggled')
+      message.success('Đã cập nhật trạng thái tài khoản')
       fetchData()
     } catch (err) {
-      message.error('Failed to update status')
+      message.error('Không thể cập nhật trạng thái')
     }
   }
 
   const handleRegister = async () => {
+    if (!isSuperAdmin) {
+      message.warning('Chỉ super admin mới được tạo tài khoản admin mới')
+      return
+    }
+
     try {
       const values = await form.validateFields()
       await registerAdmin(values)
-      message.success('New admin account created')
+      message.success('Đã tạo tài khoản quản trị mới')
       setIsModalOpen(false)
       form.resetFields()
       fetchData()
     } catch (err) {
       if (err.errorFields) return
-      message.error(err.message || 'Creation failed')
+      message.error(err.message || 'Tạo tài khoản thất bại')
     }
   }
 
@@ -151,47 +167,53 @@ export default function AdminManagementAdminPage() {
       ),
     },
     {
-      title: 'LAST LOGIN',
+      title: 'LẦN ĐĂNG NHẬP CUỐI',
       dataIndex: 'lastLogin',
       key: 'lastLogin',
-      render: (value) => <span className="text-[12px] font-medium text-zinc-600">{value ? new Date(value).toLocaleString() : 'Never'}</span>,
+      render: (value) => <span className="text-[12px] font-medium text-zinc-600">{value ? new Date(value).toLocaleString() : 'Chưa đăng nhập'}</span>,
     },
     {
       title: 'ACTION',
       key: 'action',
       render: (_, row) => (
-        <Popconfirm
-          title={`${row.status === 'Active' ? 'Deactivate' : 'Reactivate'} this account?`}
-          onConfirm={() => handleToggleStatus(row._id)}
-        >
-          <Button
-            size="small"
-            className={`!h-7 !rounded-md !px-3 !text-[10px] !font-semibold !uppercase !tracking-wide ${
-              row.status === 'Active'
-                ? '!border-rose-600 !bg-white !text-rose-600 hover:!bg-rose-50'
-                : '!border-emerald-600 !bg-emerald-600 !text-white hover:!bg-emerald-500'
-            }`}
+        isSuperAdmin ? (
+          <Popconfirm
+            title={`${row.status === 'Active' ? 'Khóa' : 'Mở lại'} tài khoản này?`}
+            onConfirm={() => handleToggleStatus(row._id)}
           >
-            {row.status === 'Active' ? 'Deactivate' : 'Reactivate'}
-          </Button>
-        </Popconfirm>
+            <Button
+              size="small"
+              className={`!h-7 !rounded-md !px-3 !text-[10px] !font-semibold !uppercase !tracking-wide ${
+                row.status === 'Active'
+                  ? '!border-rose-600 !bg-white !text-rose-600 hover:!bg-rose-50'
+                  : '!border-emerald-600 !bg-emerald-600 !text-white hover:!bg-emerald-500'
+              }`}
+            >
+              {row.status === 'Active' ? 'Khóa' : 'Mở lại'}
+            </Button>
+          </Popconfirm>
+        ) : (
+          <Tag className="!m-0 !rounded-full !border !border-zinc-200 !bg-zinc-50 !px-2 !py-0.5 !text-[10px] !font-semibold !text-zinc-500">
+            Chỉ super admin
+          </Tag>
+        )
       ),
     },
   ]
 
   const statsItems = [
-    { key: 'admins', label: 'TOTAL ACCOUNTS', value: stats.total, note: 'Platform users' },
-    { key: 'sessions', label: 'ACTIVE NOW', value: stats.active, note: 'Available staff' },
-    { key: 'alerts', label: 'SECURITY ALERTS', value: stats.alerts, note: 'System secure & verified' },
+    { key: 'admins', label: 'TỔNG TÀI KHOẢN', value: stats.total, note: 'Toàn bộ tài khoản hệ thống' },
+    { key: 'sessions', label: 'ĐANG HOẠT ĐỘNG', value: stats.active, note: 'Nhân sự trực tuyến' },
+    { key: 'alerts', label: 'CẢNH BÁO BẢO MẬT', value: stats.alerts, note: 'Hệ thống an toàn và đã xác thực' },
   ]
 
   return (
     <div className="space-y-5 pb-20">
       <section className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-[44px] leading-[0.95] font-black tracking-[-0.03em] text-zinc-900">Admin Management</h1>
+          <h1 className="text-[44px] leading-[0.95] font-black tracking-[-0.03em] text-zinc-900">Quản lý tài khoản admin</h1>
           <p className="mt-2 max-w-xl text-sm text-zinc-500">
-            Real-time control over permissions, sessions and security integrity of your operation team.
+            Theo dõi phân quyền, phiên đăng nhập và mức độ an toàn của đội vận hành theo thời gian thực.
           </p>
         </div>
         <Segmented options={viewModes} value={viewMode} onChange={setViewMode} className="!rounded-lg !bg-zinc-100 !p-1" />
@@ -219,12 +241,12 @@ export default function AdminManagementAdminPage() {
             <Space size={10}>
               <h3 className="m-0 text-[22px] leading-none font-extrabold tracking-tight text-zinc-900">Admin Accounts</h3>
               <Tag className="!rounded-full !border-rose-200 !bg-rose-50 !px-2 !py-0.5 !text-[10px] !font-bold !tracking-wide !text-rose-600">
-                LIVE
+                TRỰC TIẾP
               </Tag>
             </Space>
 
             <Space size={10}>
-              <Tooltip title="Refresh">
+              <Tooltip title="Làm mới">
                 <Button onClick={fetchData} shape="circle" icon={<ReloadOutlined />} className="!border-zinc-200 !text-zinc-600" />
               </Tooltip>
             </Space>
@@ -247,22 +269,22 @@ export default function AdminManagementAdminPage() {
           className="!rounded-2xl !border-none !bg-gradient-to-b !from-zinc-950 !to-rose-950 !text-white !shadow-none 2xl:col-span-3"
           bodyStyle={{ padding: 20 }}
         >
-          <h3 className="m-0 text-xl font-bold tracking-tight">Security Pulse</h3>
-          <p className="mt-1 text-xs text-zinc-300">Operational authentication windows</p>
+          <h3 className="m-0 text-xl font-bold tracking-tight">Trạng thái bảo mật</h3>
+          <p className="mt-1 text-xs text-zinc-300">Giám sát xác thực vận hành</p>
 
           <div className="mt-5 space-y-3">
             <div className="rounded-xl bg-zinc-900/70 p-3">
-              <div className="text-[10px] uppercase tracking-[0.15em] text-zinc-400">Strong Auth</div>
-              <div className="mt-1 text-base font-semibold">2FA + Device Bind</div>
+              <div className="text-[10px] uppercase tracking-[0.15em] text-zinc-400">Xác thực mạnh</div>
+              <div className="mt-1 text-base font-semibold">2FA + Ràng buộc thiết bị</div>
             </div>
             <div className="rounded-xl bg-zinc-900/70 p-3">
-              <div className="text-[10px] uppercase tracking-[0.15em] text-zinc-400">Session Timeout</div>
-              <div className="mt-1 text-base font-semibold">14 Minutes</div>
+              <div className="text-[10px] uppercase tracking-[0.15em] text-zinc-400">Hết hạn phiên</div>
+              <div className="mt-1 text-base font-semibold">14 phút</div>
             </div>
           </div>
 
           <div className="mt-5 rounded-xl border border-rose-900/40 bg-rose-950/50 p-3">
-            <div className="text-[10px] uppercase tracking-[0.14em] text-rose-200">Active Operators</div>
+            <div className="text-[10px] uppercase tracking-[0.14em] text-rose-200">Nhân sự đang trực</div>
             <div className="mt-2 flex items-center gap-2">
               {admins.slice(0, 3).map(a => (
                   <Avatar key={a._id} size={26} className="!bg-rose-700">{getInitials(a.name)}</Avatar>
@@ -280,7 +302,7 @@ export default function AdminManagementAdminPage() {
         >
           <p className="m-0 text-[34px] leading-none font-black tracking-tight">"Control is the foundation of trust."</p>
           <p className="mt-2 mb-0 max-w-2xl text-sm text-rose-100">
-            Keep account reviews weekly and enforce role-based permissions to ensure operational safety.
+            Duy trì kiểm tra tài khoản hằng tuần và phân quyền theo vai trò để bảo đảm an toàn vận hành.
           </p>
         </Card>
 
@@ -288,45 +310,49 @@ export default function AdminManagementAdminPage() {
           <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700">
             <UserAddOutlined className="text-lg" />
           </div>
-          <h4 className="m-0 text-lg font-bold text-zinc-900">New Admin Account</h4>
-          <p className="mt-1 text-xs text-zinc-500">Create secured account for operation lead or executive manager.</p>
+          <h4 className="m-0 text-lg font-bold text-zinc-900">Tạo tài khoản admin mới</h4>
+          <p className="mt-1 text-xs text-zinc-500">Tạo tài khoản bảo mật cho trưởng ca hoặc quản lý điều hành.</p>
           <Button
             block
             icon={<PlusOutlined />}
             onClick={() => setIsModalOpen(true)}
+            disabled={!isSuperAdmin}
             className="!mt-4 !h-10 !rounded-md !border-0 !bg-zinc-900 !text-[11px] !font-bold !uppercase !tracking-wide !text-white hover:!bg-zinc-800"
           >
-            Quick Create
+            Tạo nhanh
           </Button>
+          {!isSuperAdmin ? (
+            <p className="mt-2 text-[11px] text-zinc-500">Chỉ super admin mới có quyền tạo tài khoản admin.</p>
+          ) : null}
         </Card>
       </section>
 
       <Modal
-        title="Create New Admin Account"
+        title="Tạo tài khoản admin mới"
         open={isModalOpen}
         onOk={handleRegister}
         onCancel={() => setIsModalOpen(false)}
-        okText="Create"
+        okText="Tạo"
       >
         <Form form={form} layout="vertical" className="mt-4">
-          <Form.Item name="name" label="Full Name" rules={[{ required: true }]}>
+          <Form.Item name="name" label="Họ và tên" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="email" label="Email Address" rules={[{ required: true, type: 'email' }]}>
+          <Form.Item name="email" label="Địa chỉ email" rules={[{ required: true, type: 'email' }]}>
             <Input />
           </Form.Item>
           <div className="grid grid-cols-2 gap-4">
-             <Form.Item name="username" label="Username" rules={[{ required: true }]}>
+             <Form.Item name="username" label="Tên đăng nhập" rules={[{ required: true }]}>
                 <Input />
              </Form.Item>
-             <Form.Item name="role" label="Role" rules={[{ required: true }]}>
+             <Form.Item name="role" label="Vai trò" rules={[{ required: true }]}>
                 <Select>
                     <Select.Option value="admin">Admin</Select.Option>
-                    <Select.Option value="staff">Staff</Select.Option>
+                  <Select.Option value="super_admin">Super Admin</Select.Option>
                 </Select>
              </Form.Item>
           </div>
-          <Form.Item name="password" label="Password" rules={[{ required: true }]}>
+          <Form.Item name="password" label="Mật khẩu" rules={[{ required: true }]}>
              <Input.Password />
           </Form.Item>
         </Form>

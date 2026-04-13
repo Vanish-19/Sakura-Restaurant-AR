@@ -19,10 +19,14 @@ import adminArticleRoutes from './routes/adminArticleRoutes.js';
 import adminUserRoutes from './routes/adminUserRoutes.js';
 import adminAccountRoutes from './routes/adminAccountRoutes.js';
 import adminDashboardRoutes from './routes/adminDashboardRoutes.js';
+import userAuthRoutes from './routes/userAuthRoutes.js';
+import userOrderRoutes from './routes/userOrderRoutes.js';
 import { handleSepayWebhookEvent, buildSepayReturnRedirectUrl } from './services/sepayPaymentService.js';
+import { ensureJwtConfig } from './services/tokenService.js';
 
 // Khởi tạo Database MongoDB
 connectDB();
+ensureJwtConfig();
 
 const app = express();
 const httpServer = createServer(app);
@@ -94,6 +98,8 @@ app.use('/api/v1/orders', orderRoutes);         // Dine-in ordering (table sessi
 app.use('/api/v1/menu', menuRoutes);             // Menu browsing
 app.use('/api/v1/tables', tableRoutes);          // QR scan
 app.use('/api/v1/takeaway', takeawayRoutes);     // Takeaway/Delivery ordering
+app.use('/api/v1/auth', userAuthRoutes);         // Customer auth
+app.use('/api/v1/user/orders', userOrderRoutes); // Customer order history
 
 // ========== Admin Routes ==========
 app.use('/api/v1/admin/auth', adminAuthRoutes);       // Login/Register
@@ -105,6 +111,21 @@ app.use('/api/v1/admin/articles', adminArticleRoutes); // Content management
 app.use('/api/v1/admin/users', adminUserRoutes);      // Customer management
 app.use('/api/v1/admin/accounts', adminAccountRoutes);   // Admin account management
 app.use('/api/v1/admin/dashboard', adminDashboardRoutes); // Dashboard stats
+
+app.use((error, _req, res, _next) => {
+  const status = Number(error?.status || error?.statusCode || 500);
+  const message = error?.message || 'Internal Server Error';
+
+  if (status >= 500) {
+    console.error('Unhandled error:', message);
+  }
+
+  return res.status(status).json({
+    success: false,
+    error: message,
+    message,
+  });
+});
 
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {

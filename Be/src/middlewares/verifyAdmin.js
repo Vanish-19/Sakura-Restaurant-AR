@@ -1,6 +1,4 @@
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key_here';
+import { extractBearerToken, verifyAccessToken } from '../services/tokenService.js';
 
 /**
  * Middleware xác thực Admin qua JWT.
@@ -8,33 +6,73 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key_here';
  */
 export const verifyAdmin = (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    const token = extractBearerToken(req);
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Authorization token required' });
+    if (!token) {
+      return res.status(401).json({ error: 'Thiếu token xác thực admin' });
     }
 
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = verifyAccessToken(token);
+    const tokenType = String(decoded.type || '').toLowerCase();
+    const tokenScope = String(decoded.scope || '').toLowerCase();
+    const hasLegacyAdminType = tokenType === 'admin';
+    const hasScopedAccessToken = tokenType === 'access' && tokenScope === 'admin';
 
-    if (!decoded.role || !['admin', 'staff'].includes(decoded.role)) {
-      return res.status(403).json({ error: 'Insufficient permissions' });
+    if (!hasLegacyAdminType && !hasScopedAccessToken) {
+      return res.status(403).json({ error: 'Token admin không hợp lệ' });
     }
 
-    req.admin = decoded;
+    const normalizedRole =
+      decoded.role === 'superAdmin'
+        ? 'super_admin'
+        : decoded.role === 'staff'
+          ? 'admin'
+          : decoded.role
+
+    if (!normalizedRole || !['admin', 'super_admin'].includes(normalizedRole)) {
+      return res.status(403).json({ error: 'Không đủ quyền truy cập' });
+    }
+
+    req.admin = {
+      id: decoded.sub || decoded.id,
+      username: decoded.username || '',
+      role: normalizedRole,
+      email: decoded.email || '',
+      name: decoded.name || '',
+    };
     next();
-  } catch (error) {
-    return res.status(403).json({ error: 'Invalid or expired admin token' });
+  } catch {
+    return res.status(403).json({ error: 'Token admin không hợp lệ hoặc đã hết hạn' });
   }
 };
 
 /**
- * Middleware chỉ cho phép role admin (không cho staff).
+ * Middleware chỉ cho phép role admin.
  * Phải dùng SAU verifyAdmin.
  */
 export const adminOnly = (req, res, next) => {
   if (req.admin?.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin role required' });
+    return res.status(403).json({ error: 'Yêu cầu quyền admin' });
   }
   next();
+};
+
+/**
+ * Middleware chỉ cho phép role super admin.
+ * Phải dùng SAU verifyAdmin.
+ */
+export const superAdminOnly = (req, res, next) => {
+  if (req.admin?.role !== 'super_admin') {
+    return res.status(403).json({ error: 'Yêu cầu quyền super admin' });
+  }
+  next();
+};
+
+export const allowAdminRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!req.admin || !roles.includes(req.admin.role)) {
+      return res.status(403).json({ error: 'Không đủ quyền theo vai trò' });
+    }
+    next();
+  };
 };

@@ -11,19 +11,19 @@ export const getAllArticles = async (filter = {}) => {
 
 export const getArticleById = async (id) => {
   const article = await Article.findById(id);
-  if (!article) throw new Error('Article not found');
+  if (!article) throw new Error('Không tìm thấy bài viết');
   return article;
 };
 
 export const updateArticle = async (id, data) => {
   const updated = await Article.findByIdAndUpdate(id, data, { new: true });
-  if (!updated) throw new Error('Article not found');
+  if (!updated) throw new Error('Không tìm thấy bài viết');
   return updated;
 };
 
 export const deleteArticle = async (id) => {
   const deleted = await Article.findByIdAndDelete(id);
-  if (!deleted) throw new Error('Article not found');
+  if (!deleted) throw new Error('Không tìm thấy bài viết');
   return deleted;
 };
 

@@ -13,5 +13,5 @@ export const getStats = asyncHandler(async (req, res) => {
 
 export const toggleStatus = asyncHandler(async (req, res) => {
   const admin = await adminAccountService.toggleAdminStatus(req.params.id);
-  res.status(200).json({ success: true, message: 'Admin status updated', data: admin });
+  res.status(200).json({ success: true, message: 'Đã cập nhật trạng thái admin', data: admin });
 });

@@ -1,9 +1,11 @@
 import { ShoppingCartOutlined } from '@ant-design/icons'
 import { Badge, Button, Layout, message } from 'antd'
-import { useEffect, useRef } from 'react'
-import { Link, useLocation, useSearchParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import Brand from '../atoms/Brand.jsx'
+import { userLogout } from '../../services/authApi.js'
 import { useCart } from '../../contexts/CartContext.jsx'
+import { clearUserSession, getUserProfile } from '../../utils/authSession.js'
 import { getOrderSource } from '../../utils/orderSource.js'
 
 const { Header } = Layout
@@ -11,16 +13,41 @@ const { Header } = Layout
 export default function AppHeader({ variant = 'desktop' }) {
   const { totalItems } = useCart()
   const location = useLocation()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const orderSource = getOrderSource(searchParams)
+  const [userProfile, setUserProfile] = useState(() => getUserProfile())
+  const userDisplayName =
+    userProfile?.name ||
+    userProfile?.email ||
+    userProfile?.phone ||
+    ''
+  const isUserLoggedIn = Boolean(userDisplayName)
   const homePath = orderSource.mode === 'dine-in' ? '/order' : '/'
   const scopeKeyRef = useRef(null)
+
+  useEffect(() => {
+    setUserProfile(getUserProfile())
+  }, [location.pathname, location.search])
+
+  const handleLogout = async () => {
+    try {
+      await userLogout()
+    } catch {
+      // ignore API failures and clear client session anyway
+    }
+
+    clearUserSession()
+    setUserProfile(null)
+    message.success('Đăng xuất thành công')
+    navigate('/', { replace: true })
+  }
 
   useEffect(() => {
     const currentScopeKey =
       orderSource.mode === 'dine-in'
         ? `table:${orderSource.tableCode}`
-        : 'delivery'
+        : orderSource.mode
 
     if (scopeKeyRef.current === null) {
       scopeKeyRef.current = currentScopeKey
@@ -33,12 +60,15 @@ export default function AppHeader({ variant = 'desktop' }) {
 
     scopeKeyRef.current = currentScopeKey
     message.destroy()
-    message.info(
+    const notice =
       orderSource.mode === 'dine-in'
         ? `Đang ở ${orderSource.label}`
-        : 'Đang ở chế độ mua ship về',
-      1.8,
-    )
+        : orderSource.mode === 'delivery'
+          ? 'Đang ở chế độ giao tận nơi'
+          : orderSource.mode === 'pending-table'
+            ? 'Vui lòng chọn bàn để tiếp tục'
+            : 'Vui lòng chọn hình thức phục vụ'
+    message.info(notice, 1.8)
   }, [orderSource.mode, orderSource.tableCode, orderSource.label])
 
   const headerClassName =
@@ -62,27 +92,42 @@ export default function AppHeader({ variant = 'desktop' }) {
         </Link>
 
         <div className="flex items-center gap-2">
-          <div className="hidden rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-medium text-white/95 sm:block">
-            {orderSource.label}
-          </div>
+          {isUserLoggedIn ? (
+            <>
+              <div className="hidden items-center gap-2 rounded-full border border-white/25 bg-white/12 px-3 py-1.5 text-sm text-white sm:inline-flex">
+                <span className="text-white/75">Xin chào,</span>
+                <span className="max-w-[140px] truncate font-semibold">{userDisplayName}</span>
+              </div>
 
-          <Link to="/auth/login" className="hidden sm:inline-flex">
-            <Button
-              type="text"
-              className="!h-10 !rounded-full !border !border-white/30 !bg-transparent !px-4 !font-semibold !text-white !transition-all !duration-200 hover:!bg-white/15"
-            >
-              Login
-            </Button>
-          </Link>
+              <Button
+                type="text"
+                onClick={handleLogout}
+                className="!h-10 !rounded-full !border-0 !bg-white !px-4 !font-semibold !text-[#a0001b] !transition-all !duration-200 hover:!bg-[#ffe8ec]"
+              >
+                Đăng xuất
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link to="/auth/login" className="hidden sm:inline-flex">
+                <Button
+                  type="text"
+                  className="!h-10 !rounded-full !border !border-white/30 !bg-transparent !px-4 !font-semibold !text-white !transition-all !duration-200 hover:!bg-white/15"
+                >
+                  Đăng nhập
+                </Button>
+              </Link>
 
-          <Link to="/auth/register" className="hidden sm:inline-flex">
-            <Button
-              type="text"
-              className="!h-10 !rounded-full !border-0 !bg-white !px-4 !font-semibold !text-[#900020] !transition-all !duration-200 hover:!bg-white/90"
-            >
-              Register
-            </Button>
-          </Link>
+              <Link to="/auth/register" className="hidden sm:inline-flex">
+                <Button
+                  type="text"
+                  className="!h-10 !rounded-full !border-0 !bg-white !px-4 !font-semibold !text-[#900020] !transition-all !duration-200 hover:!bg-white/90"
+                >
+                  Đăng ký
+                </Button>
+              </Link>
+            </>
+          )}
 
           <Link to={{ pathname: '/cart', search: location.search }}>
             <Badge count={totalItems} size="small" offset={[-6, 6]}>
@@ -91,7 +136,7 @@ export default function AppHeader({ variant = 'desktop' }) {
                 icon={<ShoppingCartOutlined />}
                 className="!h-10 !rounded-full !border-0 !bg-white/15 !px-5 !font-semibold !text-white !transition-all !duration-200 hover:!-translate-y-0.5 hover:!bg-white/25 hover:!shadow-md active:!translate-y-0"
               >
-                Cart
+                Giỏ hàng
               </Button>
             </Badge>
           </Link>

@@ -64,7 +64,7 @@ const getOrderById = async (id) => {
   const order = await Order.findById(id)
     .populate('table', 'name')
     .populate('items.menu_item', 'name image_url price category');
-  if (!order) throw new Error('Order not found');
+  if (!order) throw new Error('Không tìm thấy đơn hàng');
 
   const [orderWithPayment] = await attachPaymentStatus([order]);
   return orderWithPayment;
@@ -72,7 +72,7 @@ const getOrderById = async (id) => {
 
 const updateOrderStatus = async (id, newStatus) => {
   const order = await Order.findById(id);
-  if (!order) throw new Error('Order not found');
+  if (!order) throw new Error('Không tìm thấy đơn hàng');
 
   // Validate trạng thái hợp lệ theo luồng
   const validTransitions = {
@@ -91,7 +91,7 @@ const updateOrderStatus = async (id, newStatus) => {
 
   const allowed = validTransitions[order.order_type]?.[order.status] || [];
   if (!allowed.includes(newStatus)) {
-    throw new Error(`Cannot change status from '${order.status}' to '${newStatus}' for ${order.order_type} order`);
+    throw new Error(`Không thể chuyển trạng thái từ '${order.status}' sang '${newStatus}' cho đơn ${order.order_type}`);
   }
 
   order.status = newStatus;
@@ -106,14 +106,27 @@ const updateOrderStatus = async (id, newStatus) => {
 
 const cancelOrder = async (id) => {
   const order = await Order.findById(id);
-  if (!order) throw new Error('Order not found');
+  if (!order) throw new Error('Không tìm thấy đơn hàng');
 
   if (['paid', 'cancelled', 'picked_up'].includes(order.status)) {
-    throw new Error(`Cannot cancel order with status '${order.status}'`);
+    throw new Error(`Không thể hủy đơn có trạng thái '${order.status}'`);
   }
 
   order.status = 'cancelled';
   return await order.save();
+};
+
+const hardDeleteOrder = async (id) => {
+  const order = await Order.findById(id);
+  if (!order) throw new Error('Không tìm thấy đơn hàng');
+
+  // Require cancel first to avoid accidental destructive deletion.
+  if (order.status !== 'cancelled') {
+    throw new Error('Chỉ được xóa vĩnh viễn đơn đã hủy');
+  }
+
+  await Order.findByIdAndDelete(id);
+  return { id, deleted: true };
 };
 
 const getOrderStats = async () => {
@@ -138,4 +151,4 @@ const getOrderStats = async () => {
   };
 };
 
-export { getAllOrders, getOrderById, updateOrderStatus, cancelOrder, getOrderStats };
+export { getAllOrders, getOrderById, updateOrderStatus, cancelOrder, hardDeleteOrder, getOrderStats };

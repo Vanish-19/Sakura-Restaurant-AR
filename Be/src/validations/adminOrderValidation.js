@@ -31,3 +31,9 @@ export const cancelOrderSchema = z.object({
     id: z.string().regex(objectIdRegex, 'Invalid order ID')
   })
 });
+
+export const hardDeleteOrderSchema = z.object({
+  params: z.object({
+    id: z.string().regex(objectIdRegex, 'Invalid order ID')
+  })
+});

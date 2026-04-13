@@ -11,18 +11,18 @@ export const getAllFoods = async (filter = {}) => {
 
 export const getFoodById = async (id) => {
   const food = await MenuItem.findById(id);
-  if (!food) throw new Error('Food item not found');
+  if (!food) throw new Error('Không tìm thấy món ăn');
   return food;
 };
 
 export const updateFood = async (id, data) => {
   const updated = await MenuItem.findByIdAndUpdate(id, data, { new: true });
-  if (!updated) throw new Error('Food item not found');
+  if (!updated) throw new Error('Không tìm thấy món ăn');
   return updated;
 };
 
 export const deleteFood = async (id) => {
   const deleted = await MenuItem.findByIdAndDelete(id);
-  if (!deleted) throw new Error('Food item not found');
+  if (!deleted) throw new Error('Không tìm thấy món ăn');
   return deleted;
 };

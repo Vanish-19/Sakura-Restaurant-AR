@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import CartItemRow from '../components/molecules/CartItemRow.jsx'
 import { useCart } from '../contexts/CartContext.jsx'
-import { createDineInOrder, createTakeawayOrder, getMenuItems } from '../services/orderApi.js'
+import { createDineInOrderWithUser, createTakeawayOrder, getMenuItems } from '../services/orderApi.js'
+import { getUserAccessToken, isUserLoggedIn } from '../utils/authSession.js'
 import { ensureTableToken } from '../utils/tableSession.js'
 import { getOrderSource } from '../utils/orderSource.js'
 
@@ -23,6 +24,7 @@ export default function CartPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [menuItems, setMenuItems] = useState([])
   const [deliveryForm] = Form.useForm()
+  const [dineInIdentityForm] = Form.useForm()
   const [paymentMethod, setPaymentMethod] = useState('cod')
 
   useEffect(() => {
@@ -52,6 +54,11 @@ export default function CartPage() {
 
   const continueShoppingTo = {
     pathname: orderSource.mode === 'dine-in' ? '/order' : '/',
+    search: searchParams.toString() ? `?${searchParams.toString()}` : '',
+  }
+
+  const orderHistoryTo = {
+    pathname: '/orders/history',
     search: searchParams.toString() ? `?${searchParams.toString()}` : '',
   }
 
@@ -118,20 +125,33 @@ export default function CartPage() {
         return
       }
 
+      if (orderSource.mode === 'delivery' && !isUserLoggedIn()) {
+        message.warning('Đơn giao tận nơi yêu cầu đăng nhập hoặc đăng ký tài khoản')
+        navigate(`/auth/login?redirect=${encodeURIComponent('/cart')}`)
+        return
+      }
+
       setIsSubmitting(true)
 
       try {
         let response
 
         if (orderSource.mode === 'dine-in') {
+          const activeUserToken = getUserAccessToken()
+          const loyaltyPhone = String(dineInIdentityForm.getFieldValue('customer_phone') || '').trim()
+
           const token = await ensureTableToken(orderSource.tableCode)
-          response = await createDineInOrder(
+          response = await createDineInOrderWithUser(
             token,
             lines.map((line) => ({
               menu_item_id: line.id,
               quantity: line.quantity,
               note: '',
             })),
+            {
+              userAccessToken: activeUserToken,
+              customerPhone: loyaltyPhone,
+            },
           )
         } else {
           const values = await deliveryForm.validateFields()
@@ -201,9 +221,21 @@ export default function CartPage() {
         clearCart()
         message.success(
           orderSource.mode === 'dine-in'
-            ? `Da gui order cho ${orderSource.label}`
-            : 'Da tao don giao hang thanh cong',
+            ? `Đã gửi đơn cho ${orderSource.label}`
+            : 'Đã tạo đơn giao hàng thành công',
         )
+
+        const shouldGoHistory = orderSource.mode === 'dine-in' || isUserLoggedIn()
+        if (shouldGoHistory) {
+          navigate(
+            {
+              pathname: '/orders/history',
+              search: searchParams.toString() ? `?${searchParams.toString()}` : '',
+            },
+            { replace: true },
+          )
+          return
+        }
 
         navigate(
           {
@@ -213,7 +245,7 @@ export default function CartPage() {
           { replace: true },
         )
       } catch (error) {
-        const text = error?.message || 'Khong the ket noi API'
+        const text = error?.message || 'Không thể kết nối máy chủ'
         message.error(text)
       } finally {
         setIsSubmitting(false)
@@ -221,14 +253,42 @@ export default function CartPage() {
     })()
   }
 
-  const summaryActionButtonClass =
-    'mt-3 h-12 w-full rounded-[12px] bg-gradient-to-r from-red-500 to-red-600 text-lg font-semibold text-white shadow-[0_6px_16px_rgba(220,38,38,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:from-red-400 hover:to-red-500 hover:shadow-[0_10px_22px_rgba(220,38,38,0.24)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60'
+  const renderDineInIdentityForm = () => {
+    return (
+      <Card className="rounded-2xl !border-[#e7e7ea] !shadow-[0_8px_22px_rgba(17,24,39,0.04)]" title="Thông tin tích điểm (tùy chọn)">
+        <Form form={dineInIdentityForm} layout="vertical" initialValues={{ customer_name: '', customer_phone: '' }}>
+          <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
+            <Form.Item label="Tên (tùy chọn)" name="customer_name" className="!mb-3">
+              <Input placeholder="Nguyễn Văn A" size="large" />
+            </Form.Item>
+
+            <Form.Item
+              label="Số điện thoại tích điểm"
+              name="customer_phone"
+              rules={[{ min: 8, message: 'Số điện thoại phải có ít nhất 8 ký tự' }]}
+              className="!mb-3"
+            >
+              <Input placeholder="0987654321" size="large" />
+            </Form.Item>
+          </div>
+          <div className="text-xs text-slate-500">
+            Khách ăn tại chỗ có thể bỏ qua bước này. Nếu nhập số điện thoại, hệ thống sẽ ghi nhận tích điểm cho bạn.
+          </div>
+        </Form>
+      </Card>
+    )
+  }
+
+  const summaryActionButtonClass = 'ui-btn-primary mt-3 h-12 w-full text-base disabled:cursor-not-allowed disabled:opacity-60'
 
   const continueShoppingClass =
-    'mt-3 flex h-12 w-full items-center justify-center rounded-xl border border-[#ddd7cb] bg-[#f9f9f6] text-[1.02rem] font-medium tracking-[0.01em] !text-[#3f3a37] visited:!text-[#3f3a37] no-underline font-[var(--font-heading)] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#b89b9b] hover:bg-white hover:!text-[#900020] hover:shadow-md active:translate-y-0'
+    'ui-btn-soft mt-3 flex h-12 w-full items-center justify-center text-[1.02rem] tracking-[0.01em] !text-[#3f3a37] visited:!text-[#3f3a37] no-underline font-[var(--font-heading)]'
+
+  const orderHistoryButtonClass =
+    'ui-btn-accent mt-3 flex h-12 w-full items-center justify-center text-[1rem] tracking-[0.01em] !text-[#b30d26] visited:!text-[#b30d26] no-underline'
 
   const renderDeliveryForm = () => (
-    <Card className="rounded-2xl !border-[#e7e7ea] !shadow-[0_8px_22px_rgba(17,24,39,0.04)]" title="Thông tin giao hàng">
+    <Card className="ui-form-card" title="Thông tin giao hàng">
       <Form
         form={deliveryForm}
         layout="vertical"
@@ -277,7 +337,7 @@ export default function CartPage() {
   )
 
   const renderPaymentMethods = () => (
-    <Card className="rounded-2xl !border-[#e7e7ea] !shadow-[0_8px_22px_rgba(17,24,39,0.04)]" title="Phương thức thanh toán">
+    <Card className="ui-form-card" title="Phương thức thanh toán">
       <Radio.Group
         value={paymentMethod}
         onChange={(event) => setPaymentMethod(event.target.value)}
@@ -314,7 +374,7 @@ export default function CartPage() {
   )
 
   const renderDeliverySummary = () => (
-    <Card className="rounded-2xl !border-[#e7e7ea] !shadow-[0_8px_22px_rgba(17,24,39,0.04)]" title="Tóm tắt giao hàng">
+    <Card className="ui-form-card" title="Tóm tắt giao hàng">
       <Space direction="vertical" size={8} className="w-full">
         <div className="flex items-center justify-between text-sm">
           <span className="text-slate-500">Tên người nhận</span>
@@ -326,26 +386,26 @@ export default function CartPage() {
         </div>
         <div className="flex items-center justify-between text-sm">
           <span className="text-slate-500">Thanh toán</span>
-          <span className="font-medium text-slate-700">{paymentMethod === 'online' ? 'Online' : 'COD'}</span>
+          <span className="font-medium text-slate-700">{paymentMethod === 'online' ? 'Trực tuyến' : 'COD'}</span>
         </div>
       </Space>
     </Card>
   )
 
   const renderSummaryCard = () => (
-    <Card className="rounded-2xl !border-[#e7e7ea] !shadow-[0_16px_34px_rgba(17,24,39,0.08)]" title="Order Summary">
+    <Card className="ui-card !shadow-[0_16px_34px_rgba(17,24,39,0.08)]" title="Tóm tắt đơn hàng">
       <div className="space-y-3 text-sm">
         <div className="flex items-center justify-between">
-          <div className="text-slate-500">Subtotal</div>
+          <div className="text-slate-500">Tạm tính</div>
           <div className="font-medium text-slate-700">{currency.format(subtotal)}</div>
         </div>
         <div className="flex items-center justify-between">
-          <div className="text-slate-500">Tax (10%)</div>
+          <div className="text-slate-500">Thuế (10%)</div>
           <div className="font-medium text-slate-700">{currency.format(tax)}</div>
         </div>
         <div className="border-t border-[#e5e7eb]" />
         <div className="flex items-center justify-between pt-1">
-          <div className="text-3xl font-bold text-slate-900">Total</div>
+          <div className="text-3xl font-bold text-slate-900">Tổng cộng</div>
           <div className="text-3xl font-extrabold text-red-600">{currency.format(total)}</div>
         </div>
 
@@ -355,11 +415,15 @@ export default function CartPage() {
           className={summaryActionButtonClass}
           disabled={isSubmitting}
         >
-          {isSubmitting ? 'Dang gui...' : checkoutLabel}
+          {isSubmitting ? 'Đang gửi...' : checkoutLabel}
         </button>
 
         <Link to={continueShoppingTo} className={continueShoppingClass}>
-          Continue Shopping
+          Tiếp tục chọn món
+        </Link>
+
+        <Link to={orderHistoryTo} className={orderHistoryButtonClass}>
+          Xem lịch sử gọi món
         </Link>
       </div>
     </Card>
@@ -370,20 +434,28 @@ export default function CartPage() {
       <div className="mb-5">
         <Typography.Title
           level={2}
-          className="!mb-1 !font-light font-[var(--font-heading)]"
+          className="ui-page-title"
         >
-          Your Cart
+          Giỏ hàng của bạn
         </Typography.Title>
         <div className="mt-2 inline-flex items-center rounded-full border border-[#f7c8cc] bg-[#ffe9eb] px-3 py-1.5 text-[12px] font-semibold tracking-[0.02em] text-[#a80f22] shadow-[0_4px_10px_rgba(229,62,86,0.12)]">
           {orderSource.mode === 'dine-in'
-            ? `カート • ${orderSource.label}`
-            : 'カート • Mua ship về'}
+            ? `Giỏ hàng • ${orderSource.label}`
+            : 'Giỏ hàng • Giao tận nơi'}
         </div>
       </div>
 
       {lines.length === 0 ? (
         <div className="py-12">
           <Empty description="Chưa có món nào trong giỏ." />
+          <div className="mx-auto mt-4 max-w-sm">
+            <Link
+              to={orderHistoryTo}
+              className="flex h-11 w-full items-center justify-center rounded-xl border border-[#f0b9c1] bg-[#fff2f4] text-[0.98rem] font-semibold !text-[#b30d26] no-underline transition-all duration-200 hover:-translate-y-0.5 hover:border-[#da8695] hover:bg-[#ffe6ea] hover:!text-[#98001b] hover:shadow-md"
+            >
+              Xem lịch sử gọi món
+            </Link>
+          </div>
         </div>
       ) : (
         <>
@@ -407,7 +479,9 @@ export default function CartPage() {
                   {renderDeliveryForm()}
                   {renderPaymentMethods()}
                 </div>
-              ) : null}
+              ) : (
+                renderDineInIdentityForm()
+              )}
 
               {renderSummaryCard()}
             </div>
@@ -435,7 +509,9 @@ export default function CartPage() {
                       {renderDeliverySummary()}
                     </div>
                   </div>
-                ) : null}
+                ) : (
+                  <div>{renderDineInIdentityForm()}</div>
+                )}
               </div>
 
               <div className="lg:sticky lg:top-20 lg:self-start">

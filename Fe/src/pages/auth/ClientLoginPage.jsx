@@ -1,23 +1,14 @@
 import { ArrowRightOutlined } from '@ant-design/icons'
 import { Button, Checkbox, Form, Input, notification } from 'antd'
-import { Link, useNavigate } from 'react-router-dom'
-
-function parseSavedAccount() {
-  const raw = localStorage.getItem('client_register_draft')
-  if (!raw) return null
-
-  try {
-    return JSON.parse(raw)
-  } catch {
-    return null
-  }
-}
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { userLogin } from '../../services/authApi.js'
+import { setUserSession } from '../../utils/authSession.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,32}$/
 
 const identityRules = [
-  { required: true, message: 'Please enter your email or username' },
+  { required: true, message: 'Vui lòng nhập email hoặc tên đăng nhập' },
   {
     validator: (_, value) => {
       const text = String(value || '').trim()
@@ -27,101 +18,97 @@ const identityRules = [
       const isUsername = USERNAME_REGEX.test(text)
 
       if (isEmail || isUsername) return Promise.resolve()
-      return Promise.reject(new Error('Use a valid email or username (3-32 chars)'))
+      return Promise.reject(new Error('Email hoặc tên đăng nhập không hợp lệ (3-32 ký tự)'))
     },
   },
 ]
 
 const passwordRules = [
-  { required: true, message: 'Please enter password' },
-  { min: 6, message: 'Password must be at least 6 characters' },
+  { required: true, message: 'Vui lòng nhập mật khẩu' },
+  { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
 ]
 
 export default function ClientLoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirectPath = searchParams.get('redirect') || ''
+  const registerHref = redirectPath
+    ? `/auth/register?redirect=${encodeURIComponent(redirectPath)}`
+    : '/auth/register'
 
-  const onFinish = (values) => {
-    const savedAccount = parseSavedAccount()
+  const onFinish = async (values) => {
     const identity = values.identity?.trim()
     const password = values.password || ''
 
-    if (savedAccount) {
-      const accountMatched =
-        identity === savedAccount.email || identity === savedAccount.fullName
+    try {
+      const result = await userLogin(identity, password)
+      const accessToken = result?.accessToken || result?.token || ''
+      const refreshToken = result?.refreshToken || ''
+      const user = result?.user || null
 
-      if (!accountMatched) {
-        notification.error({
-          message: 'Login failed',
-          description: 'Wrong account. Please check email/username.',
-          placement: 'topRight',
-        })
-        return
+      if (!accessToken || !refreshToken) {
+        throw new Error('Thiếu thông tin token từ máy chủ')
       }
 
-      if (password !== savedAccount.password) {
-        notification.error({
-          message: 'Login failed',
-          description: 'Wrong password. Please try again.',
-          placement: 'topRight',
-        })
-        return
-      }
-    }
+      setUserSession({ accessToken, refreshToken, user })
 
-    const payload = {
-      emailOrUsername: identity,
-      loginAt: new Date().toISOString(),
-    }
+      notification.success({
+        message: 'Đăng nhập thành công',
+        description: 'Chào mừng bạn quay lại Sakura Restaurant.',
+        placement: 'topRight',
+      })
 
-    localStorage.setItem('client_login_state', JSON.stringify(payload))
-    notification.success({
-      message: 'Login successful',
-      description: 'Welcome back to Sakura Restaurant.',
-      placement: 'topRight',
-    })
-    navigate('/')
+      const redirectPath = searchParams.get('redirect') || '/'
+      navigate(redirectPath)
+    } catch (error) {
+      notification.error({
+        message: 'Đăng nhập thất bại',
+        description: error?.message || 'Sai tài khoản hoặc mật khẩu.',
+        placement: 'topRight',
+      })
+    }
   }
 
   return (
     <div className="client-auth-card-wrap">
-      <div className="client-auth-form-title">Welcome Back</div>
+      <div className="client-auth-form-title">Chào mừng quay lại</div>
       <div className="client-auth-form-subtitle">
-        Discover elevated Japanese cuisine.
+        Khám phá tinh hoa ẩm thực Nhật Bản.
       </div>
 
       <Form layout="vertical" onFinish={onFinish} className="client-auth-form">
-        <Form.Item label="EMAIL OR USERNAME" name="identity" rules={identityRules}>
-          <Input placeholder="Enter your credentials" />
+        <Form.Item label="EMAIL HOẶC TÊN ĐĂNG NHẬP" name="identity" rules={identityRules}>
+          <Input placeholder="Nhập thông tin đăng nhập" />
         </Form.Item>
 
-        <Form.Item label="PASSWORD" name="password" rules={passwordRules}>
+        <Form.Item label="MẬT KHẨU" name="password" rules={passwordRules}>
           <Input.Password placeholder="........" />
         </Form.Item>
 
         <div className="client-auth-inline-row">
-          <Checkbox className="client-auth-checkbox">Remember me</Checkbox>
+          <Checkbox className="client-auth-checkbox">Ghi nhớ đăng nhập</Checkbox>
           <Link className="client-auth-link-muted" to="/auth/login">
-            Forgot password?
+            Quên mật khẩu?
           </Link>
         </div>
 
         <Button htmlType="submit" type="primary" className="client-auth-submit" icon={<ArrowRightOutlined />} iconPosition="end">
-          Sign In
+          Đăng nhập
         </Button>
       </Form>
 
-      <div className="client-auth-divider">CONTINUE WITH</div>
+      <div className="client-auth-divider">HOẶC TIẾP TỤC VỚI</div>
       <div className="client-auth-social-row">
         <button type="button" className="client-auth-social-btn">Google</button>
         <button type="button" className="client-auth-social-btn">Facebook</button>
       </div>
 
       <div className="client-auth-bottom-text">
-        Don't have an account? <Link to="/auth/register">Reserve Your Seat</Link>
+        Chưa có tài khoản? <Link to={registerHref}>Đăng ký ngay</Link>
       </div>
 
       <div className="client-auth-bottom-text client-auth-bottom-text--alt">
-        Ăn tại chỗ? <Link to="/order">Skip vào trang chủ</Link>
+        Ăn tại chỗ? <Link to="/order">Vào thẳng trang gọi món</Link>
       </div>
     </div>
   )

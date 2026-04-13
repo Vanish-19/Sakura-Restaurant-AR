@@ -21,7 +21,7 @@ export default function UserManagementAdminPage() {
       if (res?.success) setUsers(res.data)
       if (statsRes?.success) setStats(statsRes.data)
     } catch (err) {
-      message.error('Failed to load users')
+      message.error('Không thể tải danh sách khách hàng')
     } finally {
       setLoading(false)
     }
@@ -34,10 +34,10 @@ export default function UserManagementAdminPage() {
   const handleDelete = async (id) => {
     try {
       await deleteUser(id)
-      message.success('User deleted')
+      message.success('Đã xóa khách hàng')
       fetchData()
     } catch (err) {
-      message.error('Failed to delete')
+      message.error('Không thể xóa khách hàng')
     }
   }
 
@@ -63,16 +63,16 @@ export default function UserManagementAdminPage() {
       const values = await form.validateFields()
       if (editingId) {
         await updateUser(editingId, values)
-        message.success('User updated')
+        message.success('Đã cập nhật khách hàng')
       } else {
         await createUser(values)
-        message.success('User created')
+        message.success('Đã tạo khách hàng mới')
       }
       setIsModalOpen(false)
       fetchData()
     } catch (err) {
       if (err.errorFields) return
-      message.error('Action failed')
+      message.error('Thao tác thất bại')
     }
   }
 
@@ -109,7 +109,7 @@ export default function UserManagementAdminPage() {
       }
     },
     { 
-        title: 'JOINED DATE', 
+      title: 'NGÀY THAM GIA', 
         dataIndex: 'createdAt', 
         key: 'date',
         render: (date) => <span className="text-xs text-zinc-500">{new Date(date).toLocaleDateString()}</span>
@@ -120,7 +120,7 @@ export default function UserManagementAdminPage() {
       render: (_, record) => (
         <Space size="small">
           <Button size="small" type="text" icon={<EditOutlined />} onClick={() => handleOpenModal(record)} />
-          <Popconfirm title="Delete this user?" onConfirm={() => handleDelete(record._id)}>
+          <Popconfirm title="Bạn có chắc muốn xóa khách hàng này?" onConfirm={() => handleDelete(record._id)}>
             <Button size="small" type="text" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
@@ -129,16 +129,16 @@ export default function UserManagementAdminPage() {
   ]
 
   const statItems = [
-    { key: 'total', label: 'TOTAL USERS', value: stats.total, note: 'Since beginning' },
-    { key: 'active', label: 'VERIFIED USERS', value: stats.active, note: 'Passed email check' },
+    { key: 'total', label: 'TỔNG KHÁCH HÀNG', value: stats.total, note: 'Từ khi bắt đầu' },
+    { key: 'active', label: 'ĐÃ XÁC THỰC', value: stats.active, note: 'Đã qua kiểm tra email' },
   ]
 
   return (
     <div className="admin-page pb-20">
       <AdminSectionHeader
-        title="Customer Management"
-        subtitle="Manage end-user accounts, memberships and verified statuses."
-        action={<Button onClick={() => handleOpenModal()} className="admin-primary-btn" type="primary" icon={<PlusOutlined />}>Add Customer</Button>}
+        title="Quản lý khách hàng"
+        subtitle="Quản lý tài khoản người dùng, hạng thành viên và trạng thái xác thực."
+        action={<Button onClick={() => handleOpenModal()} className="admin-primary-btn" type="primary" icon={<PlusOutlined />}>Thêm khách hàng</Button>}
       />
 
       <Row gutter={[16, 16]}>
@@ -149,7 +149,7 @@ export default function UserManagementAdminPage() {
         ))}
       </Row>
 
-      <Card className="admin-panel-card mt-4" title="Customer Database" bodyStyle={{ padding: 0 }}>
+      <Card className="admin-panel-card mt-4" title="Cơ sở dữ liệu khách hàng" bodyStyle={{ padding: 0 }}>
         <div className="px-5 pb-5 pt-3">
           <Table 
             columns={columns} 
@@ -162,34 +162,34 @@ export default function UserManagementAdminPage() {
       </Card>
 
       <Modal
-        title={editingId ? "Edit Customer" : "New Customer"}
+        title={editingId ? 'Chỉnh sửa khách hàng' : 'Khách hàng mới'}
         open={isModalOpen}
         onOk={handleModalOk}
         onCancel={() => setIsModalOpen(false)}
         width={500}
       >
         <Form form={form} layout="vertical" className="mt-4">
-          <Form.Item name="name" label="Full Name" rules={[{ required: true }]}>
+          <Form.Item name="name" label="Họ và tên" rules={[{ required: true }]}>
              <Input />
           </Form.Item>
           
-          <Form.Item name="email" label="Email Address" rules={[{ required: true, type: 'email' }]}>
+          <Form.Item name="email" label="Địa chỉ email" rules={[{ required: true, type: 'email' }]}>
              <Input />
           </Form.Item>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="role" label="Membership Role" rules={[{ required: true }]}>
+            <Form.Item name="role" label="Hạng thành viên" rules={[{ required: true }]}>
                <Select>
-                 <Select.Option value="Guest">Guest</Select.Option>
-                 <Select.Option value="Pro Member">Pro Member</Select.Option>
-                 <Select.Option value="Platinum Member">Platinum Member</Select.Option>
+                 <Select.Option value="Guest">Khách thường</Select.Option>
+                 <Select.Option value="Pro Member">Thành viên Pro</Select.Option>
+                 <Select.Option value="Platinum Member">Thành viên Platinum</Select.Option>
                </Select>
             </Form.Item>
-            <Form.Item name="status" label="Account Status" rules={[{ required: true }]}>
+            <Form.Item name="status" label="Trạng thái tài khoản" rules={[{ required: true }]}>
                <Select>
-                 <Select.Option value="Pending">Pending</Select.Option>
-                 <Select.Option value="Verified">Verified</Select.Option>
-                 <Select.Option value="Inactive">Inactive</Select.Option>
+                 <Select.Option value="Pending">Chờ xác thực</Select.Option>
+                 <Select.Option value="Verified">Đã xác thực</Select.Option>
+                 <Select.Option value="Inactive">Ngưng hoạt động</Select.Option>
                </Select>
             </Form.Item>
           </div>

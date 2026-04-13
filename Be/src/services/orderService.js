@@ -2,10 +2,10 @@ import Order from '../models/Order.js';
 import MenuItem from '../models/MenuItem.js';
 import Table from '../models/Table.js';
 
-const createNewOrder = async (tableId, itemsData) => {
+const createNewOrder = async (tableId, itemsData, userId = null, customerPhone = '') => {
   // 1. Kiểm tra Table tồn tại
   const table = await Table.findById(tableId);
-  if (!table) throw new Error('Table not found');
+  if (!table) throw new Error('Không tìm thấy bàn');
 
   // 2. Map dữ liệu món ăn và kiểm tra giá trị thực từ DB
   let total_amount = 0;
@@ -14,7 +14,7 @@ const createNewOrder = async (tableId, itemsData) => {
   for (const item of itemsData) {
     const menuItem = await MenuItem.findById(item.menu_item_id);
     if (!menuItem || !menuItem.is_available) {
-      throw new Error(`Menu item ${item.menu_item_id} is unavailable or does not exist`);
+      throw new Error(`Món ${item.menu_item_id} không tồn tại hoặc đang tạm hết`);
     }
 
     const price = menuItem.price;
@@ -30,7 +30,10 @@ const createNewOrder = async (tableId, itemsData) => {
 
   // 3. Tạo order mới trong MongoDB
   const newOrder = new Order({
+    order_type: 'dine_in',
     table: tableId,
+    user: userId || undefined,
+    customer_phone: customerPhone || undefined,
     items: processedItems,
     total_amount
   });
@@ -58,8 +61,15 @@ const updateOrderStatus = async (orderId, newStatus) => {
     { new: true }
   ).populate('table', 'name');
 
-  if (!updatedOrder) throw new Error('Order not found');
+  if (!updatedOrder) throw new Error('Không tìm thấy đơn hàng');
   return updatedOrder;
 };
 
-export { createNewOrder, getKitchenOrders, updateOrderStatus };
+const getOrdersByTableSession = async (tableId) => {
+  return await Order.find({ table: tableId })
+    .populate('table', 'name')
+    .populate('items.menu_item', 'name image_url price category')
+    .sort({ createdAt: -1 });
+};
+
+export { createNewOrder, getKitchenOrders, updateOrderStatus, getOrdersByTableSession };

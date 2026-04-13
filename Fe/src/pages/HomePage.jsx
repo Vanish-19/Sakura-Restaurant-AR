@@ -1,6 +1,6 @@
 import { RestOutlined, ScanOutlined } from '@ant-design/icons'
 import { message } from 'antd'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import FeaturePill from '../components/molecules/FeaturePill.jsx'
 import ServiceTypeModal from '../components/organisms/ServiceTypeModal.jsx'
@@ -12,15 +12,26 @@ import { getMenuItems } from '../services/orderApi.js'
 import { ensureTableToken } from '../utils/tableSession.js'
 import {
   clearLockedTableCode,
+  clearSavedServiceMode,
+  getSavedServiceMode,
   getLockedTableCode,
   getOrderSource,
   lockTableCode,
+  setSavedServiceMode,
 } from '../utils/orderSource.js'
+import { getUserAccessToken } from '../utils/authSession.js'
 
 function toCategoryLabel(key) {
   const value = String(key || '').toLowerCase()
-  if (!value || value === 'all') return 'All'
+  if (!value || value === 'all') return 'Tất cả'
   return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+function normalizeTableCode(value) {
+  const raw = String(value || '').trim().toUpperCase()
+  const digitsOnly = raw.replace(/\D/g, '')
+  if (digitsOnly) return digitsOnly.padStart(2, '0')
+  return raw
 }
 
 export default function HomePage() {
@@ -32,7 +43,9 @@ export default function HomePage() {
   const isAndroidPreview = searchParams.get('preview') === 'android'
   const [menuItems, setMenuItems] = useState([])
   const [serviceModalOpen, setServiceModalOpen] = useState(false)
+  const [tableModalOpen, setTableModalOpen] = useState(false)
   const [isScanningQr, setIsScanningQr] = useState(false)
+  const guestRefreshResetRef = useRef(false)
   const orderSource = getOrderSource(searchParams)
 
   useEffect(() => {
@@ -66,7 +79,7 @@ export default function HomePage() {
       ),
     ).map((key) => ({ key, label: toCategoryLabel(key) }))
 
-    return fromMenu.length > 0 ? [{ key: 'all', label: 'All' }, ...fromMenu] : []
+    return fromMenu.length > 0 ? [{ key: 'all', label: 'Tất cả' }, ...fromMenu] : []
   }, [menuItems])
 
   const categoryLabelByKey = useMemo(() => {
@@ -82,16 +95,39 @@ export default function HomePage() {
   useEffect(() => {
     let cancelled = false
 
-    const normalizeTableCode = (value) => {
+    const normalizeQueryTableCode = (value) => {
       if (value === null || value === undefined) return null
-      const cleaned = String(value).trim().toUpperCase().replace(/\s+/g, '-')
+      const cleaned = normalizeTableCode(value)
       return cleaned || null
     }
 
     const syncOrderSource = async () => {
+      const isLoggedIn = Boolean(getUserAccessToken())
+
+      if (!isLoggedIn && !guestRefreshResetRef.current) {
+        guestRefreshResetRef.current = true
+        clearLockedTableCode()
+        clearSavedServiceMode()
+
+        const hasServiceQuery =
+          searchParams.has('table') ||
+          searchParams.has('tableId') ||
+          searchParams.has('ban')
+
+        if (hasServiceQuery) {
+          const next = new URLSearchParams(searchParams)
+          next.delete('table')
+          next.delete('tableId')
+          next.delete('ban')
+          setSearchParams(next, { replace: true })
+          return
+        }
+      }
+
       const locked = getLockedTableCode()
 
       if (locked) {
+        setSavedServiceMode('dine-in')
         const currentTable = searchParams.get('table')
         if (currentTable !== locked) {
           const next = new URLSearchParams(searchParams)
@@ -101,6 +137,7 @@ export default function HomePage() {
           setSearchParams(next, { replace: true })
         }
         setServiceModalOpen(false)
+        setTableModalOpen(false)
         return
       }
 
@@ -108,10 +145,25 @@ export default function HomePage() {
         searchParams.get('table') ||
         searchParams.get('tableId') ||
         searchParams.get('ban')
-      const normalized = normalizeTableCode(queryTable)
+      const normalized = normalizeQueryTableCode(queryTable)
 
       if (!normalized) {
-        setServiceModalOpen(false)
+        const savedMode = getSavedServiceMode()
+        if (savedMode === 'delivery') {
+          setServiceModalOpen(false)
+          setTableModalOpen(false)
+          return
+        }
+
+        if (savedMode === 'dine-in-pending') {
+          setServiceModalOpen(false)
+          setTableModalOpen(true)
+          return
+        }
+
+        clearSavedServiceMode()
+        setTableModalOpen(false)
+        setServiceModalOpen(true)
         return
       }
 
@@ -121,22 +173,27 @@ export default function HomePage() {
         if (cancelled) return
 
         lockTableCode(normalized)
+        setSavedServiceMode('dine-in')
         const next = new URLSearchParams(searchParams)
         next.set('table', normalized)
         next.delete('tableId')
         next.delete('ban')
         setSearchParams(next, { replace: true })
         setServiceModalOpen(false)
-        message.success(`Da kich hoat phien tai ban ${normalized}`)
+        setTableModalOpen(false)
+        message.success(`Đã kích hoạt phiên tại bàn ${normalized}`)
       } catch {
         if (cancelled) return
         clearLockedTableCode()
+        clearSavedServiceMode()
         const next = new URLSearchParams(searchParams)
         next.delete('table')
         next.delete('tableId')
         next.delete('ban')
         setSearchParams(next, { replace: true })
-        message.error('Khong xac thuc duoc ban. Vui long quet lai QR tai nha hang.')
+        setTableModalOpen(false)
+        setServiceModalOpen(true)
+        message.error('Không xác thực được bàn. Vui lòng quét lại mã QR tại nhà hàng.')
       } finally {
         if (!cancelled) setIsScanningQr(false)
       }
@@ -151,7 +208,9 @@ export default function HomePage() {
 
   const pickServiceType = (type) => {
     if (type === 'dine-in') {
-      message.info('Dine-in chi kich hoat khi quet QR tai ban.')
+      setSavedServiceMode('dine-in-pending')
+      setServiceModalOpen(false)
+      setTableModalOpen(true)
       return
     }
 
@@ -160,9 +219,35 @@ export default function HomePage() {
     next.delete('tableId')
     next.delete('ban')
     clearLockedTableCode()
+    setSavedServiceMode('delivery')
     setSearchParams(next, { replace: true })
     navigate('/', { replace: true })
     setServiceModalOpen(false)
+    setTableModalOpen(false)
+  }
+
+  const confirmTableSelection = async (tableNo) => {
+    try {
+      setIsScanningQr(true)
+      const normalized = normalizeTableCode(tableNo)
+      await ensureTableToken(normalized)
+      lockTableCode(normalized)
+      setSavedServiceMode('dine-in')
+
+      const next = new URLSearchParams(searchParams)
+      next.set('table', normalized)
+      next.delete('tableId')
+      next.delete('ban')
+      setSearchParams(next, { replace: true })
+
+      setTableModalOpen(false)
+      setServiceModalOpen(false)
+      message.success(`Đã chọn bàn ${normalized}`)
+    } catch {
+      message.error('Không thể gán bàn này. Vui lòng thử bàn khác.')
+    } finally {
+      setIsScanningQr(false)
+    }
   }
 
   return (
@@ -182,7 +267,7 @@ export default function HomePage() {
                 : 'text-4xl font-light tracking-tight font-[var(--font-heading)] md:text-6xl'
             }
           >
-            Experience Japanese Cuisine in AR
+            Trải nghiệm món Nhật với AR
           </h1>
           <p
             className={
@@ -191,16 +276,16 @@ export default function HomePage() {
                 : 'mt-7 text-base text-slate-600 md:text-lg'
             }
           >
-            View 3D models of our dishes before you order
+            Xem mô hình 3D món ăn trước khi gọi món
           </p>
 
           <div className="mt-12 flex flex-wrap justify-center gap-4">
             <FeaturePill
               icon={<RestOutlined />}
-              text="Authentic Japanese"
+              text="Ẩm thực Nhật chuẩn vị"
               variant="light"
             />
-            <FeaturePill icon={<ScanOutlined />} text="AR Preview" variant="light" />
+            <FeaturePill icon={<ScanOutlined />} text="Xem thử AR" variant="light" />
           </div>
         </div>
       </section>
@@ -211,18 +296,10 @@ export default function HomePage() {
         onChange={setActiveCategory}
       />
 
-      {orderSource.mode === 'dine-in' ? (
-        <div className="mx-auto mt-5 max-w-6xl px-6 md:px-8">
-          <div className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">
-            Calling for {orderSource.label}
-          </div>
-        </div>
-      ) : null}
-
       {isScanningQr ? (
         <div className="mx-auto mt-5 max-w-6xl px-6 md:px-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700">
-            Dang xac thuc phien ban tu QR...
+            Đang xác thực phiên bàn từ mã QR...
           </div>
         </div>
       ) : null}
@@ -258,6 +335,13 @@ export default function HomePage() {
         open={serviceModalOpen}
         onClose={() => {}}
         onSelect={pickServiceType}
+      />
+
+      <TableSelectionModal
+        open={tableModalOpen}
+        forceSelection
+        onCancel={() => {}}
+        onConfirm={confirmTableSelection}
       />
     </div>
   )

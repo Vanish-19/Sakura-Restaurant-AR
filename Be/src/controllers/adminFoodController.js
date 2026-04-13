@@ -26,5 +26,5 @@ export const update = asyncHandler(async (req, res) => {
 export const remove = asyncHandler(async (req, res) => {
   await adminFoodService.deleteFood(req.params.id);
   if (req.io) req.io.to('admin').emit('food_deleted', req.params.id);
-  res.status(200).json({ success: true, message: 'Deleted successfully' });
+  res.status(200).json({ success: true, message: 'Xóa thành công' });
 });

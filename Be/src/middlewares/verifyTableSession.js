@@ -1,6 +1,4 @@
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key_here';
+import { extractBearerToken, verifyAccessToken } from '../services/tokenService.js';
 
 /**
  * Express middleware to verify the table session via JWT token.
@@ -13,16 +11,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key_here';
  */
 export const verifyTableSession = (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    const token = extractBearerToken(req);
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Authorization token required' });
+    if (!token) {
+      return res.status(401).json({ error: 'Thiếu token xác thực phiên bàn' });
     }
 
-    const token = authHeader.split(' ')[1];
+    const decoded = verifyAccessToken(token);
 
-    // Verify the token
-    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.type && decoded.type !== 'table') {
+      return res.status(403).json({ error: 'Token phiên bàn không hợp lệ' });
+    }
 
     // Attach the decoded payload (table info) to the request object
     req.table = decoded;
@@ -31,6 +30,6 @@ export const verifyTableSession = (req, res, next) => {
     next();
   } catch (error) {
     console.error('Session verification failed:', error.message);
-    return res.status(403).json({ error: 'Invalid or expired session token' });
+    return res.status(403).json({ error: 'Token phiên bàn không hợp lệ hoặc đã hết hạn' });
   }
 };

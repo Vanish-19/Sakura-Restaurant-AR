@@ -4,10 +4,10 @@ import { useMemo, useState, useEffect } from 'react'
 import { getAllTables } from '../../services/adminTableApi.js'
 
 const floorOptions = [
-  { label: 'All Floors', value: 'all' },
-  { label: 'Main Hall', value: 'main hall' },
-  { label: 'VIP Lounge', value: 'vip lounge' },
-  { label: 'Terrace', value: 'terrace' },
+  { label: 'Tất cả khu vực', value: 'all' },
+  { label: 'Sảnh chính', value: 'main hall' },
+  { label: 'Khu VIP', value: 'vip lounge' },
+  { label: 'Sân thượng', value: 'terrace' },
 ]
 
 // Tables data is now fetched from backend
@@ -52,7 +52,7 @@ export default function TableManagementAdminPage() {
       }
     } catch (err) {
       console.error(err)
-      message.error('Failed to load tables')
+      message.error('Không thể tải danh sách bàn')
     } finally {
       setLoading(false)
     }
@@ -118,11 +118,11 @@ export default function TableManagementAdminPage() {
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search table..."
+            placeholder="Tìm bàn..."
             prefix={<SearchOutlined className="text-zinc-400" />}
             className="w-[210px] !rounded-lg !border-zinc-200 !bg-zinc-100"
           />
-          <button className="grid h-9 w-9 place-items-center rounded-md text-zinc-600 hover:bg-zinc-100" type="button" aria-label="notifications">
+          <button className="grid h-9 w-9 place-items-center rounded-md text-zinc-600 hover:bg-zinc-100" type="button" aria-label="thông báo">
             <BellFilled className="text-[13px]" />
           </button>
         </div>
@@ -151,7 +151,7 @@ export default function TableManagementAdminPage() {
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <Card className="!rounded-xl !border !border-zinc-200 !shadow-none" bodyStyle={{ padding: 18 }}>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">CURRENT OCCUPANCY</div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">MỨC ĐỘ SỬ DỤNG HIỆN TẠI</div>
           <div className="mt-2 text-[48px] leading-none font-black tracking-tight text-zinc-900">42/100</div>
           <div className="mt-2 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
             <TeamOutlined className="text-lg" />
@@ -159,18 +159,18 @@ export default function TableManagementAdminPage() {
         </Card>
 
         <Card className="!rounded-xl !border !border-emerald-200 !shadow-none" bodyStyle={{ padding: 18 }}>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">AVAILABLE</div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">BÀN TRỐNG</div>
           <div className="mt-2 text-[42px] leading-none font-black tracking-tight text-emerald-600">{availableCount}</div>
-          <Tag className="!mt-2 !rounded-md !border-emerald-100 !bg-emerald-50 !text-[10px] !font-semibold !text-emerald-700">READY</Tag>
+          <Tag className="!mt-2 !rounded-md !border-emerald-100 !bg-emerald-50 !text-[10px] !font-semibold !text-emerald-700">SẴN SÀNG</Tag>
         </Card>
 
         <Card className="!rounded-xl !border !border-amber-300 !shadow-none" bodyStyle={{ padding: 18 }}>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">RESERVED</div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">ĐÃ ĐẶT TRƯỚC</div>
           <div className="mt-2 text-[42px] leading-none font-black tracking-tight text-amber-600">{reservedCount}</div>
         </Card>
 
         <Card className="!rounded-xl !border !border-rose-600 !shadow-none" bodyStyle={{ padding: 18 }}>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">OCCUPIED</div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">ĐANG SỬ DỤNG</div>
           <div className="mt-2 text-[42px] leading-none font-black tracking-tight text-rose-700">{occupiedCount}</div>
         </Card>
       </section>

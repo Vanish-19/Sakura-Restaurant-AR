@@ -1,4 +1,5 @@
 const TABLE_LOCK_KEY = 'armenuweb_locked_table'
+const SERVICE_MODE_KEY = 'armenuweb_service_mode'
 
 function normalizeTableCode(value) {
     if (value === null || value === undefined) return null
@@ -38,6 +39,41 @@ export function clearLockedTableCode() {
     }
 }
 
+export function getSavedServiceMode() {
+    try {
+        const raw = sessionStorage.getItem(SERVICE_MODE_KEY)
+        if (raw === 'delivery' || raw === 'dine-in' || raw === 'dine-in-pending') {
+            return raw
+        }
+    } catch {
+        // ignore
+    }
+
+    return null
+}
+
+export function setSavedServiceMode(mode) {
+    if (mode !== 'delivery' && mode !== 'dine-in' && mode !== 'dine-in-pending') {
+        return null
+    }
+
+    try {
+        sessionStorage.setItem(SERVICE_MODE_KEY, mode)
+    } catch {
+        // ignore
+    }
+
+    return mode
+}
+
+export function clearSavedServiceMode() {
+    try {
+        sessionStorage.removeItem(SERVICE_MODE_KEY)
+    } catch {
+        // ignore
+    }
+}
+
 export function getOrderSource(searchParams) {
     const lockedTableCode = getLockedTableCode()
 
@@ -49,9 +85,26 @@ export function getOrderSource(searchParams) {
         }
     }
 
+    const savedMode = getSavedServiceMode()
+    if (savedMode === 'delivery') {
+        return {
+            mode: 'delivery',
+            tableCode: null,
+            label: 'Ship ve',
+        }
+    }
+
+    if (savedMode === 'dine-in-pending') {
+        return {
+            mode: 'pending-table',
+            tableCode: null,
+            label: 'Chon ban',
+        }
+    }
+
     return {
-        mode: 'delivery',
+        mode: 'unselected',
         tableCode: null,
-        label: 'Ship về',
+        label: 'Chon dich vu',
     }
 }

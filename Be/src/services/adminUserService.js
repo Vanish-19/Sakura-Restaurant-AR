@@ -11,19 +11,19 @@ export const getAllUsers = async (filter = {}) => {
 
 export const getUserById = async (id) => {
   const user = await User.findById(id);
-  if (!user) throw new Error('User not found');
+  if (!user) throw new Error('Không tìm thấy người dùng');
   return user;
 };
 
 export const updateUser = async (id, data) => {
   const updated = await User.findByIdAndUpdate(id, data, { new: true });
-  if (!updated) throw new Error('User not found');
+  if (!updated) throw new Error('Không tìm thấy người dùng');
   return updated;
 };
 
 export const deleteUser = async (id) => {
   const deleted = await User.findByIdAndDelete(id);
-  if (!deleted) throw new Error('User not found');
+  if (!deleted) throw new Error('Không tìm thấy người dùng');
   return deleted;
 };
 
