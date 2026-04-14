@@ -1,46 +1,78 @@
 import { apiRequest } from './apiClient.js'
 
-const USE_MOCK_ADMIN_AUTH = import.meta.env.VITE_USE_MOCK_ADMIN_AUTH !== 'false'
+export async function userRegister(payload) {
+  const response = await apiRequest('/auth/register', {
+    method: 'POST',
+    body: payload,
+  })
 
-const MOCK_ADMIN_ACCOUNT = {
-  username: 'admin',
-  password: 'admin123',
-  role: 'admin',
+  return response?.data ?? response
 }
 
-function createMockAuthResponse(identity) {
-  return {
-    token: `mock-admin-token-${Date.now()}`,
-    admin: {
-      id: 'mock-admin-1',
-      username: identity,
-      role: MOCK_ADMIN_ACCOUNT.role,
+export async function userLogin(identity, password) {
+  const response = await apiRequest('/auth/login', {
+    method: 'POST',
+    body: {
+      identity: String(identity || '').trim(),
+      password,
     },
-    source: 'fe-mock',
-  }
+  })
+
+  return response?.data ?? response
+}
+
+export async function userPhoneToken(phone, name) {
+  const response = await apiRequest('/auth/phone-token', {
+    method: 'POST',
+    body: {
+      phone: String(phone || '').trim(),
+      name: String(name || '').trim(),
+    },
+  })
+
+  return response?.data ?? response
+}
+
+export async function userRefreshToken(refreshToken) {
+  const response = await apiRequest('/auth/refresh', {
+    method: 'POST',
+    body: { refreshToken },
+  })
+
+  return response?.data ?? response
+}
+
+export async function userLogout() {
+  return apiRequest('/auth/logout', {
+    method: 'POST',
+  })
 }
 
 export async function adminLogin(identity, password) {
   const username = String(identity || '').trim()
 
-  if (USE_MOCK_ADMIN_AUTH) {
-    const isValidUser = username === MOCK_ADMIN_ACCOUNT.username
-    const isValidPassword = password === MOCK_ADMIN_ACCOUNT.password
-
-    if (!isValidUser || !isValidPassword) {
-      const error = new Error('Invalid credentials')
-      error.status = 401
-      throw error
-    }
-
-    return createMockAuthResponse(username)
-  }
-
-  return apiRequest('/admin/auth/login', {
+  const response = await apiRequest('/admin/auth/login', {
     method: 'POST',
     body: {
       username,
       password,
     },
+  })
+
+  return response?.data ?? response
+}
+
+export async function adminRefreshToken(refreshToken) {
+  const response = await apiRequest('/admin/auth/refresh', {
+    method: 'POST',
+    body: { refreshToken },
+  })
+
+  return response?.data ?? response
+}
+
+export async function adminLogout() {
+  return apiRequest('/admin/auth/logout', {
+    method: 'POST',
   })
 }

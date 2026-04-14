@@ -18,3 +18,58 @@ body {
   background: #fafaf6;
   color: #1f2937;
 }
+
+@layer components {
+  .ui-page-title {
+    @apply mb-1 font-[var(--font-heading)] text-4xl font-semibold leading-tight tracking-tight text-slate-900 md:text-5xl;
+  }
+
+  .ui-page-subtitle {
+    @apply text-sm leading-relaxed text-slate-500 md:text-base;
+  }
+
+  .ui-card {
+    @apply rounded-2xl border border-[#e7e7ea] bg-white shadow-[0_8px_22px_rgba(17,24,39,0.04)];
+  }
+
+  .ui-form-card {
+    @apply rounded-2xl border border-[#e7e7ea] bg-white shadow-[0_8px_22px_rgba(17,24,39,0.04)];
+  }
+
+  .ui-form-card .ant-form-item-label > label {
+    @apply text-xs font-semibold uppercase tracking-[0.12em] text-slate-500;
+  }
+
+  .ui-form-card .ant-input,
+  .ui-form-card .ant-input-affix-wrapper,
+  .ui-form-card .ant-input-outlined,
+  .ui-form-card .ant-input-number,
+  .ui-form-card .ant-input-textarea {
+    @apply rounded-xl border-[#e2e8f0] bg-[#fcfcfd] text-slate-800;
+  }
+
+  .ui-form-card .ant-input:focus,
+  .ui-form-card .ant-input-affix-wrapper:focus,
+  .ui-form-card .ant-input-affix-wrapper-focused,
+  .ui-form-card .ant-input-outlined:focus,
+  .ui-form-card .ant-input-outlined:focus-within,
+  .ui-form-card .ant-input-number:focus,
+  .ui-form-card .ant-input-number-focused,
+  .ui-form-card .ant-input-textarea:focus,
+  .ui-form-card .ant-input-textarea:focus-within {
+    @apply border-rose-300 bg-white ring-2 ring-rose-100;
+    box-shadow: none !important;
+  }
+
+  .ui-btn-primary {
+    @apply inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-red-500 to-red-600 px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(220,38,38,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:from-red-400 hover:to-red-500 hover:shadow-[0_12px_24px_rgba(220,38,38,0.28)] active:translate-y-0;
+  }
+
+  .ui-btn-soft {
+    @apply inline-flex h-11 items-center justify-center rounded-xl border border-[#ddd7cb] bg-[#f9f9f6] px-5 text-sm font-semibold text-[#3f3a37] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#b89b9b] hover:bg-white hover:text-[#900020] hover:shadow-md active:translate-y-0;
+  }
+
+  .ui-btn-accent {
+    @apply inline-flex h-11 items-center justify-center rounded-xl border border-[#f0b9c1] bg-[#fff2f4] px-5 text-sm font-semibold text-[#b30d26] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#da8695] hover:bg-[#ffe6ea] hover:text-[#98001b] hover:shadow-md active:translate-y-0;
+  }
+}

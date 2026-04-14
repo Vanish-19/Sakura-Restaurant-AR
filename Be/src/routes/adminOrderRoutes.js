@@ -1,13 +1,20 @@
 import express from 'express';
 import { verifyAdmin } from '../middlewares/verifyAdmin.js';
 import { validateParams } from '../middlewares/validateRequest.js';
-import { getOrdersSchema, getOrderByIdSchema, updateAdminOrderStatusSchema, cancelOrderSchema } from '../validations/adminOrderValidation.js';
+import {
+  getOrdersSchema,
+  getOrderByIdSchema,
+  updateAdminOrderStatusSchema,
+  cancelOrderSchema,
+  hardDeleteOrderSchema,
+} from '../validations/adminOrderValidation.js';
 import {
   getOrderStats,
   getAllOrders,
   getOrderById,
   updateOrderStatus,
-  cancelOrder
+  cancelOrder,
+  hardDeleteOrder,
 } from '../controllers/adminOrderController.js';
 
 const router = express.Router();
@@ -19,6 +26,7 @@ router.get('/stats', getOrderStats);
 router.get('/', validateParams(getOrdersSchema), getAllOrders);
 router.get('/:id', validateParams(getOrderByIdSchema), getOrderById);
 router.patch('/:id', validateParams(updateAdminOrderStatusSchema), updateOrderStatus);
-router.delete('/:id', validateParams(cancelOrderSchema), cancelOrder);
+router.patch('/:id/cancel', validateParams(cancelOrderSchema), cancelOrder);
+router.delete('/:id', validateParams(hardDeleteOrderSchema), hardDeleteOrder);
 
 export default router;

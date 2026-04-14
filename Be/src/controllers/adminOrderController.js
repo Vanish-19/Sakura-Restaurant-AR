@@ -4,6 +4,7 @@ import {
   getOrderById as svcGetOrderById,
   updateOrderStatus as svcUpdateOrderStatus,
   cancelOrder as svcCancelOrder,
+  hardDeleteOrder as svcHardDeleteOrder,
   getOrderStats as svcGetOrderStats
 } from '../services/adminOrderService.js';
 
@@ -26,7 +27,13 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 const cancelOrder = asyncHandler(async (req, res) => {
   const order = await svcCancelOrder(req.params.id);
   if (req.io) req.io.to('admin').emit('order_cancelled', order);
-  res.status(200).json({ success: true, message: 'Order cancelled', data: order });
+  res.status(200).json({ success: true, message: 'Đã hủy đơn hàng', data: order });
+});
+
+const hardDeleteOrder = asyncHandler(async (req, res) => {
+  const result = await svcHardDeleteOrder(req.params.id);
+  if (req.io) req.io.to('admin').emit('order_deleted', result);
+  res.status(200).json({ success: true, message: 'Đã xóa đơn hàng', data: result });
 });
 
 const getOrderStats = asyncHandler(async (req, res) => {
@@ -34,4 +41,4 @@ const getOrderStats = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: stats });
 });
 
-export { getAllOrders, getOrderById, updateOrderStatus, cancelOrder, getOrderStats };
+export { getAllOrders, getOrderById, updateOrderStatus, cancelOrder, hardDeleteOrder, getOrderStats };

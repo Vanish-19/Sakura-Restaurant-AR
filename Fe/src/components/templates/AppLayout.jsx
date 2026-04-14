@@ -11,11 +11,11 @@ export default function AppLayout() {
   const isAndroidPreview = searchParams.get('preview') === 'android'
 
   const layout = (
-    <Layout className={isAndroidPreview ? 'min-h-full' : 'min-h-screen'}>
+    <Layout className={isAndroidPreview ? 'min-h-full !min-h-[100dvh] flex flex-col' : 'min-h-screen !min-h-[100dvh] flex flex-col'}>
       <AppHeader variant={isAndroidPreview ? 'android' : 'desktop'} />
       {isAndroidPreview ? null : <div className="h-16" />}
 
-      <Content className="bg-[#fafaf6]">
+      <Content className="flex-1 bg-[#fafaf6]">
         <Outlet />
       </Content>
 

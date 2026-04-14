@@ -7,6 +7,7 @@ export const createTakeawaySchema = z.object({
     customer_name: z.string().min(1, 'Customer name is required'),
     customer_phone: z.string().min(8, 'Phone number must be at least 8 characters'),
     delivery_address: z.string().min(1, 'Delivery address is required'),
+    payment_method: z.enum(['online', 'cod']).optional(),
     items: z.array(
       z.object({
         menu_item_id: z.string().regex(objectIdRegex, 'Invalid menu item ID'),
@@ -19,7 +20,7 @@ export const createTakeawaySchema = z.object({
 
 export const getTakeawayByPhoneSchema = z.object({
   query: z.object({
-    phone: z.string().min(8, 'Phone number is required'),
+    phone: z.string().min(8, 'Phone number is required').optional(),
   })
 });
 

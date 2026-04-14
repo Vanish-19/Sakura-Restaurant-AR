@@ -48,9 +48,9 @@ const occupiedTables = new Set([
 ])
 
 const floorFilters = [
-  { key: 'all', label: 'All Floors' },
-  { key: 'vip', label: 'VIP Lounge' },
-  { key: 'terrace', label: 'Terrace' },
+  { key: 'all', label: 'Tất cả khu vực' },
+  { key: 'vip', label: 'Khu VIP' },
+  { key: 'terrace', label: 'Sân thượng' },
 ]
 
 function formatTableNo(value) {
@@ -64,7 +64,7 @@ function getZone(tableNo) {
   return 'all'
 }
 
-export default function TableSelectionModal({ open, onCancel, onConfirm }) {
+export default function TableSelectionModal({ open, onCancel, onConfirm, forceSelection = false }) {
   const [selected, setSelected] = useState(null)
   const [query, setQuery] = useState('')
   const [activeFloor, setActiveFloor] = useState('all')
@@ -95,88 +95,102 @@ export default function TableSelectionModal({ open, onCancel, onConfirm }) {
   return (
     <Modal
       open={open}
-      title={<div className="text-2xl font-bold">Select Table</div>}
-      onCancel={() => {}}
+      title={
+        <div>
+          <div className="text-[38px] leading-none font-black tracking-tight text-zinc-900">Chọn bàn</div>
+          <p className="mt-2 text-sm font-medium text-zinc-500">Vui lòng chọn bàn để bắt đầu phiên gọi món.</p>
+        </div>
+      }
+      onCancel={() => {
+        if (!forceSelection) onCancel?.()
+      }}
       onOk={() => selected && onConfirm(selected)}
-      okText="Confirm Selection"
-      cancelText="Back"
-      okButtonProps={{ disabled: !selected, className: '!bg-[#c0001c] hover:!bg-[#d1142f] !border-0' }}
-      cancelButtonProps={{ className: '!border-[#d6d6d6] hover:!border-[#c0001c] hover:!text-[#c0001c]' }}
+      okText="Xác nhận chọn bàn"
+      cancelText="Quay lại"
+      okButtonProps={{
+        disabled: !selected,
+        className:
+          '!h-10 !rounded-lg !bg-[#cf001a] hover:!bg-[#e0001d] !border-0 !px-5 !font-semibold',
+      }}
+      cancelButtonProps={{ className: '!h-10 !rounded-lg !border-[#ddd] !px-5 hover:!border-[#c0001c] hover:!text-[#c0001c]' }}
       width={860}
       centered
-      closable={false}
+      closable={!forceSelection}
       maskClosable={false}
-      keyboard={false}
+      keyboard={!forceSelection}
+      className="table-selection-modal"
       afterClose={() => {
         setSelected(null)
         setQuery('')
         setActiveFloor('all')
       }}
       footer={(_, { OkBtn, CancelBtn }) => (
-        <div className="flex items-center justify-between">
-          <div className="text-left text-xs text-slate-500">
-            Selected table:{' '}
-            <span className="font-semibold text-[#c0001c]">{selected ? `Table ${selected}` : '-'}</span>
+        <div className="mt-1 flex items-center justify-between border-t border-zinc-100 pt-3">
+          <div className="text-left text-xs uppercase tracking-wide text-zinc-400">
+            Bàn đã chọn{' '}
+            <span className="ml-1 text-base font-bold normal-case text-[#c0001c]">{selected ? `Bàn ${selected}` : '-'}</span>
           </div>
           <div className="flex items-center gap-2">
-            <CancelBtn />
+            {forceSelection ? null : <CancelBtn />}
             <OkBtn />
           </div>
         </div>
       )}
     >
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          <span className="inline-flex items-center gap-2">
-            <span className="h-3 w-3 rounded-sm border border-slate-300 bg-white" /> Available
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <span className="h-3 w-3 rounded-sm bg-[#8b0000]" /> Occupied
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <span className="h-3 w-3 rounded-sm bg-[#efefef]" /> Reserved
-          </span>
+      <div className="mb-3 rounded-xl border border-zinc-100 bg-white px-3 py-2">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-5 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            <span className="inline-flex items-center gap-2">
+              <span className="h-3 w-3 rounded-sm border border-zinc-300 bg-white" /> Trống
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <span className="h-3 w-3 rounded-sm bg-[#cf001a]" /> Đang dùng
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <span className="h-3 w-3 rounded-sm bg-[#f3efef]" /> Đã đặt trước
+            </span>
+          </div>
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm số bàn..."
+            className="max-w-xs !rounded-md !border-zinc-200"
+          />
         </div>
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Find table number"
-          className="max-w-xs"
-        />
+
+        <div className="flex items-center justify-end gap-2 rounded-lg bg-[#fafafa] p-1">
+          {floorFilters.map((filter) => {
+            const active = activeFloor === filter.key
+            return (
+              <button
+                key={filter.key}
+                type="button"
+                onClick={() => setActiveFloor(filter.key)}
+                className={
+                  'rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-200 ' +
+                  (active
+                    ? 'bg-gradient-to-r from-[#b80016] to-[#df0020] text-white shadow-[0_6px_14px_rgba(184,0,22,0.28)]'
+                    : 'bg-white text-zinc-500 ring-1 ring-zinc-200 hover:text-[#c0001c]')
+                }
+              >
+                {filter.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      <div className="mb-4 flex items-center justify-end gap-2">
-        {floorFilters.map((filter) => {
-          const active = activeFloor === filter.key
-          return (
-            <button
-              key={filter.key}
-              type="button"
-              onClick={() => setActiveFloor(filter.key)}
-              className={
-                'rounded-md px-3 py-1.5 text-xs font-semibold transition ' +
-                (active
-                  ? 'bg-[#c0001c] text-white'
-                  : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:text-[#c0001c]')
-              }
-            >
-              {filter.label}
-            </button>
-          )
-        })}
-      </div>
-
-      <div className="grid max-h-[52vh] grid-cols-5 gap-2 overflow-y-auto pr-1 sm:grid-cols-7 md:grid-cols-10">
+      <div className="grid max-h-[52vh] grid-cols-5 gap-2 overflow-y-auto rounded-xl border border-zinc-100 bg-white p-2 pr-1 sm:grid-cols-7 md:grid-cols-10">
         {tables.map((table) => {
           const isActive = table.tableNo === selected
 
-          let stateClass = 'border-slate-200 bg-white text-slate-800 hover:border-[#c0001c] hover:text-[#c0001c]'
+          let stateClass = 'border-zinc-200 bg-white text-zinc-800 hover:border-[#cf001a] hover:text-[#cf001a]'
           if (table.status === 'reserved') {
-            stateClass = 'cursor-not-allowed border-[#e5e5e5] bg-[#efefef] text-slate-400'
+            stateClass = 'cursor-not-allowed border-[#efebeb] bg-[#f3efef] text-zinc-400'
           } else if (table.status === 'occupied') {
-            stateClass = 'cursor-not-allowed border-[#8b0000] bg-[#8b0000] text-white'
+            stateClass = 'cursor-not-allowed border-[#cf001a] bg-[#cf001a] text-white'
           } else if (isActive) {
-            stateClass = 'border-[#c0001c] bg-[#c0001c] text-white'
+            stateClass = 'border-[#cf001a] bg-white text-[#cf001a] ring-1 ring-[#cf001a]'
           }
 
           return (
@@ -185,10 +199,7 @@ export default function TableSelectionModal({ open, onCancel, onConfirm }) {
               type="button"
               disabled={table.disabled}
               onClick={() => setSelected(table.tableNo)}
-              className={
-                'h-12 rounded-lg border text-sm font-semibold transition ' +
-                stateClass
-              }
+              className={'h-16 rounded-lg border text-lg font-semibold transition ' + stateClass}
             >
               {table.tableNo}
             </button>

@@ -1,10 +1,13 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import AdminLoginGuard from './components/organisms/admin/AdminLoginGuard.jsx'
 import AdminRouteGuard from './components/organisms/admin/AdminRouteGuard.jsx'
 import ClientAuthLayout from './components/templates/auth/ClientAuthLayout.jsx'
 import AdminLayout from './components/templates/admin/AdminLayout.jsx'
 import AppLayout from './components/templates/AppLayout.jsx'
 import CartPage from './pages/CartPage.jsx'
 import HomePage from './pages/HomePage.jsx'
+import OrderHistoryPage from './pages/OrderHistoryPage.jsx'
+import PaymentPage from './pages/PaymentPage.jsx'
 import AdminManagementAdminPage from './pages/admin/AdminManagementAdminPage.jsx'
 import ContentManagementAdminPage from './pages/admin/ContentManagementAdminPage.jsx'
 import DashboardAdminPage from './pages/admin/DashboardAdminPage.jsx'
@@ -23,6 +26,8 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/order" element={<HomePage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/orders/history" element={<OrderHistoryPage />} />
+        <Route path="/payment/:orderId" element={<PaymentPage />} />
       </Route>
 
       <Route path="/auth" element={<ClientAuthLayout />}>
@@ -30,7 +35,9 @@ export default function App() {
         <Route path="register" element={<ClientRegisterPage />} />
       </Route>
 
-      <Route path="/admin/login" element={<AdminLoginPage />} />
+      <Route element={<AdminLoginGuard />}>
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+      </Route>
 
       <Route element={<AdminRouteGuard />}>
         <Route path="/admin" element={<AdminLayout />}>

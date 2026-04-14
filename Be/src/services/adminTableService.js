@@ -7,7 +7,7 @@ const getAllTables = async () => {
 
 const createTable = async (data) => {
   const existing = await Table.findOne({ qr_hash: data.qr_hash });
-  if (existing) throw new Error('QR hash already exists');
+  if (existing) throw new Error('Mã QR đã tồn tại');
 
   const table = new Table(data);
   return await table.save();
@@ -15,16 +15,16 @@ const createTable = async (data) => {
 
 const updateTable = async (id, data) => {
   const updated = await Table.findByIdAndUpdate(id, data, { new: true });
-  if (!updated) throw new Error('Table not found');
+  if (!updated) throw new Error('Không tìm thấy bàn');
   return updated;
 };
 
 const deleteTable = async (id) => {
   const table = await Table.findById(id);
-  if (!table) throw new Error('Table not found');
+  if (!table) throw new Error('Không tìm thấy bàn');
 
   if (table.status === 'dining') {
-    throw new Error('Cannot delete table that is currently in use');
+    throw new Error('Không thể xóa bàn đang được sử dụng');
   }
 
   // Kiểm tra có đơn hàng chưa thanh toán không
@@ -33,7 +33,7 @@ const deleteTable = async (id) => {
     status: { $nin: ['paid', 'cancelled'] }
   });
   if (activeOrders > 0) {
-    throw new Error('Cannot delete table with active orders');
+    throw new Error('Không thể xóa bàn còn đơn hàng đang hoạt động');
   }
 
   return await Table.findByIdAndDelete(id);
@@ -41,7 +41,7 @@ const deleteTable = async (id) => {
 
 const resetTable = async (id) => {
   const table = await Table.findById(id);
-  if (!table) throw new Error('Table not found');
+  if (!table) throw new Error('Không tìm thấy bàn');
 
   table.status = 'empty';
   return await table.save();

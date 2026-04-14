@@ -5,7 +5,7 @@ export default function ServiceTypeModal({ open, onSelect, onClose }) {
   return (
     <Modal
       open={open}
-      title={<div className="text-center text-2xl font-bold">Choose Service Type</div>}
+      title={<div className="text-center text-2xl font-bold">Chọn hình thức phục vụ</div>}
       onCancel={onClose}
       footer={null}
       centered
@@ -15,7 +15,7 @@ export default function ServiceTypeModal({ open, onSelect, onClose }) {
       keyboard={false}
     >
       <p className="mb-6 text-center text-slate-500">
-        Select the delivery method for your order.
+        Vui lòng chọn cách nhận món phù hợp với bạn.
       </p>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -23,12 +23,12 @@ export default function ServiceTypeModal({ open, onSelect, onClose }) {
           <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-xl text-red-600">
             <RestOutlined />
           </div>
-          <div className="text-xl font-semibold text-slate-900">Dine-in</div>
+          <div className="text-xl font-semibold text-slate-900">Ăn tại chỗ</div>
           <p className="mt-2 text-sm text-slate-500">
-            Table service for guests dining at the Kyoto Gastronomic.
+            Phục vụ tại bàn dành cho khách dùng bữa tại nhà hàng.
           </p>
           <Button className="mt-4 !border-0 !bg-[#c0001c] !text-white hover:!bg-[#d1142f]" onClick={() => onSelect('dine-in')}>
-            Select Option
+            Chọn hình thức này
           </Button>
         </div>
 
@@ -36,12 +36,12 @@ export default function ServiceTypeModal({ open, onSelect, onClose }) {
           <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-xl text-red-600">
             <CarOutlined />
           </div>
-          <div className="text-xl font-semibold text-slate-900">Delivery</div>
+          <div className="text-xl font-semibold text-slate-900">Giao tận nơi</div>
           <p className="mt-2 text-sm text-slate-500">
-            Outbound orders via courier to single-party parties.
+            Đơn hàng sẽ được giao đến địa chỉ bạn cung cấp.
           </p>
           <Button className="mt-4 !border-0 !bg-[#c0001c] !text-white hover:!bg-[#d1142f]" onClick={() => onSelect('delivery')}>
-            Select Option
+            Chọn hình thức này
           </Button>
         </div>
       </div>

@@ -1,4 +1,34 @@
 import Order from '../models/Order.js';
+import Payment from '../models/Payment.js';
+
+async function attachPaymentStatus(orders) {
+  const orderIds = orders.map((order) => order._id);
+  const payments = await Payment.find({ order: { $in: orderIds }, method: 'online' });
+  const paymentMap = new Map(payments.map((payment) => [String(payment.order), payment]));
+
+  return orders.map((order) => {
+    const payment = paymentMap.get(String(order._id));
+    const isTakeaway = order.order_type === 'takeaway';
+    const paidStatus = payment?.status === 'completed' || order.status === 'paid' ? 'paid' : 'unpaid';
+    const paymentMethod = payment?.method || (isTakeaway ? 'cod' : undefined);
+
+    return {
+      ...order.toObject(),
+      paid_status: isTakeaway ? paidStatus : undefined,
+      payment_method: isTakeaway ? paymentMethod : undefined,
+      payment: payment
+        ? {
+            id: payment._id,
+            status: payment.status,
+            provider: payment.provider,
+            provider_ref: payment.provider_ref,
+            checkout_url: payment.checkout_url,
+            paid_at: payment.paid_at,
+          }
+        : null,
+    };
+  });
+}
 
 const getAllOrders = async ({ status, order_type, page = 1, limit = 20 }) => {
   const query = {};
@@ -17,8 +47,10 @@ const getAllOrders = async ({ status, order_type, page = 1, limit = 20 }) => {
     Order.countDocuments(query)
   ]);
 
+  const ordersWithPayment = await attachPaymentStatus(orders);
+
   return {
-    orders,
+    orders: ordersWithPayment,
     pagination: {
       page: Number(page),
       limit: Number(limit),
@@ -32,13 +64,15 @@ const getOrderById = async (id) => {
   const order = await Order.findById(id)
     .populate('table', 'name')
     .populate('items.menu_item', 'name image_url price category');
-  if (!order) throw new Error('Order not found');
-  return order;
+  if (!order) throw new Error('Không tìm thấy đơn hàng');
+
+  const [orderWithPayment] = await attachPaymentStatus([order]);
+  return orderWithPayment;
 };
 
 const updateOrderStatus = async (id, newStatus) => {
   const order = await Order.findById(id);
-  if (!order) throw new Error('Order not found');
+  if (!order) throw new Error('Không tìm thấy đơn hàng');
 
   // Validate trạng thái hợp lệ theo luồng
   const validTransitions = {
@@ -57,26 +91,42 @@ const updateOrderStatus = async (id, newStatus) => {
 
   const allowed = validTransitions[order.order_type]?.[order.status] || [];
   if (!allowed.includes(newStatus)) {
-    throw new Error(`Cannot change status from '${order.status}' to '${newStatus}' for ${order.order_type} order`);
+    throw new Error(`Không thể chuyển trạng thái từ '${order.status}' sang '${newStatus}' cho đơn ${order.order_type}`);
   }
 
   order.status = newStatus;
   const updated = await order.save();
-  return await Order.findById(updated._id)
+  const populated = await Order.findById(updated._id)
     .populate('table', 'name')
     .populate('items.menu_item', 'name image_url');
+
+  const [orderWithPayment] = await attachPaymentStatus([populated]);
+  return orderWithPayment;
 };
 
 const cancelOrder = async (id) => {
   const order = await Order.findById(id);
-  if (!order) throw new Error('Order not found');
+  if (!order) throw new Error('Không tìm thấy đơn hàng');
 
   if (['paid', 'cancelled', 'picked_up'].includes(order.status)) {
-    throw new Error(`Cannot cancel order with status '${order.status}'`);
+    throw new Error(`Không thể hủy đơn có trạng thái '${order.status}'`);
   }
 
   order.status = 'cancelled';
   return await order.save();
+};
+
+const hardDeleteOrder = async (id) => {
+  const order = await Order.findById(id);
+  if (!order) throw new Error('Không tìm thấy đơn hàng');
+
+  // Require cancel first to avoid accidental destructive deletion.
+  if (order.status !== 'cancelled') {
+    throw new Error('Chỉ được xóa vĩnh viễn đơn đã hủy');
+  }
+
+  await Order.findByIdAndDelete(id);
+  return { id, deleted: true };
 };
 
 const getOrderStats = async () => {
@@ -101,4 +151,4 @@ const getOrderStats = async () => {
   };
 };
 
-export { getAllOrders, getOrderById, updateOrderStatus, cancelOrder, getOrderStats };
+export { getAllOrders, getOrderById, updateOrderStatus, cancelOrder, hardDeleteOrder, getOrderStats };

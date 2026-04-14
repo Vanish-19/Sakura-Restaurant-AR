@@ -1,9 +1,10 @@
 import { DeleteOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
 
-const currency = new Intl.NumberFormat('en-US', {
+const currency = new Intl.NumberFormat('vi-VN', {
   style: 'currency',
-  currency: 'USD',
+  currency: 'VND',
+  maximumFractionDigits: 0,
 })
 
 export default function CartItemRow({

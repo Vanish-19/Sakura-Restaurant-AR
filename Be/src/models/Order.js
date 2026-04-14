@@ -9,6 +9,7 @@ const orderItemSchema = new mongoose.Schema({
 
 const orderSchema = new mongoose.Schema({
   order_type: { type: String, enum: ['dine_in', 'takeaway'], default: 'dine_in' },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 
   // Dine-in fields
   table: { type: mongoose.Schema.Types.ObjectId, ref: 'Table' },

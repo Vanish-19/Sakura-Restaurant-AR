@@ -25,7 +25,7 @@ const updateTable = asyncHandler(async (req, res) => {
 const deleteTable = asyncHandler(async (req, res) => {
   const { id } = req.params;
   await svcDeleteTable(id);
-  res.status(200).json({ success: true, message: 'Table deleted' });
+  res.status(200).json({ success: true, message: 'Đã xóa bàn' });
 });
 
 const resetTable = asyncHandler(async (req, res) => {

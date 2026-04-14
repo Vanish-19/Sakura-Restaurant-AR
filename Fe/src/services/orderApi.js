@@ -27,7 +27,13 @@ export async function getMenuItems(category) {
         price: Number(item.price || 0),
         category: (item.category || 'all').toLowerCase(),
         imageUrl,
-        arModels: item?.assets?.ar_models || null,
+        arModels: item?.assets?.ar_models
+          ? {
+              glb_url: item.assets.ar_models.glb || '',
+              usdz_url: item.assets.ar_models.usdz || '',
+            }
+          : null,
+        isBestSeller: Boolean(item?.is_best_seller),
       }
     })
     .filter(Boolean)
@@ -41,12 +47,23 @@ export async function scanTableSession(qrHash) {
 }
 
 export async function createDineInOrder(token, items) {
+  return createDineInOrderWithUser(token, items)
+}
+
+export async function createDineInOrderWithUser(tableToken, items, options = {}) {
+  const userAccessToken = options.userAccessToken || ''
+  const customerPhone = options.customerPhone || ''
+
   return apiRequest('/orders', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${tableToken}`,
+      ...(userAccessToken ? { 'x-user-authorization': `Bearer ${userAccessToken}` } : {}),
     },
-    body: { items },
+    body: {
+      items,
+      ...(customerPhone ? { customer_phone: customerPhone } : {}),
+    },
   })
 }
 
@@ -54,5 +71,30 @@ export async function createTakeawayOrder(payload) {
   return apiRequest('/takeaway/orders', {
     method: 'POST',
     body: payload,
+  })
+}
+
+export async function getTakeawayOrderById(id) {
+  return apiRequest(`/takeaway/orders/${id}`)
+}
+
+export async function cancelTakeawayOrder(id) {
+  return apiRequest(`/takeaway/orders/${id}/cancel`, {
+    method: 'PATCH',
+  })
+}
+
+export async function getUserOrderHistory() {
+  return apiRequest('/user/orders/history', {
+    method: 'GET',
+  })
+}
+
+export async function getMyTableOrders(tableToken) {
+  return apiRequest('/orders/my', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${tableToken}`,
+    },
   })
 }
