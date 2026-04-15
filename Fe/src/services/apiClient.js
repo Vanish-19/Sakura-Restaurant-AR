@@ -93,15 +93,17 @@ export async function apiRequest(path, { method = 'GET', headers, body, _retry =
   const adminToken = typeof window !== 'undefined' ? getToken('admin_access_token') : null
   const userToken = typeof window !== 'undefined' ? getToken('user_access_token') : null
 
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
+
   const requestInit = {
     method,
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(isAdminApi && adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
       ...(!isAdminApi && needsUserAuth && userToken ? { Authorization: `Bearer ${userToken}` } : {}),
       ...(headers ?? {}),
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
   }
 
   const response = await requestWithFallback(path, requestInit)

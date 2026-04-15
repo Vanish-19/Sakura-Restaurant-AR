@@ -1,7 +1,7 @@
 import { RestOutlined, ScanOutlined } from '@ant-design/icons'
 import { message } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import FeaturePill from '../components/molecules/FeaturePill.jsx'
 import ServiceTypeModal from '../components/organisms/ServiceTypeModal.jsx'
 import TableSelectionModal from '../components/organisms/TableSelectionModal.jsx'
@@ -15,7 +15,6 @@ import {
   clearSavedServiceMode,
   getSavedServiceMode,
   getLockedTableCode,
-  getOrderSource,
   lockTableCode,
   setSavedServiceMode,
 } from '../utils/orderSource.js'
@@ -39,14 +38,12 @@ export default function HomePage() {
   const { addItem } = useCart()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
-  const location = useLocation()
   const isAndroidPreview = searchParams.get('preview') === 'android'
   const [menuItems, setMenuItems] = useState([])
   const [serviceModalOpen, setServiceModalOpen] = useState(false)
   const [tableModalOpen, setTableModalOpen] = useState(false)
   const [isScanningQr, setIsScanningQr] = useState(false)
   const guestRefreshResetRef = useRef(false)
-  const orderSource = getOrderSource(searchParams)
 
   useEffect(() => {
     let isMounted = true
@@ -250,6 +247,15 @@ export default function HomePage() {
     }
   }
 
+  const handleViewAr = (item) => {
+    if (!item?.arModels?.glb_url && !item?.arModels?.usdz_url) {
+      message.warning('Món này chưa có model AR để xem')
+      return
+    }
+
+    navigate(`/ar?itemId=${encodeURIComponent(item.id)}`)
+  }
+
   return (
     <div className="bg-[#fafaf6]">
       <section className="relative overflow-hidden border-b border-[#e9e7df] bg-gradient-to-b from-[#f9f6ef] via-[#f7f3ea] to-[#f2ece0] text-slate-900">
@@ -323,7 +329,7 @@ export default function HomePage() {
                   message.success('Đã thêm vào giỏ hàng')
                 }}
                 onViewAr={() => {
-                  message.info('Tính năng AR sẽ sớm có')
+                  handleViewAr(item)
                 }}
               />
             ))}

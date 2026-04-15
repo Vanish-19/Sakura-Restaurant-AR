@@ -8,6 +8,7 @@ const proxyTarget = process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:3000'
 export default defineConfig({
   plugins: [tailwindcss(), react()],
   server: {
+    allowedHosts: ['.ngrok-free.dev', '.ngrok.io', 'localhost', '127.0.0.1'],
     proxy: {
       '/api/v1': {
         target: proxyTarget,

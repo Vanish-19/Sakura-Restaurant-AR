@@ -8,7 +8,19 @@ import Order from './models/Order.js';
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/sakura_restaurant';
 
 const menuItems = [
-  { name: 'Salmon Nigiri', description: 'Fresh salmon over sushi rice', price: 12.99, category: 'sushi', image_url: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800&q=80', is_available: true },
+  {
+    name: 'Salmon Nigiri',
+    description: 'Fresh salmon over sushi rice',
+    price: 12.99,
+    category: 'sushi',
+    image_url: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800&q=80',
+    ar_models: {
+      glb_url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Duck/glTF-Binary/Duck.glb',
+      usdz_url: 'https://modelviewer.dev/shared-assets/models/Astronaut.usdz',
+    },
+    is_best_seller: true,
+    is_available: true,
+  },
   { name: 'Tuna Nigiri', description: 'Premium bluefin tuna', price: 15.99, category: 'sushi', image_url: 'https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=800&q=80', is_available: true },
   { name: 'California Roll', description: 'Crab, avocado, and cucumber', price: 10.99, category: 'sushi', image_url: 'https://images.unsplash.com/photo-1553621042-f6e147245754?w=800&q=80', is_available: true },
   { name: 'Dragon Roll', description: 'Eel and avocado roll', price: 16.99, category: 'sushi', image_url: 'https://images.unsplash.com/photo-1559410545-0bdcd187e0a6?w=800&q=80', is_available: true },
@@ -33,7 +45,13 @@ const tables = [
 ];
 
 const admins = [
-  { username: 'admin', password: 'admin123', role: 'admin' },
+  {
+    username: 'admin',
+    password: 'admin123',
+    name: 'System Admin',
+    email: 'admin@sakura.local',
+    role: 'admin',
+  },
 ];
 
 async function seed() {

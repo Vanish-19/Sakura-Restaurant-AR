@@ -20,3 +20,16 @@ export async function updateFood(id, payload) {
 export async function deleteFood(id) {
   return apiRequest(`/admin/foods/${id}`, { method: 'DELETE' });
 }
+
+export async function uploadFoodModel(file, modelType) {
+  const formData = new FormData()
+  formData.append('model', file)
+  if (modelType) {
+    formData.append('modelType', modelType)
+  }
+
+  return apiRequest('/admin/foods/upload-model', {
+    method: 'POST',
+    body: formData,
+  })
+}

@@ -1,7 +1,7 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
-import { Button, Card, Space, Table, Tag, message, Avatar, Popconfirm, Modal, Form, Input, InputNumber, Switch, Select } from 'antd'
+import { DeleteOutlined, EditOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons'
+import { Button, Card, Space, Table, Tag, message, Avatar, Popconfirm, Modal, Form, Input, InputNumber, Switch, Select, Upload } from 'antd'
 import { useEffect, useState } from 'react'
-import { getAllFoods, createFood, updateFood, deleteFood } from '../../services/adminFoodApi.js'
+import { getAllFoods, createFood, updateFood, deleteFood, uploadFoodModel } from '../../services/adminFoodApi.js'
 
 const formatVnd = (value) => new Intl.NumberFormat('vi-VN').format(Number(value || 0))
 
@@ -10,7 +10,68 @@ export default function FoodManagementAdminPage() {
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
+  const [uploadingModelType, setUploadingModelType] = useState(null)
   const [form] = Form.useForm()
+
+  const allowedModelTypes = ['glb', 'usdz']
+
+  const beforeModelUpload = (expectedType) => (file) => {
+    const extension = String(file?.name || '').split('.').pop()?.toLowerCase()
+    if (extension !== expectedType) {
+      message.error(`Vui lòng chọn file .${expectedType}`)
+      return Upload.LIST_IGNORE
+    }
+
+    const isWithinLimit = (file?.size || 0) <= 25 * 1024 * 1024
+    if (!isWithinLimit) {
+      message.error('Kích thước file tối đa là 25MB')
+      return Upload.LIST_IGNORE
+    }
+
+    return true
+  }
+
+  const handleUploadModel = (modelType) => async ({ file, onSuccess, onError }) => {
+    if (!allowedModelTypes.includes(modelType)) {
+      onError?.(new Error('Loại model không hợp lệ'))
+      return
+    }
+
+    try {
+      setUploadingModelType(modelType)
+      const res = await uploadFoodModel(file, modelType)
+      const uploadedUrl = res?.data?.url
+      if (!uploadedUrl) {
+        throw new Error('Không nhận được URL model từ server')
+      }
+
+      // Nếu upload GLB và backend đã convert USDZ thành công
+      if (modelType === 'glb' && res?.data?.convertedUsdz?.url) {
+        form.setFieldsValue({
+          glb_url: uploadedUrl,
+          usdz_url: res.data.convertedUsdz.url,
+        })
+        message.success('Upload .glb + auto-convert .usdz thành công!')
+      } else {
+        // Fallback: chỉ fill field tương ứng
+        const targetField = modelType === 'usdz' ? 'usdz_url' : 'glb_url'
+        form.setFieldsValue({ [targetField]: uploadedUrl })
+        message.success(`Upload .${modelType} thành công`)
+
+        // Nếu convert USDZ thất bại, show warning
+        if (modelType === 'glb' && res?.data?.conversionError) {
+          message.warning(`Convert USDZ thất bại: ${res.data.conversionError}`)
+        }
+      }
+
+      onSuccess?.(res, file)
+    } catch (err) {
+      message.error(err?.message || `Upload .${modelType} thất bại`)
+      onError?.(err)
+    } finally {
+      setUploadingModelType(null)
+    }
+  }
 
   const fetchFoods = async () => {
     try {
@@ -267,12 +328,49 @@ export default function FoodManagementAdminPage() {
             <Input />
           </Form.Item>
 
+          <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+            <p className="m-0 text-[12px] text-blue-700 font-medium">
+              💡 Upload file .glb sẽ tự động convert sang .usdz (iOS)
+            </p>
+            <p className="m-0 mt-1 text-[11px] text-blue-500">
+              Bạn chỉ cần upload file GLB, hệ thống sẽ tự tạo file USDZ tương ứng.
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-4 border-t pt-4 mt-2">
             <Form.Item name="glb_url" label="Mô hình AR (.glb) - Android/Web">
-              <Input placeholder="https://..." />
+              <Input
+                placeholder="https://..."
+                addonAfter={(
+                  <Upload
+                    accept=".glb"
+                    showUploadList={false}
+                    beforeUpload={beforeModelUpload('glb')}
+                    customRequest={handleUploadModel('glb')}
+                  >
+                    <Button size="small" type="text" icon={<UploadOutlined />} loading={uploadingModelType === 'glb'}>
+                      Upload
+                    </Button>
+                  </Upload>
+                )}
+              />
             </Form.Item>
             <Form.Item name="usdz_url" label="Mô hình AR (.usdz) - iOS">
-              <Input placeholder="https://..." />
+              <Input
+                placeholder="https://..."
+                addonAfter={(
+                  <Upload
+                    accept=".usdz"
+                    showUploadList={false}
+                    beforeUpload={beforeModelUpload('usdz')}
+                    customRequest={handleUploadModel('usdz')}
+                  >
+                    <Button size="small" type="text" icon={<UploadOutlined />} loading={uploadingModelType === 'usdz'}>
+                      Upload
+                    </Button>
+                  </Upload>
+                )}
+              />
             </Form.Item>
           </div>
         </Form>

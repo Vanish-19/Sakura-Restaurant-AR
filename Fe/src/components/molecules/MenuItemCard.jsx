@@ -17,7 +17,7 @@ export default function MenuItemCard({
 }) {
   const handleAdd = onAdd ?? (() => { })
   const handleViewAr = onViewAr ?? (() => { })
-  const canViewAr = Boolean(item?.isBestSeller)
+  const canViewAr = Boolean(item?.arModels?.glb_url || item?.arModels?.usdz_url)
 
   return (
     <div className="relative">

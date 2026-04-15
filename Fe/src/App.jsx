@@ -8,6 +8,7 @@ import CartPage from './pages/CartPage.jsx'
 import HomePage from './pages/HomePage.jsx'
 import OrderHistoryPage from './pages/OrderHistoryPage.jsx'
 import PaymentPage from './pages/PaymentPage.jsx'
+import ArScenePage from './pages/ArScenePage.jsx'
 import AdminManagementAdminPage from './pages/admin/AdminManagementAdminPage.jsx'
 import ContentManagementAdminPage from './pages/admin/ContentManagementAdminPage.jsx'
 import DashboardAdminPage from './pages/admin/DashboardAdminPage.jsx'
@@ -29,6 +30,8 @@ export default function App() {
         <Route path="/orders/history" element={<OrderHistoryPage />} />
         <Route path="/payment/:orderId" element={<PaymentPage />} />
       </Route>
+
+      <Route path="/ar" element={<ArScenePage />} />
 
       <Route path="/auth" element={<ClientAuthLayout />}>
         <Route path="login" element={<ClientLoginPage />} />

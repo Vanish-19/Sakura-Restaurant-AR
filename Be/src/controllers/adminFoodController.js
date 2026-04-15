@@ -28,3 +28,12 @@ export const remove = asyncHandler(async (req, res) => {
   if (req.io) req.io.to('admin').emit('food_deleted', req.params.id);
   res.status(200).json({ success: true, message: 'Xóa thành công' });
 });
+
+export const uploadModel = asyncHandler(async (req, res) => {
+  const result = await adminFoodService.uploadFoodModel({
+    file: req.file,
+    modelType: req.body?.modelType,
+  });
+
+  res.status(200).json({ success: true, data: result });
+});
