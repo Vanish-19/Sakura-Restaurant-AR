@@ -15,6 +15,7 @@ import adminTableRoutes from './routes/adminTableRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import takeawayRoutes from './routes/takeawayRoutes.js';
 import adminFoodRoutes from './routes/adminFoodRoutes.js';
+import adminFoodCategoryRoutes from './routes/adminFoodCategoryRoutes.js';
 import adminArticleRoutes from './routes/adminArticleRoutes.js';
 import adminUserRoutes from './routes/adminUserRoutes.js';
 import adminAccountRoutes from './routes/adminAccountRoutes.js';
@@ -107,6 +108,7 @@ app.use('/api/v1/admin/orders', adminOrderRoutes);    // Order management
 app.use('/api/v1/admin/tables', adminTableRoutes);    // Table management
 app.use('/api/v1/admin/payments', paymentRoutes);     // Payment management
 app.use('/api/v1/admin/foods', adminFoodRoutes);      // Food/Menu management
+app.use('/api/v1/admin/food-categories', adminFoodCategoryRoutes); // Food category management
 app.use('/api/v1/admin/articles', adminArticleRoutes); // Content management
 app.use('/api/v1/admin/users', adminUserRoutes);      // Customer management
 app.use('/api/v1/admin/accounts', adminAccountRoutes);   // Admin account management
