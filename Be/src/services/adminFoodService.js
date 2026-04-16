@@ -67,8 +67,16 @@ export const uploadFoodModel = async ({ file, modelType }) => {
     format: uploadResult?.format,
   };
 
-  // Nếu upload GLB → tự động convert sang USDZ
+  const enableAutoUsdzConversion = process.env.ENABLE_AUTO_USDZ_CONVERSION === 'true';
+
+  // Nếu upload GLB → chỉ convert khi bật cờ môi trường
   if (resolvedModelType === 'glb') {
+    if (!enableAutoUsdzConversion) {
+      result.conversionWarning =
+        'Đã tắt auto-convert GLB->USDZ để tránh mất texture/màu. Vui lòng upload USDZ gốc để dùng iOS Quick Look chuẩn màu.';
+      return result;
+    }
+
     try {
       const { convertGlbToUsdz } = await import('./glbToUsdzConverter.js');
       const usdzBuffer = await convertGlbToUsdz(file.buffer);

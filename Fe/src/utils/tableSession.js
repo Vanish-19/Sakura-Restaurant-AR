@@ -1,6 +1,6 @@
 import { scanTableSession } from '../services/orderApi.js'
 
-const USE_MOCK_TABLE_SCAN = import.meta.env.VITE_USE_MOCK_TABLE_SCAN !== 'false'
+const USE_MOCK_TABLE_SCAN = import.meta.env.VITE_USE_MOCK_TABLE_SCAN === 'true'
 
 function tokenStorageKey(tableCode) {
   return `armenuweb_table_token:${tableCode}`

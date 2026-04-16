@@ -5,6 +5,33 @@ import { getAllFoods, createFood, updateFood, deleteFood, uploadFoodModel } from
 
 const formatVnd = (value) => new Intl.NumberFormat('vi-VN').format(Number(value || 0))
 
+async function convertGlbToUsdzInBrowser(glbFile) {
+  const [{ GLTFLoader }, { USDZExporter }] = await Promise.all([
+    import('three/examples/jsm/loaders/GLTFLoader.js'),
+    import('three/examples/jsm/exporters/USDZExporter.js'),
+  ])
+
+  const objectUrl = URL.createObjectURL(glbFile)
+
+  try {
+    const loader = new GLTFLoader()
+    const gltf = await loader.loadAsync(objectUrl)
+
+    const exporter = new USDZExporter()
+    const usdzArrayBuffer = await exporter.parseAsync(gltf.scene, {
+      maxTextureSize: 2048,
+    })
+
+    return new File(
+      [usdzArrayBuffer],
+      String(glbFile.name || 'model.glb').replace(/\.glb$/i, '.usdz'),
+      { type: 'model/vnd.usdz+zip' },
+    )
+  } finally {
+    URL.revokeObjectURL(objectUrl)
+  }
+}
+
 export default function FoodManagementAdminPage() {
   const [foods, setFoods] = useState([])
   const [loading, setLoading] = useState(true)
@@ -22,9 +49,9 @@ export default function FoodManagementAdminPage() {
       return Upload.LIST_IGNORE
     }
 
-    const isWithinLimit = (file?.size || 0) <= 25 * 1024 * 1024
+    const isWithinLimit = (file?.size || 0) <= 20 * 1024 * 1024
     if (!isWithinLimit) {
-      message.error('Kích thước file tối đa là 25MB')
+      message.error('Kích thước file tối đa là 20MB')
       return Upload.LIST_IGNORE
     }
 
@@ -45,23 +72,46 @@ export default function FoodManagementAdminPage() {
         throw new Error('Không nhận được URL model từ server')
       }
 
-      // Nếu upload GLB và backend đã convert USDZ thành công
-      if (modelType === 'glb' && res?.data?.convertedUsdz?.url) {
+      if (modelType === 'glb') {
+        let usdzUrl = res?.data?.convertedUsdz?.url
+
+        if (!usdzUrl) {
+          try {
+            message.loading({
+              content: 'Đang convert GLB -> USDZ trên trình duyệt để giữ màu...',
+              key: 'glb-usdz-convert',
+              duration: 0,
+            })
+
+            const usdzFile = await convertGlbToUsdzInBrowser(file)
+            const usdzRes = await uploadFoodModel(usdzFile, 'usdz')
+            usdzUrl = usdzRes?.data?.url || ''
+
+            message.success({
+              content: 'Convert và upload USDZ thành công (giữ màu tốt hơn)',
+              key: 'glb-usdz-convert',
+            })
+          } catch (convertError) {
+            message.warning({
+              content: `Không thể auto-convert USDZ giữ màu: ${convertError?.message || 'unknown error'}`,
+              key: 'glb-usdz-convert',
+            })
+          }
+        }
+
         form.setFieldsValue({
           glb_url: uploadedUrl,
-          usdz_url: res.data.convertedUsdz.url,
+          ...(usdzUrl ? { usdz_url: usdzUrl } : {}),
         })
-        message.success('Upload .glb + auto-convert .usdz thành công!')
-      } else {
-        // Fallback: chỉ fill field tương ứng
-        const targetField = modelType === 'usdz' ? 'usdz_url' : 'glb_url'
-        form.setFieldsValue({ [targetField]: uploadedUrl })
-        message.success(`Upload .${modelType} thành công`)
 
-        // Nếu convert USDZ thất bại, show warning
-        if (modelType === 'glb' && res?.data?.conversionError) {
-          message.warning(`Convert USDZ thất bại: ${res.data.conversionError}`)
+        if (usdzUrl) {
+          message.success('Upload GLB + USDZ thành công (ưu tiên giữ màu)')
+        } else {
+          message.success('Upload GLB thành công. Bạn nên upload thêm USDZ gốc để AR iOS chuẩn màu hơn.')
         }
+      } else {
+        form.setFieldsValue({ usdz_url: uploadedUrl })
+        message.success('Upload .usdz thành công')
       }
 
       onSuccess?.(res, file)

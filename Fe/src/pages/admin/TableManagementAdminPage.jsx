@@ -3,12 +3,27 @@ import { Badge, Button, Card, Input, Tag, message, Spin } from 'antd'
 import { useMemo, useState, useEffect } from 'react'
 import { getAllTables } from '../../services/adminTableApi.js'
 
-const floorOptions = [
-  { label: 'Tất cả khu vực', value: 'all' },
-  { label: 'Sảnh chính', value: 'main hall' },
-  { label: 'Khu VIP', value: 'vip lounge' },
-  { label: 'Sân thượng', value: 'terrace' },
-]
+const floorLabelMap = {
+  'main hall': 'Sảnh chính',
+  'vip lounge': 'Khu VIP',
+  terrace: 'Sân thượng',
+  window: 'Khu cửa sổ',
+}
+
+function toFloorLabel(zone) {
+  const normalized = String(zone || '').trim().toLowerCase()
+  return floorLabelMap[normalized] || String(zone || 'Không xác định')
+}
+
+function extractTableCode(table) {
+  const nameDigits = String(table?.name || '').match(/\d+/)?.[0]
+  if (nameDigits) return nameDigits.padStart(2, '0')
+
+  const qrDigits = String(table?.qr_hash || '').match(/\d+/)?.[0]
+  if (qrDigits) return qrDigits.padStart(2, '0')
+
+  return String(table?.name || '??')
+}
 
 // Tables data is now fetched from backend
 
@@ -29,6 +44,16 @@ export default function TableManagementAdminPage() {
   const [tables, setTables] = useState([])
   const [loading, setLoading] = useState(true)
 
+  const floorOptions = useMemo(() => {
+    const zones = Array.from(new Set(tables.map((t) => t.zone).filter(Boolean)))
+    const dynamicOptions = zones.map((zone) => ({
+      label: toFloorLabel(zone),
+      value: String(zone).toLowerCase(),
+    }))
+
+    return [{ label: 'Tất cả khu vực', value: 'all' }, ...dynamicOptions]
+  }, [tables])
+
   const fetchTables = async () => {
     try {
       setLoading(true)
@@ -42,8 +67,8 @@ export default function TableManagementAdminPage() {
 
           return {
             id: t._id,
-            code: t.name.replace('T', ''),
-            zone: t.zone || 'Main Hall',
+            code: extractTableCode(t),
+            zone: String(t.zone || 'main hall').trim(),
             state,
             note
           }
@@ -79,6 +104,8 @@ export default function TableManagementAdminPage() {
   const availableCount = tables.filter((slot) => slot.state === 'available').length
   const reservedCount = tables.filter((slot) => slot.state === 'reserved').length
   const occupiedCount = tables.filter((slot) => slot.state === 'occupied').length
+  const totalCount = tables.length
+  const currentUsage = occupiedCount + reservedCount
 
   return (
     <div className="space-y-4 pb-20">
@@ -152,7 +179,7 @@ export default function TableManagementAdminPage() {
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <Card className="!rounded-xl !border !border-zinc-200 !shadow-none" bodyStyle={{ padding: 18 }}>
           <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">MỨC ĐỘ SỬ DỤNG HIỆN TẠI</div>
-          <div className="mt-2 text-[48px] leading-none font-black tracking-tight text-zinc-900">42/100</div>
+          <div className="mt-2 text-[48px] leading-none font-black tracking-tight text-zinc-900">{currentUsage}/{totalCount || 0}</div>
           <div className="mt-2 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
             <TeamOutlined className="text-lg" />
           </div>
@@ -203,7 +230,7 @@ export default function TableManagementAdminPage() {
                         <span className="absolute -right-2 -top-2 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">R</span>
                       ) : null}
                     </div>
-                    <div className="text-center text-[10px] uppercase tracking-[0.12em] text-zinc-400">{slot.zone}</div>
+                    <div className="text-center text-[10px] uppercase tracking-[0.12em] text-zinc-400">{toFloorLabel(slot.zone)}</div>
                   </div>
                 ))}
               </div>
