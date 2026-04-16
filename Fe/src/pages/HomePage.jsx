@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import FeaturePill from '../components/molecules/FeaturePill.jsx'
 import ServiceTypeModal from '../components/organisms/ServiceTypeModal.jsx'
-import TableSelectionModal from '../components/organisms/TableSelectionModal.jsx'
 import MenuItemCard from '../components/molecules/MenuItemCard.jsx'
 import CategoryBar from '../components/organisms/CategoryBar.jsx'
 import { useCart } from '../contexts/CartContext.jsx'
@@ -41,7 +40,6 @@ export default function HomePage() {
   const isAndroidPreview = searchParams.get('preview') === 'android'
   const [menuItems, setMenuItems] = useState([])
   const [serviceModalOpen, setServiceModalOpen] = useState(false)
-  const [tableModalOpen, setTableModalOpen] = useState(false)
   const [isScanningQr, setIsScanningQr] = useState(false)
   const guestRefreshResetRef = useRef(false)
 
@@ -105,20 +103,6 @@ export default function HomePage() {
         guestRefreshResetRef.current = true
         clearLockedTableCode()
         clearSavedServiceMode()
-
-        const hasServiceQuery =
-          searchParams.has('table') ||
-          searchParams.has('tableId') ||
-          searchParams.has('ban')
-
-        if (hasServiceQuery) {
-          const next = new URLSearchParams(searchParams)
-          next.delete('table')
-          next.delete('tableId')
-          next.delete('ban')
-          setSearchParams(next, { replace: true })
-          return
-        }
       }
 
       const locked = getLockedTableCode()
@@ -134,7 +118,6 @@ export default function HomePage() {
           setSearchParams(next, { replace: true })
         }
         setServiceModalOpen(false)
-        setTableModalOpen(false)
         return
       }
 
@@ -148,18 +131,15 @@ export default function HomePage() {
         const savedMode = getSavedServiceMode()
         if (savedMode === 'delivery') {
           setServiceModalOpen(false)
-          setTableModalOpen(false)
           return
         }
 
         if (savedMode === 'dine-in-pending') {
           setServiceModalOpen(false)
-          setTableModalOpen(true)
           return
         }
 
         clearSavedServiceMode()
-        setTableModalOpen(false)
         setServiceModalOpen(true)
         return
       }
@@ -177,7 +157,6 @@ export default function HomePage() {
         next.delete('ban')
         setSearchParams(next, { replace: true })
         setServiceModalOpen(false)
-        setTableModalOpen(false)
         message.success(`Đã kích hoạt phiên tại bàn ${normalized}`)
       } catch {
         if (cancelled) return
@@ -188,7 +167,6 @@ export default function HomePage() {
         next.delete('tableId')
         next.delete('ban')
         setSearchParams(next, { replace: true })
-        setTableModalOpen(false)
         setServiceModalOpen(true)
         message.error('Không xác thực được bàn. Vui lòng quét lại mã QR tại nhà hàng.')
       } finally {
@@ -207,7 +185,7 @@ export default function HomePage() {
     if (type === 'dine-in') {
       setSavedServiceMode('dine-in-pending')
       setServiceModalOpen(false)
-      setTableModalOpen(true)
+      message.info('Vui lòng quét QR trên bàn để vào đúng giao diện của bàn tương ứng.')
       return
     }
 
@@ -220,31 +198,6 @@ export default function HomePage() {
     setSearchParams(next, { replace: true })
     navigate('/', { replace: true })
     setServiceModalOpen(false)
-    setTableModalOpen(false)
-  }
-
-  const confirmTableSelection = async (tableNo) => {
-    try {
-      setIsScanningQr(true)
-      const normalized = normalizeTableCode(tableNo)
-      await ensureTableToken(normalized)
-      lockTableCode(normalized)
-      setSavedServiceMode('dine-in')
-
-      const next = new URLSearchParams(searchParams)
-      next.set('table', normalized)
-      next.delete('tableId')
-      next.delete('ban')
-      setSearchParams(next, { replace: true })
-
-      setTableModalOpen(false)
-      setServiceModalOpen(false)
-      message.success(`Đã chọn bàn ${normalized}`)
-    } catch {
-      message.error('Không thể gán bàn này. Vui lòng thử bàn khác.')
-    } finally {
-      setIsScanningQr(false)
-    }
   }
 
   const handleViewAr = (item) => {
@@ -345,13 +298,6 @@ export default function HomePage() {
         open={serviceModalOpen}
         onClose={() => {}}
         onSelect={pickServiceType}
-      />
-
-      <TableSelectionModal
-        open={tableModalOpen}
-        forceSelection
-        onCancel={() => {}}
-        onConfirm={confirmTableSelection}
       />
     </div>
   )

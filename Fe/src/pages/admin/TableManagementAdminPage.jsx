@@ -1,7 +1,8 @@
 import { BellFilled, PlusOutlined, SearchOutlined, TeamOutlined } from '@ant-design/icons'
-import { Badge, Button, Card, Input, Tag, message, Spin } from 'antd'
+import { Badge, Button, Card, Input, Modal, QRCode, Tag, Typography, message, Spin } from 'antd'
 import { useMemo, useState, useEffect } from 'react'
 import { getAllTables } from '../../services/adminTableApi.js'
+import { buildTableQrUrls, TABLE_QR_BASE_URL } from '../../constants/tableQrRoutes.js'
 
 const floorLabelMap = {
   'main hall': 'Sảnh chính',
@@ -43,6 +44,17 @@ export default function TableManagementAdminPage() {
   const [query, setQuery] = useState('')
   const [tables, setTables] = useState([])
   const [loading, setLoading] = useState(true)
+  const [qrModalOpen, setQrModalOpen] = useState(false)
+  const [selectedTableForQr, setSelectedTableForQr] = useState(null)
+  const qrBaseUrl = TABLE_QR_BASE_URL
+
+  const qrUrlByCode = useMemo(() => {
+    const byCode = new Map()
+    for (const item of buildTableQrUrls(qrBaseUrl)) {
+      byCode.set(item.tableCode, item.url)
+    }
+    return byCode
+  }, [qrBaseUrl])
 
   const floorOptions = useMemo(() => {
     const zones = Array.from(new Set(tables.map((t) => t.zone).filter(Boolean)))
@@ -70,7 +82,8 @@ export default function TableManagementAdminPage() {
             code: extractTableCode(t),
             zone: String(t.zone || 'main hall').trim(),
             state,
-            note
+            note,
+            qrHash: t.qr_hash || '',
           }
         })
         setTables(mapped)
@@ -106,6 +119,12 @@ export default function TableManagementAdminPage() {
   const occupiedCount = tables.filter((slot) => slot.state === 'occupied').length
   const totalCount = tables.length
   const currentUsage = occupiedCount + reservedCount
+
+  const selectedTableQrUrl = useMemo(() => {
+    const tableCode = selectedTableForQr?.code || ''
+    const normalizedCode = String(tableCode).padStart(2, '0')
+    return qrUrlByCode.get(normalizedCode) || `${qrBaseUrl}/order?table=${normalizedCode}`
+  }, [selectedTableForQr, qrUrlByCode, qrBaseUrl])
 
   return (
     <div className="space-y-4 pb-20">
@@ -216,7 +235,14 @@ export default function TableManagementAdminPage() {
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
                 {visibleSlots.map((slot) => (
                   <div key={slot.id} className="space-y-2">
-                    <div className={`relative flex h-[74px] items-center justify-center rounded-xl border-2 text-center ${tableStateStyle(slot.state)}`}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedTableForQr(slot)
+                        setQrModalOpen(true)
+                      }}
+                      className={`relative flex h-[74px] w-full items-center justify-center rounded-xl border-2 text-center transition hover:scale-[1.02] ${tableStateStyle(slot.state)}`}
+                    >
                       <div>
                         <div className="text-[34px] leading-none font-black tracking-tight">{slot.code}</div>
                         <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide">{slot.note}</div>
@@ -229,7 +255,7 @@ export default function TableManagementAdminPage() {
                       {slot.state === 'reserved' ? (
                         <span className="absolute -right-2 -top-2 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">R</span>
                       ) : null}
-                    </div>
+                    </button>
                     <div className="text-center text-[10px] uppercase tracking-[0.12em] text-zinc-400">{toFloorLabel(slot.zone)}</div>
                   </div>
                 ))}
@@ -290,6 +316,33 @@ export default function TableManagementAdminPage() {
           className="!h-11 !w-11 !rounded-xl !border-0 !bg-rose-600 !text-white hover:!bg-rose-500"
         />
       </div>
+
+      <Modal
+        title={selectedTableForQr ? `QR bàn ${selectedTableForQr.code}` : 'QR bàn'}
+        open={qrModalOpen}
+        onCancel={() => {
+          setQrModalOpen(false)
+          setSelectedTableForQr(null)
+        }}
+        footer={null}
+        centered
+      >
+        <div className="flex flex-col items-center gap-3">
+          <QRCode
+            value={selectedTableQrUrl}
+            size={220}
+            errorLevel="H"
+          />
+
+          <Typography.Text copyable={{ text: selectedTableQrUrl }} className="break-all text-center text-xs text-zinc-600">
+            {selectedTableQrUrl}
+          </Typography.Text>
+
+          <div className="text-center text-[11px] text-zinc-500">
+            Quét mã này để mở giao diện gọi món đúng cho bàn {selectedTableForQr?.code || '--'}.
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

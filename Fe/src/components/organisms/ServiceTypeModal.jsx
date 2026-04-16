@@ -25,10 +25,10 @@ export default function ServiceTypeModal({ open, onSelect, onClose }) {
           </div>
           <div className="text-xl font-semibold text-slate-900">Ăn tại chỗ</div>
           <p className="mt-2 text-sm text-slate-500">
-            Phục vụ tại bàn dành cho khách dùng bữa tại nhà hàng.
+            Quét QR tại bàn để mở đúng giao diện gọi món của bàn tương ứng.
           </p>
           <Button className="mt-4 !border-0 !bg-[#c0001c] !text-white hover:!bg-[#d1142f]" onClick={() => onSelect('dine-in')}>
-            Chọn hình thức này
+            Tôi sẽ quét QR tại bàn
           </Button>
         </div>
 
