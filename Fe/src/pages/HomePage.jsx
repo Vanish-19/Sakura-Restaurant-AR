@@ -282,7 +282,11 @@ export default function HomePage() {
                 : 'mt-7 text-base text-slate-600 md:text-lg'
             }
           >
-            Xem mô hình 3D món ăn trước khi gọi món
+            <em className="inline-flex items-center gap-1.5">
+              <span aria-hidden="true" className="text-4xl font-black leading-none text-slate-300 md:text-5xl">❝</span>
+              <span>Chúng tôi biết ngoài kia có nhiều lựa chọn, cảm ơn bạn đã chọn Sakura Restaurant</span>
+              <span aria-hidden="true" className="text-4xl font-black leading-none text-slate-300 md:text-5xl">❞</span>
+            </em>
           </p>
 
           <div className="mt-12 flex flex-wrap justify-center gap-4">

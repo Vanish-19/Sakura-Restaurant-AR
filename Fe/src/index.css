@@ -5,6 +5,13 @@
     "Times New Roman", Times, serif;
   --font-jp: "Noto Serif JP", ui-serif, Georgia, Cambria, "Times New Roman",
     Times, serif;
+  --client-bg: #fafaf6;
+  --client-text: #1f2937;
+  --client-header-bg: linear-gradient(90deg, #6a0012 0%, #8e0018 50%, #6a0012 100%);
+  --client-footer-bg: #1a1a1a;
+  --client-footer-text: #f9f9f6;
+  --client-footer-subtext: #d9d9d2;
+  --client-android-bg: linear-gradient(180deg, #fee2e2 0%, #fff1f2 50%, #fecdd3 100%);
 }
 
 html,
@@ -15,8 +22,55 @@ body,
 
 body {
   margin: 0;
-  background: #fafaf6;
-  color: #1f2937;
+  background: var(--client-bg);
+  color: var(--client-text);
+}
+
+body[data-client-theme='soft'] {
+  --client-bg: #f2f4f7;
+  --client-text: #1f2937;
+  --client-header-bg: linear-gradient(90deg, #5a1021 0%, #7a1d3a 55%, #5a1021 100%);
+  --client-footer-bg: #121722;
+  --client-footer-text: #edf2ff;
+  --client-footer-subtext: #c7cfdf;
+  --client-android-bg: linear-gradient(180deg, #e9eef6 0%, #f4f6fb 60%, #eceff8 100%);
+}
+
+body[data-client-theme='dark'] {
+  --client-bg: #0f141f;
+  --client-text: #e5e7eb;
+  --client-header-bg: linear-gradient(90deg, #0d1b2d 0%, #133152 55%, #0d1b2d 100%);
+  --client-footer-bg: #070b11;
+  --client-footer-text: #f3f4f6;
+  --client-footer-subtext: #9ca3af;
+  --client-android-bg: linear-gradient(180deg, #101a29 0%, #0f172a 60%, #0b1220 100%);
+}
+
+.client-layout-shell {
+  background: var(--client-bg);
+  color: var(--client-text);
+}
+
+.client-layout-content {
+  background: var(--client-bg);
+  color: var(--client-text);
+}
+
+.client-header {
+  background: var(--client-header-bg) !important;
+}
+
+.client-footer {
+  background: var(--client-footer-bg) !important;
+  color: var(--client-footer-text) !important;
+}
+
+.client-footer-secondary {
+  color: var(--client-footer-subtext);
+}
+
+.android-preview-bg {
+  background: var(--client-android-bg);
 }
 
 @layer components {

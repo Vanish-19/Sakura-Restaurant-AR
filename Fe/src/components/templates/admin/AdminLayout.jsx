@@ -2,33 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import AdminSidebar from '../../organisms/admin/AdminSidebar.jsx'
 import AdminTopbar from '../../organisms/admin/AdminTopbar.jsx'
-
-const ADMIN_SETTINGS_KEY = 'armenuweb_admin_settings_v1'
-
-function getInitialAdminSettings() {
-  const fallback = {
-    websiteName: 'ZenithCrimson',
-    themePreset: 'default',
-    accentColor: '#c10017',
-  }
-
-  try {
-    const raw = localStorage.getItem(ADMIN_SETTINGS_KEY)
-    if (!raw) return fallback
-    const parsed = JSON.parse(raw)
-    return {
-      ...fallback,
-      ...(parsed || {}),
-    }
-  } catch {
-    return fallback
-  }
-}
+import { defaultSiteSettings, SITE_SETTINGS_KEY } from '../../../utils/siteSettings.js'
 
 export default function AdminLayout() {
   const location = useLocation()
   const [adminSearchQuery, setAdminSearchQuery] = useState('')
-  const [adminSettings, setAdminSettings] = useState(getInitialAdminSettings)
+  const [adminSettings, setAdminSettings] = useState(defaultSiteSettings)
 
   const isOrderSearchEnabled = useMemo(() => {
     return (
@@ -45,7 +24,26 @@ export default function AdminLayout() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify(adminSettings))
+      const raw = localStorage.getItem(SITE_SETTINGS_KEY)
+      if (!raw) {
+        setAdminSettings(defaultSiteSettings)
+        return
+      }
+
+      const parsed = JSON.parse(raw)
+      setAdminSettings({
+        ...defaultSiteSettings,
+        ...(parsed || {}),
+      })
+    } catch {
+      setAdminSettings(defaultSiteSettings)
+    }
+  }, [])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SITE_SETTINGS_KEY, JSON.stringify(adminSettings))
+      window.dispatchEvent(new Event('site-settings-updated'))
     } catch {
       // ignore storage failures
     }

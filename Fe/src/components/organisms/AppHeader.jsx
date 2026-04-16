@@ -81,7 +81,7 @@ export default function AppHeader({ variant = 'desktop' }) {
     <Header
       className={
         headerClassName +
-        ' !bg-gradient-to-r !from-red-900 !via-red-800 !to-red-900 !shadow-sm'
+        ' client-header !shadow-sm'
       }
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
