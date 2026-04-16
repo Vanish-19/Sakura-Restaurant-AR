@@ -7,6 +7,9 @@ const proxyTarget = process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:3000'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [tailwindcss(), react()],
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
   server: {
     allowedHosts: ['.ngrok-free.dev', '.ngrok.io', 'localhost', '127.0.0.1'],
     proxy: {

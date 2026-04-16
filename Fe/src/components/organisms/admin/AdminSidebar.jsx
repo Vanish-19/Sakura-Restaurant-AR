@@ -9,7 +9,8 @@ import {
   TeamOutlined,
   UserSwitchOutlined,
 } from '@ant-design/icons'
-import { useMemo } from 'react'
+import { Form, Input, Modal, Select } from 'antd'
+import { useMemo, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 
 const navItems = [
@@ -22,23 +23,51 @@ const navItems = [
   { key: '/admin/content', label: 'Content Management', icon: <ReadOutlined /> },
 ]
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ adminSettings, onUpdateSettings }) {
   const location = useLocation()
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [settingsForm] = Form.useForm()
 
   const selectedKeys = useMemo(() => {
     const exact = navItems.find((item) => location.pathname.startsWith(item.key))
     return exact ? [exact.key] : ['/admin/dashboard']
   }, [location.pathname])
 
+  const openSettings = () => {
+    settingsForm.setFieldsValue({
+      websiteName: adminSettings?.websiteName || 'ZenithCrimson',
+      themePreset: adminSettings?.themePreset || 'default',
+      accentColor: adminSettings?.accentColor || '#c10017',
+    })
+    setIsSettingsOpen(true)
+  }
+
+  const handleSaveSettings = async () => {
+    try {
+      const values = await settingsForm.validateFields()
+      onUpdateSettings?.({
+        websiteName: values.websiteName,
+        themePreset: values.themePreset,
+        accentColor: values.accentColor,
+      })
+      setIsSettingsOpen(false)
+    } catch {
+      // form validation handles UI feedback
+    }
+  }
+
   return (
     <aside className="fixed inset-y-0 left-0 z-20 hidden w-[220px] border-r border-zinc-200 bg-[#efefef] lg:flex lg:flex-col">
       <div className="px-5 pb-4 pt-4">
         <div className="mb-2.5 flex items-center gap-2.5">
-          <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] bg-[#c10017] text-white shadow-sm">
+          <div
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] text-white shadow-sm"
+            style={{ backgroundColor: 'var(--admin-accent)' }}
+          >
             <ForkOutlined className="text-[12px]" />
           </div>
           <div className="min-w-0 max-w-[150px]">
-            <p className="truncate text-[13px] font-extrabold uppercase leading-none tracking-tight text-zinc-900">ZenithCrimson</p>
+            <p className="truncate text-[13px] font-extrabold uppercase leading-none tracking-tight text-zinc-900">{adminSettings?.websiteName || 'ZenithCrimson'}</p>
             <p className="mt-1 truncate text-[9px] font-medium uppercase leading-none tracking-[0.16em] text-zinc-500">Premium Management</p>
           </div>
         </div>
@@ -55,9 +84,10 @@ export default function AdminSidebar() {
                   className={[
                     'relative flex items-center gap-2.5 px-5 py-3 text-[13px] font-medium transition',
                     selected
-                      ? 'bg-white text-[#c10017] before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-[#c10017]'
+                      ? 'bg-white font-semibold'
                       : 'text-zinc-600 hover:bg-white/60 hover:text-zinc-900',
                   ].join(' ')}
+                  style={selected ? { color: 'var(--admin-accent)', borderLeft: '3px solid var(--admin-accent)' } : undefined}
                 >
                   <span className="text-[14px]">{item.icon}</span>
                   <span>{item.label}</span>
@@ -69,15 +99,58 @@ export default function AdminSidebar() {
       </nav>
 
       <div className="space-y-1 px-0 pb-6">
-        <div className="flex items-center gap-2.5 px-5 py-2 text-[13px] text-zinc-600">
+        <button
+          type="button"
+          onClick={openSettings}
+          className="flex w-full items-center gap-2.5 px-5 py-2 text-[13px] text-zinc-600 transition hover:bg-white/60 hover:text-zinc-900"
+        >
           <SettingOutlined className="text-[13px]" />
           <span>Settings</span>
-        </div>
+        </button>
         <div className="flex items-center gap-2.5 px-5 py-2 text-[13px] text-zinc-600">
           <QuestionCircleOutlined className="text-[13px]" />
           <span>Support</span>
         </div>
       </div>
+
+      <Modal
+        title="Cài đặt website admin"
+        open={isSettingsOpen}
+        onCancel={() => setIsSettingsOpen(false)}
+        onOk={handleSaveSettings}
+        okText="Lưu cài đặt"
+      >
+        <Form form={settingsForm} layout="vertical" className="mt-3">
+          <Form.Item
+            name="websiteName"
+            label="Tên website"
+            rules={[{ required: true, message: 'Vui lòng nhập tên website' }]}
+          >
+            <Input maxLength={32} placeholder="Ví dụ: ZenithCrimson" />
+          </Form.Item>
+
+          <Form.Item name="themePreset" label="Theme" initialValue="default">
+            <Select
+              options={[
+                { value: 'default', label: 'Default Light' },
+                { value: 'soft', label: 'Soft Gray' },
+                { value: 'dark', label: 'Dark Contrast' },
+              ]}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="accentColor"
+            label="Màu nhấn"
+            rules={[
+              { required: true, message: 'Vui lòng nhập màu nhấn' },
+              { pattern: /^#([0-9a-fA-F]{6})$/, message: 'Màu phải ở dạng #RRGGBB' },
+            ]}
+          >
+            <Input placeholder="#c10017" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </aside>
   )
 }

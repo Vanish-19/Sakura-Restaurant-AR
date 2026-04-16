@@ -1,6 +1,7 @@
 import Order from '../models/Order.js';
 import User from '../models/User.js';
 import MenuItem from '../models/MenuItem.js';
+import Payment from '../models/Payment.js';
 
 export const getDashboardStats = async () => {
   const today = new Date();
@@ -28,6 +29,12 @@ export const getDashboardStats = async () => {
     return days;
   };
 
+  const completedOnlineOrderIds = await Payment.distinct('order', { status: 'completed' });
+  const revenueOrConditions = [{ status: 'paid' }];
+  if (completedOnlineOrderIds.length > 0) {
+    revenueOrConditions.push({ _id: { $in: completedOnlineOrderIds } });
+  }
+
   const [
     revenueData,
     totalOrders,
@@ -37,7 +44,11 @@ export const getDashboardStats = async () => {
     revenueTrendRaw
   ] = await Promise.all([
     Order.aggregate([
-      { $match: { status: 'paid' } },
+      {
+        $match: {
+          $or: revenueOrConditions,
+        },
+      },
       { $group: { _id: null, total: { $sum: '$total_amount' } } }
     ]),
     Order.countDocuments({}),
@@ -62,7 +73,12 @@ export const getDashboardStats = async () => {
       .sort({ createdAt: -1 })
       .limit(5),
     Order.aggregate([
-      { $match: { status: 'paid', createdAt: { $gte: new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000) } } },
+      {
+        $match: {
+          createdAt: { $gte: new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000) },
+          $or: revenueOrConditions,
+        },
+      },
       {
         $group: {
           _id: {

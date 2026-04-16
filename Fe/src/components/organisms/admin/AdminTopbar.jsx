@@ -5,7 +5,11 @@ import { useNavigate } from 'react-router-dom'
 import { adminLogout } from '../../../services/authApi.js'
 import { clearAdminSession, getAdminProfile } from '../../../utils/authSession.js'
 
-export default function AdminTopbar() {
+export default function AdminTopbar({
+  searchEnabled = false,
+  searchValue = '',
+  onSearchChange,
+}) {
   const navigate = useNavigate()
   const adminProfile = getAdminProfile()
 
@@ -38,14 +42,18 @@ export default function AdminTopbar() {
 
   return (
     <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 pb-3">
-      <label className="relative w-full max-w-[300px] sm:max-w-[360px]">
-        <SearchOutlined className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-zinc-400" />
-        <input
-          type="text"
-          placeholder="Tìm đơn hàng, khách hàng..."
-          className="h-9 w-full rounded-lg border border-zinc-200 bg-zinc-100/70 pl-9 pr-3 text-[12px] text-zinc-700 outline-none placeholder:text-zinc-400 focus:border-zinc-300"
-        />
-      </label>
+      {searchEnabled ? (
+        <label className="relative w-full max-w-[300px] sm:max-w-[360px]">
+          <SearchOutlined className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-zinc-400" />
+          <input
+            type="text"
+            placeholder="Tìm theo mã đơn hàng..."
+            value={searchValue}
+            onChange={(event) => onSearchChange?.(event.target.value)}
+            className="h-9 w-full rounded-lg border border-zinc-200 bg-zinc-100/70 pl-9 pr-3 text-[12px] text-zinc-700 outline-none placeholder:text-zinc-400 focus:border-zinc-300"
+          />
+        </label>
+      ) : <div />}
 
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
         <button className="grid h-8 w-8 place-items-center rounded-md text-zinc-600 hover:bg-zinc-100" type="button" aria-label="thông báo">

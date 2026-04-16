@@ -30,10 +30,20 @@ async function attachPaymentStatus(orders) {
   });
 }
 
-const getAllOrders = async ({ status, order_type, page = 1, limit = 20 }) => {
+const getAllOrders = async ({ status, order_type, order_id, page = 1, limit = 20 }) => {
   const query = {};
   if (status) query.status = status;
   if (order_type) query.order_type = order_type;
+  if (order_id) {
+    const orderIdKeyword = String(order_id).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    query.$expr = {
+      $regexMatch: {
+        input: { $toString: '$_id' },
+        regex: orderIdKeyword,
+        options: 'i',
+      },
+    };
+  }
 
   const skip = (page - 1) * limit;
 
@@ -133,10 +143,22 @@ const getOrderStats = async () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const completedOnlineOrderIds = await Payment.distinct('order', { status: 'completed' });
+  const revenueOrConditions = [{ status: 'paid' }];
+
+  if (completedOnlineOrderIds.length > 0) {
+    revenueOrConditions.push({ _id: { $in: completedOnlineOrderIds } });
+  }
+
   const [todayOptions, todayRevenue, statusCounts] = await Promise.all([
     Order.countDocuments({ createdAt: { $gte: today } }),
     Order.aggregate([
-      { $match: { createdAt: { $gte: today }, status: 'paid' } },
+      {
+        $match: {
+          createdAt: { $gte: today },
+          $or: revenueOrConditions,
+        },
+      },
       { $group: { _id: null, total: { $sum: '$total_amount' } } }
     ]),
     Order.aggregate([

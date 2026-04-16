@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useMemo, useReducer } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import { getOrderSource } from '../utils/orderSource.js'
 
 const STORAGE_KEY = 'armenuweb_cart_v1'
@@ -21,6 +20,7 @@ function toScopeKey(orderSource) {
  * @property {(id: string, quantity: number) => void} setQuantity
  * @property {(id: string) => void} removeItem
  * @property {() => void} clearCart
+ * @property {() => void} clearAllCarts
  */
 
 function safeParse(json) {
@@ -113,6 +113,9 @@ function cartReducer(state, action) {
         [scopeKey]: {},
       }
     }
+    case 'clearAll': {
+      return { [DELIVERY_SCOPE_KEY]: {} }
+    }
     default:
       return state
   }
@@ -132,7 +135,10 @@ function getInitialCart() {
 const CartContext = createContext(null)
 
 export function CartProvider({ children }) {
-  const [searchParams] = useSearchParams()
+  const searchParams =
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search)
+      : new URLSearchParams('')
   const orderSource = getOrderSource(searchParams)
   const scopeKey = toScopeKey(orderSource)
 
@@ -175,6 +181,7 @@ export function CartProvider({ children }) {
         dispatch({ type: 'remove', payload: { scopeKey, id } })
       },
       clearCart: () => dispatch({ type: 'clear', payload: { scopeKey } }),
+      clearAllCarts: () => dispatch({ type: 'clearAll' }),
     }
   }, [cartById, scopeKey])
 

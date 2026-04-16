@@ -7,9 +7,11 @@ import {
   WalletOutlined,
   LoadingOutlined,
 } from '@ant-design/icons'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { message, Spin } from 'antd'
+import { useOutletContext } from 'react-router-dom'
 import { getDashboardStats } from '../../services/adminDashboardApi.js'
+import { getAllOrders } from '../../services/adminOrderApi.js'
 
 function formatCurrency(num) {
   return new Intl.NumberFormat('vi-VN', {
@@ -33,8 +35,13 @@ function toneClassName(tone) {
 }
 
 export default function DashboardAdminPage() {
+  const { adminSearchQuery = '' } = useOutletContext() || {}
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [searchOrders, setSearchOrders] = useState([])
+  const [searchLoading, setSearchLoading] = useState(false)
+
+  const recentOrders = useMemo(() => data?.recentOrders || [], [data])
 
   const fetchData = async () => {
     try {
@@ -55,6 +62,50 @@ export default function DashboardAdminPage() {
     fetchData()
   }, [])
 
+  useEffect(() => {
+    const keyword = String(adminSearchQuery || '').trim()
+
+    if (!keyword) {
+      setSearchOrders([])
+      setSearchLoading(false)
+      return
+    }
+
+    let mounted = true
+    setSearchLoading(true)
+
+    getAllOrders({ order_id: keyword, limit: 25 })
+      .then((res) => {
+        if (!mounted) return
+        const rows = Array.isArray(res?.orders) ? res.orders : []
+        setSearchOrders(rows.map((o) => ({
+          id: o._id,
+          customer: o.customer_name || 'Dine-in Guest',
+          items_count: Array.isArray(o.items) ? o.items.length : 0,
+          time: o.createdAt,
+          amount: o.total_amount,
+          status: o.status,
+        })))
+      })
+      .catch(() => {
+        if (!mounted) return
+        setSearchOrders([])
+      })
+      .finally(() => {
+        if (mounted) setSearchLoading(false)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [adminSearchQuery])
+
+  const displayedRecentOrders = useMemo(() => {
+    const keyword = String(adminSearchQuery || '').trim()
+    if (!keyword) return recentOrders
+    return searchOrders
+  }, [adminSearchQuery, recentOrders, searchOrders])
+
   if (loading || !data) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
@@ -63,7 +114,7 @@ export default function DashboardAdminPage() {
     )
   }
 
-  const { stats: s, recentOrders } = data
+  const { stats: s } = data
   const revenueTrend = Array.isArray(data?.revenueTrend) ? data.revenueTrend : []
   const maxTrendRevenue = Math.max(1, ...revenueTrend.map((point) => Number(point?.revenue || 0)))
   const trendTotal = revenueTrend.reduce((sum, point) => sum + Number(point?.revenue || 0), 0)
@@ -207,9 +258,9 @@ export default function DashboardAdminPage() {
               </tr>
             </thead>
             <tbody>
-              {recentOrders.map((row) => (
+              {displayedRecentOrders.map((row) => (
                 <tr key={row.id} className="border-t border-[#efeff1] text-sm text-[#2a2b30]">
-                  <td className="px-5 py-4 font-semibold text-xs">...{row.id.slice(-8).toUpperCase()}</td>
+                  <td className="px-5 py-4 font-mono text-[11px] font-semibold text-[#21242a]">{row.id}</td>
                   <td className="px-5 py-4">{row.customer}</td>
                   <td className="px-5 py-4 text-[#656870]">{row.items_count} món</td>
                   <td className="px-5 py-4 text-[#656870]">{new Date(row.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
@@ -219,6 +270,20 @@ export default function DashboardAdminPage() {
                   </td>
                 </tr>
               ))}
+              {displayedRecentOrders.length === 0 && !searchLoading ? (
+                <tr>
+                  <td className="px-5 py-6 text-center text-sm text-zinc-500" colSpan={6}>
+                    Không tìm thấy đơn hàng theo mã đã nhập.
+                  </td>
+                </tr>
+              ) : null}
+              {searchLoading ? (
+                <tr>
+                  <td className="px-5 py-6 text-center text-sm text-zinc-500" colSpan={6}>
+                    Đang tìm đơn hàng...
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>

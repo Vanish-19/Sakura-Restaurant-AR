@@ -11,7 +11,7 @@ import { getOrderSource } from '../../utils/orderSource.js'
 const { Header } = Layout
 
 export default function AppHeader({ variant = 'desktop' }) {
-  const { totalItems } = useCart()
+  const { totalItems, clearAllCarts } = useCart()
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -38,6 +38,7 @@ export default function AppHeader({ variant = 'desktop' }) {
     }
 
     clearUserSession()
+    clearAllCarts()
     setUserProfile(null)
     message.success('Đăng xuất thành công')
     navigate('/', { replace: true })

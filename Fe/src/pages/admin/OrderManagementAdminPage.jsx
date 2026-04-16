@@ -1,5 +1,6 @@
 import { Card, Col, Row, Tag, message, Button, Space, Tabs, Popconfirm } from 'antd'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import AdminDataTable from '../../components/molecules/admin/AdminDataTable.jsx'
 import AdminSectionHeader from '../../components/molecules/admin/AdminSectionHeader.jsx'
 import AdminStatCard from '../../components/molecules/admin/AdminStatCard.jsx'
@@ -28,16 +29,20 @@ function formatDateTime(value) {
 }
 
 export default function OrderManagementAdminPage() {
+  const { adminSearchQuery = '' } = useOutletContext() || {}
   const [dineInOrders, setDineInOrders] = useState([])
   const [takeawayOrders, setTakeawayOrders] = useState([])
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
 
   const fetchOrders = async () => {
+    const keyword = String(adminSearchQuery || '').trim()
+    const commonParams = keyword ? { order_id: keyword } : {}
+
     try {
       setLoading(true)
-      const resDineIn = await getAllOrders({ order_type: 'dine_in' })
-      const resTakeaway = await getAllOrders({ order_type: 'takeaway' })
+      const resDineIn = await getAllOrders({ order_type: 'dine_in', ...commonParams })
+      const resTakeaway = await getAllOrders({ order_type: 'takeaway', ...commonParams })
       const resStats = await getOrderStats()
 
       if (resDineIn?.success) {
@@ -60,6 +65,10 @@ export default function OrderManagementAdminPage() {
   useEffect(() => {
     fetchOrders()
   }, [])
+
+  useEffect(() => {
+    fetchOrders()
+  }, [adminSearchQuery])
 
   const handleStatusChange = async (id, newStatus) => {
     try {
@@ -124,7 +133,7 @@ export default function OrderManagementAdminPage() {
   }
 
   const dineInColumns = [
-    { title: 'ORDER ID', dataIndex: '_id', key: 'id', render: (id) => <span className="text-xs text-zinc-500">...{id.slice(-6)}</span> },
+    { title: 'ORDER ID', dataIndex: '_id', key: 'id', render: (id) => <span className="font-mono text-[11px] text-zinc-700">{id}</span> },
     { title: 'THỜI GIAN TẠO', dataIndex: 'createdAt', key: 'createdAt', render: (value) => <span className="text-xs text-zinc-600">{formatDateTime(value)}</span> },
     { title: 'BÀN', dataIndex: 'table', key: 'table', render: (table) => <Tag>{table?.name || 'Không rõ'}</Tag> },
     { 
@@ -169,7 +178,7 @@ export default function OrderManagementAdminPage() {
   ]
 
   const takeawayColumns = [
-    { title: 'ORDER ID', dataIndex: '_id', key: 'id', render: (id) => <span className="text-xs text-zinc-500">...{id.slice(-6)}</span> },
+    { title: 'ORDER ID', dataIndex: '_id', key: 'id', render: (id) => <span className="font-mono text-[11px] text-zinc-700">{id}</span> },
     { title: 'THỜI GIAN TẠO', dataIndex: 'createdAt', key: 'createdAt', render: (value) => <span className="text-xs text-zinc-600">{formatDateTime(value)}</span> },
     { 
       title: 'CUSTOMER', 
@@ -229,6 +238,18 @@ export default function OrderManagementAdminPage() {
     { key: 'act_orders', label: 'ĐANG XỬ LÝ', value: (stats?.by_status?.pending || 0) + (stats?.by_status?.cooking || 0), note: 'Khối lượng bếp' },
   ]
 
+  const filteredDineInOrders = useMemo(() => {
+    const keyword = String(adminSearchQuery || '').trim().toLowerCase()
+    if (!keyword) return dineInOrders
+    return dineInOrders.filter((order) => String(order?._id || '').toLowerCase().includes(keyword))
+  }, [adminSearchQuery, dineInOrders])
+
+  const filteredTakeawayOrders = useMemo(() => {
+    const keyword = String(adminSearchQuery || '').trim().toLowerCase()
+    if (!keyword) return takeawayOrders
+    return takeawayOrders.filter((order) => String(order?._id || '').toLowerCase().includes(keyword))
+  }, [adminSearchQuery, takeawayOrders])
+
   return (
     <div className="admin-page pb-20">
       <AdminSectionHeader
@@ -252,12 +273,12 @@ export default function OrderManagementAdminPage() {
              {
                key: '1',
                label: <span className="font-semibold px-2">ĐƠN ĂN TẠI CHỖ</span>,
-               children: <AdminDataTable rowKey="_id" loading={loading} columns={dineInColumns} dataSource={dineInOrders} />
+               children: <AdminDataTable rowKey="_id" loading={loading} columns={dineInColumns} dataSource={filteredDineInOrders} />
              },
              {
                key: '2',
                label: <span className="font-semibold px-2">ĐƠN MANG ĐI / GIAO HÀNG</span>,
-               children: <AdminDataTable rowKey="_id" loading={loading} columns={takeawayColumns} dataSource={takeawayOrders} />
+               children: <AdminDataTable rowKey="_id" loading={loading} columns={takeawayColumns} dataSource={filteredTakeawayOrders} />
              }
            ]}
          />

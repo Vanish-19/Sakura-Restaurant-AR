@@ -2,6 +2,7 @@ import {
   Avatar,
   Button,
   Card,
+  Descriptions,
   Segmented,
   Space,
   Table,
@@ -23,7 +24,14 @@ import {
   UsergroupAddOutlined,
 } from '@ant-design/icons'
 import { useEffect, useMemo, useState } from 'react'
-import { getAllAdmins, getAdminStats, toggleAdminStatus, registerAdmin } from '../../services/adminAccountApi.js'
+import {
+  getAdminDetail,
+  getAllAdmins,
+  getAdminStats,
+  registerAdmin,
+  resetAdminPassword,
+  toggleAdminStatus,
+} from '../../services/adminAccountApi.js'
 import { getAdminProfile } from '../../utils/authSession.js'
 
 const viewModes = [
@@ -54,7 +62,12 @@ export default function AdminManagementAdminPage() {
   const [stats, setStats] = useState({ total: 0, active: 0, alerts: 0 })
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [selectedAdmin, setSelectedAdmin] = useState(null)
   const [form] = Form.useForm()
+  const [passwordForm] = Form.useForm()
 
   const currentRole = currentAdmin?.role === 'superAdmin' ? 'super_admin' : currentAdmin?.role
   const isSuperAdmin = currentRole === 'super_admin'
@@ -78,6 +91,39 @@ export default function AdminManagementAdminPage() {
     fetchData()
   }, [])
 
+  const loadAdminDetail = async (id) => {
+    setDetailLoading(true)
+    try {
+      const res = await getAdminDetail(id)
+      if (res?.success) {
+        setSelectedAdmin(res.data)
+        return res.data
+      }
+      return null
+    } catch (err) {
+      message.error(err.message || 'Không thể tải chi tiết tài khoản')
+      return null
+    } finally {
+      setDetailLoading(false)
+    }
+  }
+
+  const openAdminDetail = async (row) => {
+    if (!isSuperAdmin) {
+      message.warning('Chỉ super admin mới được xem chi tiết tài khoản')
+      return
+    }
+
+    setIsDetailModalOpen(true)
+    setSelectedAdmin(row)
+    await loadAdminDetail(row._id)
+  }
+
+  const closeAdminDetail = () => {
+    setIsDetailModalOpen(false)
+    setSelectedAdmin(null)
+  }
+
   const handleToggleStatus = async (id) => {
     if (!isSuperAdmin) {
       message.warning('Chỉ super admin mới được khóa hoặc mở tài khoản admin')
@@ -87,9 +133,35 @@ export default function AdminManagementAdminPage() {
     try {
       await toggleAdminStatus(id)
       message.success('Đã cập nhật trạng thái tài khoản')
-      fetchData()
+      await fetchData()
+      if (selectedAdmin?._id === id) {
+        await loadAdminDetail(id)
+      }
     } catch (err) {
-      message.error('Không thể cập nhật trạng thái')
+      message.error(err.message || 'Không thể cập nhật trạng thái')
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!isSuperAdmin) {
+      message.warning('Chỉ super admin mới được đổi mật khẩu tài khoản')
+      return
+    }
+
+    if (!selectedAdmin?._id) {
+      message.error('Không tìm thấy tài khoản cần đổi mật khẩu')
+      return
+    }
+
+    try {
+      const values = await passwordForm.validateFields()
+      await resetAdminPassword(selectedAdmin._id, values.password)
+      message.success('Đổi mật khẩu thành công')
+      setIsPasswordModalOpen(false)
+      passwordForm.resetFields()
+    } catch (err) {
+      if (err.errorFields) return
+      message.error(err.message || 'Không thể đổi mật khẩu')
     }
   }
 
@@ -182,6 +254,7 @@ export default function AdminManagementAdminPage() {
             onConfirm={() => handleToggleStatus(row._id)}
           >
             <Button
+              onClick={(event) => event.stopPropagation()}
               size="small"
               className={`!h-7 !rounded-md !px-3 !text-[10px] !font-semibold !uppercase !tracking-wide ${
                 row.status === 'Active'
@@ -261,6 +334,14 @@ export default function AdminManagementAdminPage() {
               pagination={{ pageSize: 15 }}
               scroll={{ x: 920 }}
               rowClassName={() => 'hover:!bg-zinc-50'}
+              onRow={(record) => (
+                isSuperAdmin
+                  ? {
+                      onClick: () => openAdminDetail(record),
+                      style: { cursor: 'pointer' },
+                    }
+                  : {}
+              )}
             />
           </div>
         </Card>
@@ -326,6 +407,108 @@ export default function AdminManagementAdminPage() {
           ) : null}
         </Card>
       </section>
+
+      <Modal
+        title="Chi tiết tài khoản"
+        open={isDetailModalOpen}
+        onCancel={closeAdminDetail}
+        footer={[
+          <Button key="close" onClick={closeAdminDetail}>Đóng</Button>,
+          <Button
+            key="password"
+            onClick={() => {
+              setIsPasswordModalOpen(true)
+              passwordForm.resetFields()
+            }}
+            disabled={!isSuperAdmin || !selectedAdmin?._id}
+          >
+            Đổi mật khẩu
+          </Button>,
+          <Popconfirm
+            key="toggle"
+            title={`${selectedAdmin?.status === 'Active' ? 'Khóa' : 'Mở lại'} tài khoản này?`}
+            onConfirm={() => selectedAdmin?._id && handleToggleStatus(selectedAdmin._id)}
+            disabled={!selectedAdmin?._id}
+          >
+            <Button
+              danger={selectedAdmin?.status === 'Active'}
+              type={selectedAdmin?.status === 'Active' ? 'default' : 'primary'}
+              disabled={!isSuperAdmin || !selectedAdmin?._id}
+            >
+              {selectedAdmin?.status === 'Active' ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
+            </Button>
+          </Popconfirm>,
+        ]}
+      >
+        {detailLoading ? (
+          <div className="py-8 text-center text-zinc-500">Đang tải chi tiết...</div>
+        ) : selectedAdmin ? (
+          <Descriptions column={1} size="small" bordered>
+            <Descriptions.Item label="ID">{selectedAdmin._id}</Descriptions.Item>
+            <Descriptions.Item label="Họ và tên">{selectedAdmin.name || 'N/A'}</Descriptions.Item>
+            <Descriptions.Item label="Email">{selectedAdmin.email || 'N/A'}</Descriptions.Item>
+            <Descriptions.Item label="Tên đăng nhập">{selectedAdmin.username || 'N/A'}</Descriptions.Item>
+            <Descriptions.Item label="Vai trò">{roleMeta[selectedAdmin.role]?.label || selectedAdmin.role || 'N/A'}</Descriptions.Item>
+            <Descriptions.Item label="Trạng thái">{selectedAdmin.status || 'N/A'}</Descriptions.Item>
+            <Descriptions.Item label="Đăng nhập gần nhất">
+              {selectedAdmin.lastLogin ? new Date(selectedAdmin.lastLogin).toLocaleString() : 'Chưa đăng nhập'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Ngày tạo">
+              {selectedAdmin.createdAt ? new Date(selectedAdmin.createdAt).toLocaleString() : 'N/A'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Cập nhật gần nhất">
+              {selectedAdmin.updatedAt ? new Date(selectedAdmin.updatedAt).toLocaleString() : 'N/A'}
+            </Descriptions.Item>
+          </Descriptions>
+        ) : (
+          <div className="py-8 text-center text-zinc-500">Không có dữ liệu tài khoản</div>
+        )}
+      </Modal>
+
+      <Modal
+        title="Đổi mật khẩu tài khoản"
+        open={isPasswordModalOpen}
+        onOk={handleResetPassword}
+        okText="Lưu mật khẩu"
+        onCancel={() => {
+          setIsPasswordModalOpen(false)
+          passwordForm.resetFields()
+        }}
+      >
+        <Form form={passwordForm} layout="vertical" className="mt-3">
+          <Form.Item label="Tài khoản" className="!mb-3">
+            <Input value={selectedAdmin?.username || selectedAdmin?.email || ''} disabled />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            label="Mật khẩu mới"
+            rules={[
+              { required: true, message: 'Vui lòng nhập mật khẩu mới' },
+              { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
+            ]}
+          >
+            <Input.Password placeholder="Nhập mật khẩu mới" />
+          </Form.Item>
+          <Form.Item
+            name="confirmPassword"
+            label="Xác nhận mật khẩu"
+            dependencies={['password']}
+            rules={[
+              { required: true, message: 'Vui lòng xác nhận mật khẩu' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('password') === value) {
+                    return Promise.resolve()
+                  }
+                  return Promise.reject(new Error('Mật khẩu xác nhận không khớp'))
+                },
+              }),
+            ]}
+          >
+            <Input.Password placeholder="Nhập lại mật khẩu mới" />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       <Modal
         title="Tạo tài khoản admin mới"

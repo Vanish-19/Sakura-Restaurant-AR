@@ -20,7 +20,7 @@ export default function PaymentPage() {
   const { orderId } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const { clearCart } = useCart()
+  const { clearAllCarts } = useCart()
 
   const [loading, setLoading] = useState(true)
   const [order, setOrder] = useState(null)
@@ -73,7 +73,7 @@ export default function PaymentPage() {
 
         if (data?.status === 'paid') {
           if (timeoutId) window.clearTimeout(timeoutId)
-          clearCart()
+          clearAllCarts()
           if (!successShownRef.current) {
             message.success('Thanh toán online thành công')
             successShownRef.current = true
@@ -110,7 +110,7 @@ export default function PaymentPage() {
       if (intervalId) window.clearInterval(intervalId)
       if (timeoutId) window.clearTimeout(timeoutId)
     }
-  }, [clearCart, navigate, orderId, isPaid])
+  }, [clearAllCarts, navigate, orderId, isPaid])
 
   if (loading) {
     return (
