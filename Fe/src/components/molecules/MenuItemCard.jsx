@@ -18,8 +18,7 @@ export default function MenuItemCard({
   const handleAdd = onAdd ?? (() => { })
   const handleViewAr = onViewAr ?? (() => { })
   const canViewAr = Boolean(item?.arModels?.glb_url || item?.arModels?.usdz_url)
-  const isBestSeller = Boolean(item?.isBestSeller)
-  const shouldShowArAction = isBestSeller
+  const shouldShowArAction = canViewAr
   const descriptionTooltip = (item?.description || '').trim()
 
   return (

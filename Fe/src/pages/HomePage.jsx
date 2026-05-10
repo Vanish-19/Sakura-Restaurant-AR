@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import FeaturePill from '../components/molecules/FeaturePill.jsx'
 import ServiceTypeModal from '../components/organisms/ServiceTypeModal.jsx'
+import Model3DPreviewModal from '../components/organisms/Model3DPreviewModal.jsx'
 import MenuItemCard from '../components/molecules/MenuItemCard.jsx'
 import CategoryBar from '../components/organisms/CategoryBar.jsx'
 import { useCart } from '../contexts/CartContext.jsx'
@@ -32,6 +33,14 @@ function normalizeTableCode(value) {
   return raw
 }
 
+function isMobileDevice() {
+  if (typeof window === 'undefined') return false
+  const ua = window.navigator.userAgent || ''
+  const mobileUa = /Android|iPhone|iPad|iPod/i.test(ua)
+  const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches
+  return Boolean(mobileUa || coarsePointer)
+}
+
 export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState('all')
   const { addItem } = useCart()
@@ -39,6 +48,8 @@ export default function HomePage() {
   const navigate = useNavigate()
   const isAndroidPreview = searchParams.get('preview') === 'android'
   const [menuItems, setMenuItems] = useState([])
+  const [is3dPreviewOpen, setIs3dPreviewOpen] = useState(false)
+  const [previewItem, setPreviewItem] = useState(null)
   const [serviceModalOpen, setServiceModalOpen] = useState(false)
   const [isScanningQr, setIsScanningQr] = useState(false)
   const guestRefreshResetRef = useRef(false)
@@ -206,7 +217,19 @@ export default function HomePage() {
       return
     }
 
+    if (!isMobileDevice()) {
+      setPreviewItem(item)
+      setIs3dPreviewOpen(true)
+      return
+    }
+
     navigate(`/ar?itemId=${encodeURIComponent(item.id)}`)
+  }
+
+  const handleOpenArFromPreview = () => {
+    if (!previewItem?.id) return
+    setIs3dPreviewOpen(false)
+    navigate(`/ar?itemId=${encodeURIComponent(previewItem.id)}`)
   }
 
   return (
@@ -298,6 +321,13 @@ export default function HomePage() {
         open={serviceModalOpen}
         onClose={() => {}}
         onSelect={pickServiceType}
+      />
+
+      <Model3DPreviewModal
+        open={is3dPreviewOpen}
+        item={previewItem}
+        onClose={() => setIs3dPreviewOpen(false)}
+        onOpenAr={handleOpenArFromPreview}
       />
     </div>
   )

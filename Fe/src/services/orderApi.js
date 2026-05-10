@@ -27,7 +27,12 @@ export async function getMenuItems(category) {
         price: Number(item.price || 0),
         category: (item.category || 'all').toLowerCase(),
         imageUrl,
-        arModels: item?.assets?.ar_models
+        arModels: item?.ar_models
+          ? {
+              glb_url: item.ar_models.glb_url || '',
+              usdz_url: item.ar_models.usdz_url || '',
+            }
+          : item?.assets?.ar_models
           ? {
               glb_url: item.assets.ar_models.glb || '',
               usdz_url: item.assets.ar_models.usdz || '',
