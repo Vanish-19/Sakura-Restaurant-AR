@@ -140,18 +140,13 @@ export default function HomePage() {
 
       if (!normalized) {
         const savedMode = getSavedServiceMode()
-        if (savedMode === 'delivery') {
+        if (savedMode === 'delivery' || savedMode === 'dine-in-pending') {
           setServiceModalOpen(false)
           return
         }
 
-        if (savedMode === 'dine-in-pending') {
-          setServiceModalOpen(false)
-          return
-        }
-
-        clearSavedServiceMode()
-        setServiceModalOpen(true)
+        setSavedServiceMode('delivery')
+        setServiceModalOpen(false)
         return
       }
 
@@ -234,19 +229,19 @@ export default function HomePage() {
 
   return (
     <div className="bg-[#fafaf6]">
-      <section className="relative overflow-hidden border-b border-[#e9e7df] bg-gradient-to-b from-[#f9f6ef] via-[#f7f3ea] to-[#f2ece0] text-slate-900">
+      <section className="relative min-h-[420px] overflow-hidden border-b border-[#e9e7df] text-white md:min-h-[520px]">
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.06]"
-          style={{ backgroundImage: 'url(/patterns/sakura-wagara.svg)' }}
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: 'url(/background.png)' }}
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/55 via-transparent to-white/35" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/55" />
 
-        <div className="relative mx-auto max-w-6xl px-6 py-24 text-center md:px-8 md:py-28">
+        <div className="relative mx-auto flex min-h-[420px] max-w-6xl flex-col items-center justify-center px-6 py-24 text-center md:min-h-[520px] md:px-8 md:py-28">
           <h1
             className={
               isAndroidPreview
-                ? 'text-2xl font-light tracking-tight font-[var(--font-heading)]'
-                : 'text-4xl font-light tracking-tight font-[var(--font-heading)] md:text-6xl'
+                ? 'text-2xl font-semibold tracking-tight font-[var(--font-heading)]'
+                : 'text-4xl font-semibold tracking-tight font-[var(--font-heading)] md:text-6xl'
             }
           >
             Trải nghiệm món Nhật với AR
@@ -254,14 +249,14 @@ export default function HomePage() {
           <p
             className={
               isAndroidPreview
-                ? 'mt-6 text-sm text-slate-600'
-                : 'mt-7 text-base text-slate-600 md:text-lg'
+                ? 'mt-6 text-sm text-white/80'
+                : 'mt-7 text-base text-white/80 md:text-lg'
             }
           >
             <em className="inline-flex items-center gap-1.5">
-              <span aria-hidden="true" className="text-4xl font-black leading-none text-slate-300 md:text-5xl">❝</span>
+              <span aria-hidden="true" className="text-4xl font-black leading-none text-white/60 md:text-5xl">❝</span>
               <span>Chúng tôi biết ngoài kia có nhiều lựa chọn, cảm ơn bạn đã chọn Sakura Restaurant</span>
-              <span aria-hidden="true" className="text-4xl font-black leading-none text-slate-300 md:text-5xl">❞</span>
+              <span aria-hidden="true" className="text-4xl font-black leading-none text-white/60 md:text-5xl">❞</span>
             </em>
           </p>
 
@@ -269,9 +264,9 @@ export default function HomePage() {
             <FeaturePill
               icon={<RestOutlined />}
               text="Ẩm thực Nhật chuẩn vị"
-              variant="light"
+              variant="hero-primary"
             />
-            <FeaturePill icon={<ScanOutlined />} text="Xem thử AR" variant="light" />
+            <FeaturePill icon={<ScanOutlined />} text="Xem thử AR" variant="hero-secondary" />
           </div>
         </div>
       </section>

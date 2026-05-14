@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap');
+
 .client-auth-layout {
   height: 100dvh;
   display: flex;
@@ -18,11 +20,13 @@
 }
 
 .client-auth-hero--register {
-  background-image: url('/auth/register-hero.svg');
+  background-image: url('/registerVR.png');
+  background-position: center center;
 }
 
 .client-auth-hero--login {
-  background-image: url('/auth/login-hero.svg');
+  background-image: url('/loginAR.png');
+  background-position: center top;
 }
 
 .client-auth-hero__overlay {
@@ -31,38 +35,136 @@
   background: linear-gradient(0deg, rgba(92, 0, 12, 0.55), rgba(92, 0, 12, 0.18));
 }
 
+/* Register hero: overlay nhẹ hơn để giữ màu pastel của ảnh */
+.client-auth-hero--register .client-auth-hero__overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 20, 30, 0.08) 0%,
+    rgba(15, 20, 30, 0.10) 40%,
+    rgba(15, 20, 30, 0.40) 70%,
+    rgba(10, 12, 20, 0.72) 100%
+  );
+}
+
+/* Text màu sáng trên hero register — đồng bộ font với login */
+.client-auth-hero--register .client-auth-hero__headline {
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(30px, 4vw, 56px);
+  line-height: 0.96;
+  color: #fff;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.client-auth-hero--register .client-auth-hero__text {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  line-height: 1.6;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+}
+
 .client-auth-hero__content {
   position: relative;
   z-index: 2;
   height: 100%;
-  padding: 42px 34px;
+  padding: 24px 16px 36px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: flex-start;
   color: #fff;
 }
 
+/* Brand slot — góc trên trái, vẫn nằm trong flow */
+.client-auth-hero__brand-slot {
+  flex-shrink: 0;
+}
+
+/* Spacer không cần nữa khi dùng absolute */
+.client-auth-hero__spacer {
+  display: none;
+}
+
+/* Cụm headline + description — ghim tuyệt đối lên ảnh */
+.client-auth-hero__bottom {
+  position: absolute;
+  /* Đặt cách đáy ~26% — nằm TRÊN vùng "LOGIN ENTER" của ảnh */
+  bottom: 6%;
+  left: 32px;
+  right: 32px;
+  z-index: 3;
+}
+
+.client-auth-hero--login .client-auth-hero__overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.10) 50%,
+    /* Mờ dần rồi trắng đục che watermark "LOGIN ENTER" ở đáy ảnh */
+    rgba(245, 240, 232, 0.70) 72%,
+    rgba(242, 237, 228, 0.92) 86%,
+    rgba(240, 235, 225, 0.98) 100%
+  );
+}
+
+.client-auth-hero--login .client-auth-hero__content {
+  color: #2c2c2c;
+  text-shadow: 0 1px 3px rgba(255,255,255,0.5);
+}
+
 .client-auth-hero__eyebrow {
-  margin-top: 20px;
-  font-size: 10px;
-  letter-spacing: 0.22em;
-  font-weight: 700;
-  opacity: 0.94;
+  margin: 0 0 14px;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  font-weight: 600;
+  text-transform: uppercase;
+  opacity: 0.8;
 }
 
 .client-auth-hero__headline {
-  margin: 18px 0 12px;
-  font-size: clamp(30px, 4vw, 56px);
-  line-height: 0.96;
+  margin: 0 0 12px;
+  font-size: clamp(28px, 3.6vw, 50px);
+  line-height: 1.05;
   font-weight: 700;
   max-width: 360px;
 }
 
+/* Dòng riêng xuống hàng cho headline split */
+.client-auth-hero__headline-line {
+  display: block;
+}
+
+.client-auth-hero--login .client-auth-hero__headline {
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
+  font-weight: 400;           /* Regular — mảnh như nét cọ */
+  font-style: italic;         /* Italic Serif gợi thư pháp */
+  font-size: clamp(32px, 4vw, 54px);
+  line-height: 1.08;
+  color: #2c2c2c;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 6px rgba(255,255,255,0.55);
+}
+
 .client-auth-hero__text {
-  max-width: 340px;
-  font-size: 14px;
-  line-height: 1.45;
+  max-width: 300px;
+  font-size: 13px;
+  line-height: 1.55;
   color: rgba(255, 255, 255, 0.9);
+}
+
+/* Dòng riêng cho text split */
+.client-auth-hero__text-line {
+  display: block;
+}
+
+.client-auth-hero--login .client-auth-hero__text {
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: #3d3d3d;
+  letter-spacing: 0.015em;
+  text-shadow: 0 1px 5px rgba(255,255,255,0.55);
 }
 
 .client-auth-hero__meta {
@@ -79,11 +181,89 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 34px;
+  padding: 20px 28px;
+}
+
+/* ── Tailwind-based login form: Ant Design overrides ── */
+.login-form-tw .ant-form-item {
+  margin-bottom: 0;
+}
+
+.login-form-tw .ant-form-item-explain-error {
+  font-size: 11px;
+  margin-top: 4px;
+  padding-left: 0;
+}
+
+.login-form-tw .ant-input,
+.login-form-tw .ant-input-affix-wrapper {
+  border: 0 !important;
+  border-bottom: 1.5px solid #e0e0e0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding-inline: 0 !important;
+  padding-block: 10px !important;
+  box-shadow: none !important;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.login-form-tw .ant-input:focus,
+.login-form-tw .ant-input-affix-wrapper:focus-within {
+  border-bottom-color: #b0001a !important;
+}
+
+.login-form-tw .ant-input-affix-wrapper > .ant-input {
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+.login-form-tw .ant-checkbox-wrapper {
+  font-size: 13px;
+  color: #5f5f61;
+}
+
+.login-form-tw .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #b0001a;
+  border-color: #b0001a;
 }
 
 .client-auth-main--register {
   padding-block: 20px;
+}
+
+/* Register form Tailwind overrides */
+.register-form-tw .ant-form-item {
+  margin-bottom: 0;
+}
+
+.register-form-tw .ant-form-item-explain-error {
+  font-size: 11px;
+  margin-top: 3px;
+  padding-left: 0;
+}
+
+.register-form-tw .ant-input,
+.register-form-tw .ant-input-affix-wrapper {
+  border: 0 !important;
+  border-bottom: 1.5px solid #e0e0e0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding-inline: 0 !important;
+  padding-block: 10px !important;
+  box-shadow: none !important;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.register-form-tw .ant-input:focus,
+.register-form-tw .ant-input-affix-wrapper:focus-within {
+  border-bottom-color: #b0001a !important;
+}
+
+.register-form-tw .ant-input-affix-wrapper > .ant-input {
+  border: 0 !important;
+  padding: 0 !important;
 }
 
 .client-auth-card-wrap {
@@ -208,6 +388,45 @@
   font-size: 11px;
   letter-spacing: 0.18em;
   color: rgba(255, 255, 255, 0.82);
+}
+
+.client-auth-hero--login .auth-brand__subtitle {
+  color: #333333;
+}
+
+/* ── Brand mini — góc trên trái hero login —————————————— */
+.auth-brand--mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-brand__mark--mini {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: rgba(209, 0, 31, 0.15);
+  color: #b0001a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.auth-brand__title--mini {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #2c2c2c;
+  line-height: 1.2;
+}
+
+.auth-brand__subtitle--mini {
+  font-size: 8.5px;
+  letter-spacing: 0.20em;
+  color: #6b6b6f;
+  line-height: 1.2;
 }
 
 .client-auth-shell {
@@ -440,7 +659,27 @@
   }
 
   .client-auth-hero {
-    min-height: 230px;
+    min-height: 240px;
+  }
+
+  .client-auth-hero__bottom {
+    /* Mobile: hero ngắn ~240px, đặt text cách đáy 22% */
+    bottom: 22%;
+    left: 20px;
+    right: 20px;
+  }
+
+  .client-auth-hero__headline-line {
+    display: inline;
+  }
+
+  .client-auth-hero--login .client-auth-hero__headline {
+    font-size: clamp(22px, 6vw, 28px);
+    margin-bottom: 0;
+  }
+
+  .client-auth-hero__text {
+    display: none;
   }
 
   .client-auth-main {

@@ -8,14 +8,22 @@ export default function FeaturePill({
   const Component = onClick ? 'button' : 'div'
 
   const variantClassName =
-    variant === 'light'
-      ? 'bg-white/80 text-slate-900 ring-1 ring-red-100'
-      : 'bg-white/15 text-white'
+    variant === 'hero-primary'
+      ? 'bg-[#d8001e] text-white shadow-[0_12px_22px_rgba(216,0,30,0.28)]'
+      : variant === 'hero-secondary'
+        ? 'bg-[#6b6b6b] text-white/90'
+        : variant === 'light'
+          ? 'bg-white/80 text-slate-900 ring-1 ring-red-100'
+          : 'bg-white/15 text-white'
 
   const hoverClassName = onClick
-    ? variant === 'light'
-      ? 'cursor-pointer border-0 outline-none transition-all duration-200 hover:bg-white hover:ring-red-200 hover:shadow-md'
-      : 'cursor-pointer border-0 outline-none transition-all duration-200 hover:bg-white/25 hover:shadow-md'
+    ? variant === 'hero-primary'
+      ? 'cursor-pointer border-0 outline-none transition-all duration-200 hover:bg-[#c0001a] hover:shadow-[0_14px_26px_rgba(216,0,30,0.32)]'
+      : variant === 'hero-secondary'
+        ? 'cursor-pointer border-0 outline-none transition-all duration-200 hover:bg-[#5c5c5c]'
+        : variant === 'light'
+          ? 'cursor-pointer border-0 outline-none transition-all duration-200 hover:bg-white hover:ring-red-200 hover:shadow-md'
+          : 'cursor-pointer border-0 outline-none transition-all duration-200 hover:bg-white/25 hover:shadow-md'
     : ''
 
   const activeClassName =

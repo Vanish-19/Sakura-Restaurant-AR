@@ -25,6 +25,12 @@ export default function AppHeader({ variant = 'desktop' }) {
   const isUserLoggedIn = Boolean(userDisplayName)
   const homePath = orderSource.mode === 'dine-in' ? '/order' : '/'
   const scopeKeyRef = useRef(null)
+  const navItems = [
+    { key: 'home', label: 'Home', to: homePath, match: ['/', '/order'] },
+    { key: 'about', label: 'About', to: '/about', match: ['/about'] },
+    { key: 'blog', label: 'Blog', to: '/blog', match: ['/blog'] },
+    { key: 'contact', label: 'Contact', to: '/contact', match: ['/contact'] },
+  ]
 
   useEffect(() => {
     setUserProfile(getUserProfile())
@@ -74,36 +80,52 @@ export default function AppHeader({ variant = 'desktop' }) {
 
   const headerClassName =
     variant === 'android'
-      ? '!sticky !top-0 !z-50 !h-16 !bg-red-700 !px-0'
-      : '!fixed !top-0 !left-0 !right-0 !z-50 !h-16 !bg-red-700 !px-0'
+      ? '!sticky !top-0 !z-50 !h-16 !bg-white/95 !px-0 backdrop-blur'
+      : '!fixed !top-0 !left-0 !right-0 !z-50 !h-16 !bg-white/95 !px-0 backdrop-blur'
+
+  const isActiveRoute = (matches) =>
+    matches.some((route) => location.pathname === route)
 
   return (
-    <Header
-      className={
-        headerClassName +
-        ' client-header !shadow-sm'
-      }
-    >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+    <Header className={headerClassName + ' !border-b !border-[#ece7dc] !shadow-sm'}>
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-4">
         <Link
           to={{ pathname: homePath, search: location.search }}
-          className="no-underline !text-white hover:!text-white"
+          className="no-underline"
         >
-          <Brand className="!text-white" />
+          <Brand className="text-[#b10b22]" />
         </Link>
 
-        <div className="flex items-center gap-2">
+        <nav className="hidden items-center gap-8 text-sm font-semibold text-slate-700 lg:flex">
+          {navItems.map((item) => (
+            <Link
+              key={item.key}
+              to={{ pathname: item.to, search: location.search }}
+              className={`header-nav__link ${isActiveRoute(item.match) ? 'header-nav__link--active' : ''}`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hidden items-center gap-2 text-xs font-semibold text-slate-500 sm:flex">
+            <button type="button" className="header-lang header-lang--active">VN</button>
+            <span className="text-slate-300">|</span>
+            <button type="button" className="header-lang">JP</button>
+          </div>
+
           {isUserLoggedIn ? (
             <>
-              <div className="hidden items-center gap-2 rounded-full border border-white/25 bg-white/12 px-3 py-1.5 text-sm text-white sm:inline-flex">
-                <span className="text-white/75">Xin chào,</span>
-                <span className="max-w-[140px] truncate font-semibold">{userDisplayName}</span>
+              <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 md:inline-flex">
+                <span className="text-slate-400">Xin chào,</span>
+                <span className="max-w-[140px] truncate font-semibold text-slate-800">{userDisplayName}</span>
               </div>
 
               <Button
                 type="text"
                 onClick={handleLogout}
-                className="!h-10 !rounded-full !border-0 !bg-white !px-4 !font-semibold !text-[#a0001b] !transition-all !duration-200 hover:!bg-[#ffe8ec]"
+                className="!h-9 !rounded-full !border !border-red-200 !bg-white !px-4 !font-semibold !text-[#b10b22] !transition-all !duration-200 hover:!border-red-300 hover:!bg-[#ffe8ec]"
               >
                 Đăng xuất
               </Button>
@@ -113,7 +135,7 @@ export default function AppHeader({ variant = 'desktop' }) {
               <Link to="/auth/login" className="hidden sm:inline-flex">
                 <Button
                   type="text"
-                  className="!h-10 !rounded-full !border !border-white/30 !bg-transparent !px-4 !font-semibold !text-white !transition-all !duration-200 hover:!bg-white/15"
+                  className="!h-9 !rounded-full !border !border-slate-200 !bg-white !px-4 !font-semibold !text-slate-700 !transition-all !duration-200 hover:!border-red-200 hover:!text-[#b10b22]"
                 >
                   Đăng nhập
                 </Button>
@@ -122,7 +144,7 @@ export default function AppHeader({ variant = 'desktop' }) {
               <Link to="/auth/register" className="hidden sm:inline-flex">
                 <Button
                   type="text"
-                  className="!h-10 !rounded-full !border-0 !bg-white !px-4 !font-semibold !text-[#900020] !transition-all !duration-200 hover:!bg-white/90"
+                  className="!h-9 !rounded-full !border-0 !bg-[#d8001e] !px-4 !font-semibold !text-white !transition-all !duration-200 hover:!bg-[#c0001a]"
                 >
                   Đăng ký
                 </Button>
@@ -131,14 +153,12 @@ export default function AppHeader({ variant = 'desktop' }) {
           )}
 
           <Link to={{ pathname: '/cart', search: location.search }}>
-            <Badge count={totalItems} size="small" offset={[-6, 6]}>
+            <Badge count={totalItems} size="small" offset={[-2, 2]}>
               <Button
                 type="text"
                 icon={<ShoppingCartOutlined />}
-                className="!h-10 !rounded-full !border-0 !bg-white/15 !px-5 !font-semibold !text-white !transition-all !duration-200 hover:!-translate-y-0.5 hover:!bg-white/25 hover:!shadow-md active:!translate-y-0"
-              >
-                Giỏ hàng
-              </Button>
+                className="!h-9 !w-9 !min-w-9 !rounded-full !border !border-slate-200 !bg-white !p-0 !text-slate-700 !transition-all !duration-200 hover:!border-red-200 hover:!text-[#b10b22]"
+              />
             </Badge>
           </Link>
         </div>

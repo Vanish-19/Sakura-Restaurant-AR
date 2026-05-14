@@ -103,8 +103,8 @@ export function getOrderSource(searchParams) {
     }
 
     return {
-        mode: 'unselected',
+        mode: 'delivery',
         tableCode: null,
-        label: 'Chon dich vu',
+        label: 'Ship ve',
     }
 }

@@ -30,7 +30,6 @@ export default function MenuItemCard({
       ) : null}
 
       <Card
-        hoverable
         className="menu-item-card h-full overflow-hidden !rounded-2xl !border-0 !bg-transparent !shadow-[0_4px_20px_rgba(0,0,0,0.05)]"
         style={{ display: 'flex', flexDirection: 'column' }}
         styles={{
