@@ -4,6 +4,7 @@ import AdminRouteGuard from './components/organisms/admin/AdminRouteGuard.jsx'
 import ClientAuthLayout from './components/templates/auth/ClientAuthLayout.jsx'
 import AdminLayout from './components/templates/admin/AdminLayout.jsx'
 import AppLayout from './components/templates/AppLayout.jsx'
+import AboutPage from './pages/AboutPage.jsx'
 import CartPage from './pages/CartPage.jsx'
 import HomePage from './pages/HomePage.jsx'
 import OrderHistoryPage from './pages/OrderHistoryPage.jsx'
@@ -25,6 +26,7 @@ export default function App() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/order" element={<HomePage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/orders/history" element={<OrderHistoryPage />} />
