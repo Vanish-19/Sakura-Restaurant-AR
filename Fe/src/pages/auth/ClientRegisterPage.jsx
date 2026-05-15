@@ -300,7 +300,7 @@ export default function ClientRegisterPage() {
             type="primary"
             icon={<ArrowRightOutlined />}
             iconPosition="end"
-            className="!w-full !h-[52px] !bg-gradient-to-r !from-[#af0017] !to-[#d1001f] !border-none !rounded-lg !font-bold !text-[15px] !tracking-wide hover:!shadow-[0_10px_28px_rgba(175,0,23,0.35)] hover:!-translate-y-0.5 transition-all duration-200 !text-white"
+            className="client-auth-action-btn !w-full !h-[52px] !border-none !rounded-lg !font-bold !text-[15px] !tracking-wide !text-white"
           >
             Tạo tài khoản
           </Button>
@@ -312,7 +312,7 @@ export default function ClientRegisterPage() {
             Đã có tài khoản?{' '}
             <Link
               to={loginHref}
-              className="font-bold text-[#b00518] hover:text-[#8a0010] no-underline transition-colors"
+              className="auth-hover-link font-bold no-underline"
             >
               Đăng nhập
             </Link>

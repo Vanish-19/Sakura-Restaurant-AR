@@ -134,7 +134,7 @@ export default function ClientLoginPage() {
             </Checkbox>
             <Link
               to="/auth/login"
-              className="text-[12px] font-semibold text-[#b00518] hover:text-[#8a0010] transition-colors no-underline"
+              className="auth-hover-link text-[12px] font-semibold no-underline"
             >
               Quên mật khẩu?
             </Link>
@@ -146,7 +146,7 @@ export default function ClientLoginPage() {
             type="primary"
             icon={<ArrowRightOutlined />}
             iconPosition="end"
-            className="!w-full !h-[52px] !bg-gradient-to-r !from-[#af0017] !to-[#d1001f] !border-none !rounded-lg !font-bold !text-[15px] !tracking-wide hover:!shadow-[0_10px_28px_rgba(175,0,23,0.35)] hover:!-translate-y-0.5 transition-all duration-200 !text-white"
+            className="client-auth-action-btn !w-full !h-[52px] !border-none !rounded-lg !font-bold !text-[15px] !tracking-wide !text-white"
           >
             Đăng nhập
           </Button>
@@ -192,7 +192,7 @@ export default function ClientLoginPage() {
             Chưa có tài khoản?{' '}
             <Link
               to={registerHref}
-              className="font-bold text-[#b00518] hover:text-[#8a0010] no-underline transition-colors"
+              className="auth-hover-link font-bold no-underline"
             >
               Đăng ký ngay
             </Link>
@@ -200,7 +200,7 @@ export default function ClientLoginPage() {
           <p className="text-[12px] text-[#a0a0a5]">
             <Link
               to="/"
-              className="font-semibold text-[#888] hover:text-[#555] no-underline transition-colors"
+              className="auth-hover-link auth-hover-link--muted font-semibold no-underline"
             >
               ← Vào trang chủ
             </Link>
