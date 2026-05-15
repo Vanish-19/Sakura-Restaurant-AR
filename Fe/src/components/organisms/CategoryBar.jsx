@@ -13,10 +13,10 @@ export default function CategoryBar({ categories, activeKey, onChange }) {
                 key={category.key}
                 type="text"
                 className={
-                  '!h-10 !rounded-full !border-0 !px-6 !font-semibold !transition-all !duration-200 hover:!-translate-y-0.5 active:!translate-y-0 ' +
+                  '!h-10 !rounded-full !border !px-6 !font-semibold !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 active:!translate-y-0 ' +
                   (isActive
-                    ? '!bg-gradient-to-r !from-red-600 !to-red-700 !text-white hover:!from-red-500 hover:!to-red-600 hover:!shadow-md'
-                    : '!text-slate-900 hover:!bg-white hover:!text-red-700')
+                    ? '!border-[#8B0000] !bg-[#8B0000] !text-white !shadow-[0_10px_22px_rgba(139,0,0,0.22)] hover:!bg-[#700000] hover:!shadow-[0_14px_28px_rgba(139,0,0,0.28)]'
+                    : '!border-transparent !bg-transparent !text-[#4A4A4A] hover:!border-[#c6001e] hover:!bg-[#fff1f3] hover:!text-[#900020] hover:!shadow-[0_10px_22px_rgba(144,0,32,0.10)]')
                 }
                 onClick={() => onChange(category.key)}
               >

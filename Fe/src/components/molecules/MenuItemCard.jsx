@@ -92,7 +92,7 @@ export default function MenuItemCard({
               mouseEnterDelay={0.15}
             >
               <Button
-                className="!h-9 !rounded-full !border-red-200 !bg-white/90 !px-4 !text-slate-900 !transition-all !duration-200 hover:!-translate-y-0.5 hover:!border-red-400 hover:!bg-red-50 hover:!text-red-700 hover:!shadow-sm active:!translate-y-0 disabled:!cursor-not-allowed disabled:!opacity-60"
+                className="!h-9 !rounded-full !border-red-200 !bg-white/90 !px-4 !text-slate-900 !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!border-[#c6001e] hover:!bg-[#fff1f3] hover:!text-[#b10b22] hover:!shadow-[0_10px_22px_rgba(177,11,34,0.12)] active:!translate-y-0 disabled:!cursor-not-allowed disabled:!opacity-60"
                 icon={<ScanOutlined />}
                 shape="round"
                 disabled={!canViewAr}
@@ -103,7 +103,7 @@ export default function MenuItemCard({
             </Tooltip>
           ) : null}
           <Button
-            className="!h-10 !w-10 !min-w-10 !rounded-full !border-0 !bg-gradient-to-br !from-red-500 !to-red-600 !p-0 !text-white !opacity-100 !transition-all !duration-200 hover:!-translate-y-0.5 hover:!from-red-400 hover:!to-red-500 hover:!shadow-[0_10px_20px_rgba(220,38,38,0.32)] active:!translate-y-0"
+            className="!h-10 !w-10 !min-w-10 !rounded-full !border-0 !bg-[#8B0000] !p-0 !text-white !opacity-100 !shadow-[0_8px_18px_rgba(139,0,0,0.18)] !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!bg-[#700000] hover:!shadow-[0_14px_28px_rgba(139,0,0,0.28)] active:!translate-y-0"
             type="primary"
             icon={<ShoppingCartOutlined />}
             shape="round"

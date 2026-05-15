@@ -125,7 +125,7 @@ export default function AppHeader({ variant = 'desktop' }) {
               <Button
                 type="text"
                 onClick={handleLogout}
-                className="!h-9 !rounded-full !border !border-red-200 !bg-white !px-4 !font-semibold !text-[#b10b22] !transition-all !duration-200 hover:!border-red-300 hover:!bg-[#ffe8ec]"
+                className="!h-9 !rounded-full !border !border-red-200 !bg-white !px-4 !font-semibold !text-[#b10b22] !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!border-[#c6001e] hover:!bg-[#fff1f3] hover:!text-[#b10b22] hover:!shadow-[0_10px_22px_rgba(177,11,34,0.12)] active:!translate-y-0"
               >
                 Đăng xuất
               </Button>
@@ -135,7 +135,7 @@ export default function AppHeader({ variant = 'desktop' }) {
               <Link to="/auth/login" className="hidden sm:inline-flex">
                 <Button
                   type="text"
-                  className="!h-9 !rounded-full !border !border-slate-200 !bg-white !px-4 !font-semibold !text-slate-700 !transition-all !duration-200 hover:!border-red-200 hover:!text-[#b10b22]"
+                  className="!h-9 !rounded-full !border !border-slate-200 !bg-white !px-4 !font-semibold !text-slate-700 !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!border-[#c6001e] hover:!bg-[#fff1f3] hover:!text-[#b10b22] hover:!shadow-[0_10px_22px_rgba(177,11,34,0.12)] active:!translate-y-0"
                 >
                   Đăng nhập
                 </Button>
@@ -144,7 +144,7 @@ export default function AppHeader({ variant = 'desktop' }) {
               <Link to="/auth/register" className="hidden sm:inline-flex">
                 <Button
                   type="text"
-                  className="!h-9 !rounded-full !border-0 !bg-[#d8001e] !px-4 !font-semibold !text-white !transition-all !duration-200 hover:!bg-[#c0001a]"
+                  className="!h-9 !rounded-full !border-0 !bg-[#8B0000] !px-4 !font-semibold !text-white !shadow-[0_8px_18px_rgba(139,0,0,0.18)] !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!bg-[#700000] hover:!shadow-[0_14px_28px_rgba(139,0,0,0.28)] active:!translate-y-0"
                 >
                   Đăng ký
                 </Button>
@@ -157,7 +157,7 @@ export default function AppHeader({ variant = 'desktop' }) {
               <Button
                 type="text"
                 icon={<ShoppingCartOutlined />}
-                className="!h-9 !w-9 !min-w-9 !rounded-full !border !border-slate-200 !bg-white !p-0 !text-slate-700 !transition-all !duration-200 hover:!border-red-200 hover:!text-[#b10b22]"
+                className="!h-9 !w-9 !min-w-9 !rounded-full !border !border-slate-200 !bg-white !p-0 !text-slate-700 !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!border-[#c6001e] hover:!bg-[#fff1f3] hover:!text-[#b10b22] hover:!shadow-[0_10px_22px_rgba(177,11,34,0.12)] active:!translate-y-0"
               />
             </Badge>
           </Link>

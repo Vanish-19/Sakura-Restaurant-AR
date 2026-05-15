@@ -120,7 +120,7 @@ export default function OrderHistoryPage() {
           options={filterOptions}
           value={activeFilter}
           onChange={setActiveFilter}
-          className="!rounded-lg !bg-[#f4f4f6] !p-1"
+          className="brand-segmented !rounded-lg !bg-[#f4f4f6] !p-1"
         />
       </div>
 

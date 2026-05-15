@@ -169,8 +169,8 @@ export default function TableSelectionModal({ open, onCancel, onConfirm, forceSe
                 className={
                   'rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-200 ' +
                   (active
-                    ? 'bg-gradient-to-r from-[#b80016] to-[#df0020] text-white shadow-[0_6px_14px_rgba(184,0,22,0.28)]'
-                    : 'bg-white text-zinc-500 ring-1 ring-zinc-200 hover:text-[#c0001c]')
+                    ? 'bg-[#8B0000] text-white shadow-[0_8px_18px_rgba(139,0,0,0.24)]'
+                    : 'bg-white text-[#4A4A4A] ring-1 ring-zinc-200 hover:bg-[#fff1f3] hover:text-[#900020] hover:ring-[#c6001e]')
                 }
               >
                 {filter.label}

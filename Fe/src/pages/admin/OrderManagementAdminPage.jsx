@@ -268,7 +268,7 @@ export default function OrderManagementAdminPage() {
       <Card className="admin-panel-card mt-6" bodyStyle={{ padding: 0 }}>
          <Tabs 
            defaultActiveKey="1"
-           className="px-5 pt-3"
+           className="brand-tabs px-5 pt-3"
            items={[
              {
                key: '1',

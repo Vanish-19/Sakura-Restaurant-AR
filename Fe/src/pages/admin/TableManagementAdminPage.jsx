@@ -149,8 +149,8 @@ export default function TableManagementAdminPage() {
                   className={[
                     'pb-1 text-sm font-medium transition',
                     active
-                      ? 'border-b-2 border-rose-600 text-rose-600'
-                      : 'text-zinc-400 hover:text-zinc-700',
+                      ? 'border-b-2 border-[#8B0000] text-[#8B0000]'
+                      : 'text-[#4A4A4A] hover:text-[#900020]',
                   ].join(' ')}
                 >
                   {option.label}
@@ -185,8 +185,8 @@ export default function TableManagementAdminPage() {
               className={[
                 'whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold transition',
                 active
-                  ? 'border-rose-600 bg-rose-600 text-white'
-                  : 'border-zinc-300 bg-white text-zinc-600',
+                  ? 'border-[#8B0000] bg-[#8B0000] text-white shadow-[0_8px_18px_rgba(139,0,0,0.22)]'
+                  : 'border-zinc-300 bg-white text-[#4A4A4A] hover:border-[#c6001e] hover:bg-[#fff1f3] hover:text-[#900020]',
               ].join(' ')}
             >
               {option.label}
