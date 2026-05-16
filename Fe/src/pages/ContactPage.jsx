@@ -84,8 +84,8 @@ export default function ContactPage() {
             alt="Không gian liên hệ Sakura Restaurant"
             className="absolute inset-0 h-full w-full object-cover object-center"
           />
-          <div className="absolute inset-0 bg-zinc-200/42" />
-          <div className="absolute inset-0 bg-gradient-to-b from-white/8 via-white/24 to-white/44" />
+          <div className="absolute inset-0 bg-zinc-200/62" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/24 via-white/48 to-white/68" />
         </div>
 
         <div className="relative z-10 mx-auto flex min-h-[500px] max-w-7xl items-center justify-center px-5 pb-24 pt-10 text-center sm:px-8 md:min-h-[570px] md:pb-28 xl:min-h-[620px] xl:px-10">
@@ -104,14 +104,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-white px-5 py-14 sm:px-8 md:py-16 xl:px-10">
-        <img
-          src="/bgBody.png"
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center opacity-45"
-        />
-        <div className="absolute inset-0 bg-white/70" />
+      <section className="relative overflow-hidden bg-[#fffafa] px-5 py-14 sm:px-8 md:py-16 xl:px-10">
 
         <div className="relative z-10 mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.85fr_1.35fr] xl:gap-16">
           <div>
@@ -166,9 +159,9 @@ export default function ContactPage() {
                     src="/bgBody.png"
                     alt=""
                     aria-hidden="true"
-                    className="absolute inset-0 h-full w-full object-cover object-right opacity-55"
+                    className="absolute inset-0 h-full w-full object-cover object-right opacity-70"
                   />
-                  <div className="absolute inset-0 bg-white/54" />
+                  <div className="absolute inset-0 bg-white/50" />
                   <div className="relative z-10 max-w-[260px]">
                     <Text className="!block !text-base !font-extrabold !text-slate-950">
                       Trải nghiệm AR của bạn gặp trục trặc?
@@ -240,8 +233,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#fff7f8] via-[#fff3f5] to-[#fffafa] px-5 py-10 sm:px-8 xl:px-10">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(216,0,30,0.045),transparent_32%),radial-gradient(circle_at_82%_20%,rgba(216,0,30,0.035),transparent_30%)]" />
+      <section className="relative overflow-hidden bg-[#fffafa] px-5 py-10 sm:px-8 xl:px-10">
         <div className="relative z-10 mx-auto grid max-w-6xl gap-6 md:grid-cols-3">
           {serviceCards.map((item) => (
             <Card key={item.title} className="!rounded-xl !border !border-[#f1e5e5] !bg-white/90 !shadow-[0_12px_28px_rgba(17,24,39,0.05)]" bodyStyle={{ padding: 24 }}>
