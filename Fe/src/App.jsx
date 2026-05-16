@@ -6,6 +6,7 @@ import AdminLayout from './components/templates/admin/AdminLayout.jsx'
 import AppLayout from './components/templates/AppLayout.jsx'
 import AboutPage from './pages/AboutPage.jsx'
 import CartPage from './pages/CartPage.jsx'
+import ContactPage from './pages/ContactPage.jsx'
 import HomePage from './pages/HomePage.jsx'
 import OrderHistoryPage from './pages/OrderHistoryPage.jsx'
 import PaymentPage from './pages/PaymentPage.jsx'
@@ -27,6 +28,7 @@ export default function App() {
       <Route element={<AppLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/order" element={<HomePage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/orders/history" element={<OrderHistoryPage />} />

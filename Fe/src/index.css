@@ -224,6 +224,34 @@ body[data-client-theme='dark'] {
     transition: background-color 9999s ease-out 0s;
   }
 
+  .contact-form .ant-form-item {
+    @apply mb-4;
+  }
+
+  .contact-form .ant-form-item-label {
+    @apply pb-1.5;
+  }
+
+  .contact-form .ant-form-item-label > label {
+    @apply text-xs font-bold text-[#4A4A4A];
+  }
+
+  .contact-form .ant-input,
+  .contact-form .ant-select-selector {
+    @apply rounded-md border-[#eadede] bg-white/90 text-sm shadow-none transition-colors duration-300;
+  }
+
+  .contact-form .ant-input {
+    @apply px-3 py-2.5;
+  }
+
+  .contact-form .ant-input:hover,
+  .contact-form .ant-input:focus,
+  .contact-form .ant-select-selector:hover,
+  .contact-form .ant-select-focused .ant-select-selector {
+    @apply border-[#c6001e] shadow-none;
+  }
+
   .menu-item-card {
     @apply rounded-2xl border border-[#ece7dc] bg-white shadow-[0_8px_24px_rgba(17,24,39,0.06)];
     transform: translateZ(0);
