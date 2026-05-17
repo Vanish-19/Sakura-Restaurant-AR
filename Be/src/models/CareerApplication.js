@@ -37,7 +37,7 @@ const careerApplicationSchema = new mongoose.Schema(
       default: 'new',
     },
   },
-  { timestamps: true }
+  { timestamps: true, collection: 'career_applications' }
 );
 
 careerApplicationSchema.index({ email: 1, position: 1, createdAt: -1 });
