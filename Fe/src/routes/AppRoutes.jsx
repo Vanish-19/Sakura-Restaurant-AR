@@ -12,6 +12,7 @@ import HomePage from '../pages/HomePage.jsx'
 import OrderHistoryPage from '../pages/OrderHistoryPage.jsx'
 import PaymentPage from '../pages/PaymentPage.jsx'
 import PrivacyPolicyPage from '../pages/static/PrivacyPolicyPage.jsx'
+import PressKitPage from '../pages/static/PressKitPage.jsx'
 import TermsOfServicePage from '../pages/static/TermsOfServicePage.jsx'
 import ArScenePage from '../pages/ArScenePage.jsx'
 import AdminManagementAdminPage from '../pages/admin/AdminManagementAdminPage.jsx'
@@ -42,6 +43,7 @@ export default function AppRoutes() {
           <Route path="/payment/:orderId" element={<PaymentPage />} />
           <Route path="/privacy&policy" element={<PrivacyPolicyPage />} />
           <Route path="/term&service" element={<TermsOfServicePage />} />
+          <Route path="/press-kit" element={<PressKitPage />} />
         </Route>
 
         <Route path="/ar" element={<ArScenePage />} />
