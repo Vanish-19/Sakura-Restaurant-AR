@@ -1,5 +1,6 @@
-import Admin from '../models/Admin.js';
 import mongoose from 'mongoose';
+import Admin from '../models/Admin.js';
+import { createHttpError } from '../utils/AppError.js';
 
 function normalizeRole(role) {
   if (role === 'superAdmin') return 'super_admin';
@@ -7,8 +8,14 @@ function normalizeRole(role) {
   return 'admin';
 }
 
+function assertValidObjectId(id) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw createHttpError('Invalid admin account id', 400, 'INVALID_ADMIN_ID');
+  }
+}
+
 export const getAllAdmins = async () => {
-  const admins = await Admin.find({}).select('-password').sort({ createdAt: -1 });
+  const admins = await Admin.find({}).select('-password -refreshToken').sort({ createdAt: -1 });
   return admins.map((item) => ({
     ...item.toObject(),
     role: normalizeRole(item.role),
@@ -18,18 +25,16 @@ export const getAllAdmins = async () => {
 export const getAdminStats = async () => {
   const [total, active] = await Promise.all([
     Admin.countDocuments({}),
-    Admin.countDocuments({ status: 'Active' })
+    Admin.countDocuments({ status: 'Active' }),
   ]);
-  return { total, active, alerts: 0 }; // alerts as placeholders for now
+  return { total, active, alerts: 0 };
 };
 
 export const getAdminById = async (id) => {
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new Error('ID tài khoản không hợp lệ');
-  }
+  assertValidObjectId(id);
 
-  const admin = await Admin.findById(id).select('-password');
-  if (!admin) throw new Error('Không tìm thấy admin');
+  const admin = await Admin.findById(id).select('-password -refreshToken');
+  if (!admin) throw createHttpError('Admin account not found', 404, 'ADMIN_NOT_FOUND');
 
   return {
     ...admin.toObject(),
@@ -38,28 +43,26 @@ export const getAdminById = async (id) => {
 };
 
 export const toggleAdminStatus = async (id) => {
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new Error('ID tài khoản không hợp lệ');
-  }
+  assertValidObjectId(id);
 
   const admin = await Admin.findById(id);
-  if (!admin) throw new Error('Không tìm thấy admin');
+  if (!admin) throw createHttpError('Admin account not found', 404, 'ADMIN_NOT_FOUND');
+
   admin.status = admin.status === 'Active' ? 'Inactive' : 'Active';
-  return await admin.save();
+  if (admin.status === 'Inactive') admin.refreshToken = '';
+  return admin.save();
 };
 
 export const resetAdminPassword = async (id, password) => {
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new Error('ID tài khoản không hợp lệ');
-  }
+  assertValidObjectId(id);
 
   const nextPassword = String(password || '').trim();
   if (!nextPassword || nextPassword.length < 6) {
-    throw new Error('Mật khẩu mới phải có ít nhất 6 ký tự');
+    throw createHttpError('New password must be at least 6 characters', 400, 'PASSWORD_TOO_SHORT');
   }
 
   const admin = await Admin.findById(id).select('+password');
-  if (!admin) throw new Error('Không tìm thấy admin');
+  if (!admin) throw createHttpError('Admin account not found', 404, 'ADMIN_NOT_FOUND');
 
   admin.password = nextPassword;
   admin.refreshToken = '';

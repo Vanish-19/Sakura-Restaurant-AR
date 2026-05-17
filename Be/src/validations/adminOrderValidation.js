@@ -27,6 +27,16 @@ export const updateAdminOrderStatusSchema = z.object({
   })
 });
 
+export const updateOrderItemStatusSchema = z.object({
+  params: z.object({
+    id: z.string().regex(objectIdRegex, 'Invalid order ID'),
+    itemId: z.string().regex(objectIdRegex, 'Invalid order item ID')
+  }),
+  body: z.object({
+    status: z.enum(['pending', 'cooking', 'ready', 'served', 'cancelled'])
+  })
+});
+
 export const cancelOrderSchema = z.object({
   params: z.object({
     id: z.string().regex(objectIdRegex, 'Invalid order ID')

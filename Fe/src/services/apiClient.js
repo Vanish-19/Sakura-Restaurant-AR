@@ -2,7 +2,8 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
 const DIRECT_API_BASE_URL =
-  import.meta.env.VITE_API_DIRECT_BASE_URL || 'http://127.0.0.1:3000/api/v1'
+  import.meta.env.VITE_API_DIRECT_BASE_URL ||
+  (import.meta.env.DEV ? 'http://127.0.0.1:3000/api/v1' : '')
 
 function getToken(key) {
   try {
@@ -19,7 +20,7 @@ function joinUrl(base, path) {
 
 function getPreferredBases() {
   if (!API_BASE_URL.startsWith('/')) return [API_BASE_URL]
-  return [API_BASE_URL, DIRECT_API_BASE_URL]
+  return [API_BASE_URL, DIRECT_API_BASE_URL].filter(Boolean)
 }
 
 async function requestWithFallback(path, requestInit) {

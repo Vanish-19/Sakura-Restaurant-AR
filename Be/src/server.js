@@ -3,6 +3,8 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { connectDB } from './config/db.js';
 
 // Routes
@@ -31,17 +33,97 @@ connectDB();
 ensureJwtConfig();
 
 const app = express();
+app.set('trust proxy', 1);
 const httpServer = createServer(app);
+
+function normalizeOrigin(origin) {
+  return String(origin || '').trim().replace(/\/$/, '');
+}
+
+function getAllowedOrigins() {
+  const configured = [
+    process.env.FRONTEND_URL,
+    ...(process.env.CORS_ORIGINS || '').split(','),
+  ]
+    .map(normalizeOrigin)
+    .filter(Boolean);
+
+  if (process.env.NODE_ENV !== 'production') {
+    configured.push(
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'http://localhost:4173',
+      'http://127.0.0.1:4173',
+    );
+  }
+
+  return [...new Set(configured)];
+}
+
+const allowedOrigins = getAllowedOrigins();
+
+function isOriginAllowed(origin) {
+  if (!origin) return true;
+  if (allowedOrigins.includes('*')) return true;
+  return allowedOrigins.includes(normalizeOrigin(origin));
+}
+
+const corsOptions = {
+  credentials: true,
+  origin(origin, callback) {
+    if (isOriginAllowed(origin)) return callback(null, true);
+    return callback(new Error('CORS origin not allowed'), false);
+  },
+};
+
+function buildLimiter({ windowMs, limit, message }) {
+  return rateLimit({
+    windowMs,
+    limit,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: {
+      success: false,
+      error: message,
+      message,
+    },
+  });
+}
+
+const authLimiter = buildLimiter({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  message: 'Too many authentication attempts. Please try again later.',
+});
+
+const orderLimiter = buildLimiter({
+  windowMs: 5 * 60 * 1000,
+  limit: 80,
+  message: 'Too many order requests. Please slow down.',
+});
+
+const uploadLimiter = buildLimiter({
+  windowMs: 60 * 60 * 1000,
+  limit: 30,
+  message: 'Too many upload requests. Please try again later.',
+});
+
+const webhookLimiter = buildLimiter({
+  windowMs: 60 * 1000,
+  limit: 120,
+  message: 'Too many webhook requests.',
+});
 
 // Setup Socket.io
 const io = new Server(httpServer, {
   cors: {
-    origin: '*', // In production, replace with your frontend URL
-    methods: ['GET', 'POST']
+    ...corsOptions,
+    methods: ['GET', 'POST'],
   }
 });
 
-app.use(cors());
+app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(cors(corsOptions));
 
 // Middleware to inject the Socket.io instance into requests
 app.use((req, res, next) => {
@@ -49,7 +131,17 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+app.use('/api/v1/auth', authLimiter);
+app.use('/api/v1/admin/auth', authLimiter);
+app.use('/api/v1/tables/scan', orderLimiter);
+app.use('/api/v1/orders', orderLimiter);
+app.use('/api/v1/takeaway/orders', orderLimiter);
+app.use('/api/v1/careers/applications', uploadLimiter);
+app.use('/api/v1/admin/foods/upload-model', uploadLimiter);
+app.use('/api/v1/payments/sepay/webhook', webhookLimiter);
 
 app.get('/api/v1/payments/sepay/return', async (req, res) => {
   try {
@@ -117,17 +209,45 @@ app.use('/api/v1/admin/accounts', adminAccountRoutes);   // Admin account manage
 app.use('/api/v1/admin/dashboard', adminDashboardRoutes); // Dashboard stats
 
 app.use((error, _req, res, _next) => {
-  const status = Number(error?.status || error?.statusCode || 500);
-  const message = error?.message || 'Internal Server Error';
+  let status = Number(error?.status || error?.statusCode || 500);
+  let message = error?.message || 'Internal Server Error';
+  let code = error?.code || 'INTERNAL_ERROR';
+  let details = error?.details;
+
+  if (message === 'CORS origin not allowed') {
+    status = 403;
+    code = 'CORS_ORIGIN_NOT_ALLOWED';
+  }
+
+  if (error?.name === 'CastError') {
+    status = 400;
+    code = 'INVALID_ID';
+    message = 'Invalid resource id';
+  }
+
+  if (error?.name === 'ValidationError') {
+    status = 400;
+    code = 'VALIDATION_ERROR';
+    details = Object.values(error.errors || {}).map((item) => item.message);
+  }
+
+  if (error?.code === 11000) {
+    status = 409;
+    code = 'DUPLICATE_KEY';
+    message = 'Duplicate resource';
+    details = error.keyValue;
+  }
 
   if (status >= 500) {
-    console.error('Unhandled error:', message);
+    console.error('Unhandled error:', message, error?.stack || '');
   }
 
   return res.status(status).json({
     success: false,
+    code,
     error: message,
     message,
+    ...(details ? { details } : {}),
   });
 });
 

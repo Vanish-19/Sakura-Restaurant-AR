@@ -1,15 +1,13 @@
 import asyncHandler from 'express-async-handler';
 import Table from '../models/Table.js';
 import { signAccessToken } from '../services/tokenService.js';
+import { createTableSession } from '../services/tableSessionService.js';
 
-/**
- * Handles scanning a QR code for a table to start a dining session.
- */
 const scanTable = asyncHandler(async (req, res) => {
   const { qr_hash } = req.body;
 
   if (!qr_hash) {
-    return res.status(400).json({ error: 'Thiếu mã qr_hash' });
+    return res.status(400).json({ success: false, error: 'qr_hash is required' });
   }
 
   const normalizedQrHash = String(qr_hash).trim();
@@ -20,23 +18,32 @@ const scanTable = asyncHandler(async (req, res) => {
     (await Table.findOne({ qr_hash: normalizedQrHash.toUpperCase() }));
 
   if (!table) {
-    return res.status(404).json({ error: 'Không tìm thấy bàn' });
+    return res.status(404).json({ success: false, error: 'Table not found' });
   }
 
-  // Update table status to dining
   table.status = 'dining';
   await table.save();
 
-  // Generate JWT session token
+  const session = await createTableSession(table, normalizedQrHash);
   const token = signAccessToken(
-    { table_id: table._id, name: table.name, type: 'table' },
-    { expiresIn: '24h' }
+    {
+      table_id: table._id,
+      session_id: session._id,
+      name: table.name,
+      type: 'table',
+    },
+    { expiresIn: process.env.TABLE_SESSION_JWT_EXPIRES_IN || '24h' },
   );
 
   res.status(200).json({
-    message: 'Đã bắt đầu phiên bàn',
+    success: true,
+    message: 'Table session started',
     token,
-    table
+    session: {
+      id: session._id,
+      expires_at: session.expires_at,
+    },
+    table,
   });
 });
 

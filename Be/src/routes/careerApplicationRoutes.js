@@ -10,6 +10,21 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024,
     files: 2,
   },
+  fileFilter: (_req, file, cb) => {
+    const allowed = new Set([
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ]);
+
+    if (!allowed.has(file.mimetype)) {
+      const error = new Error('Only PDF, DOC, or DOCX files are supported');
+      error.status = 400;
+      return cb(error);
+    }
+
+    return cb(null, true);
+  },
 });
 
 router.post(

@@ -1,9 +1,10 @@
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
+import { createHttpError } from '../utils/AppError.js';
 
 async function attachPaymentStatus(orders) {
   const orderIds = orders.map((order) => order._id);
-  const payments = await Payment.find({ order: { $in: orderIds }, method: 'online' });
+  const payments = await Payment.find({ order: { $in: orderIds } });
   const paymentMap = new Map(payments.map((payment) => [String(payment.order), payment]));
 
   return orders.map((order) => {
@@ -20,6 +21,7 @@ async function attachPaymentStatus(orders) {
         ? {
             id: payment._id,
             status: payment.status,
+            method: payment.method,
             provider: payment.provider,
             provider_ref: payment.provider_ref,
             checkout_url: payment.checkout_url,
@@ -28,6 +30,22 @@ async function attachPaymentStatus(orders) {
         : null,
     };
   });
+}
+
+function normalizePagination({ page = 1, limit = 20 }) {
+  const normalizedPage = Math.max(1, Number(page) || 1);
+  const normalizedLimit = Math.min(100, Math.max(1, Number(limit) || 20));
+  return {
+    page: normalizedPage,
+    limit: normalizedLimit,
+    skip: (normalizedPage - 1) * normalizedLimit,
+  };
+}
+
+async function getPopulatedOrder(id) {
+  return Order.findById(id)
+    .populate('table', 'name')
+    .populate('items.menu_item', 'name image_url price category');
 }
 
 const getAllOrders = async ({ status, order_type, order_id, page = 1, limit = 20 }) => {
@@ -45,7 +63,7 @@ const getAllOrders = async ({ status, order_type, order_id, page = 1, limit = 20
     };
   }
 
-  const skip = (page - 1) * limit;
+  const { page: normalizedPage, limit: normalizedLimit, skip } = normalizePagination({ page, limit });
 
   const [orders, total] = await Promise.all([
     Order.find(query)
@@ -53,8 +71,8 @@ const getAllOrders = async ({ status, order_type, order_id, page = 1, limit = 20
       .populate('items.menu_item', 'name image_url price category')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit),
-    Order.countDocuments(query)
+      .limit(normalizedLimit),
+    Order.countDocuments(query),
   ]);
 
   const ordersWithPayment = await attachPaymentStatus(orders);
@@ -62,19 +80,17 @@ const getAllOrders = async ({ status, order_type, order_id, page = 1, limit = 20
   return {
     orders: ordersWithPayment,
     pagination: {
-      page: Number(page),
-      limit: Number(limit),
+      page: normalizedPage,
+      limit: normalizedLimit,
       total,
-      pages: Math.ceil(total / limit),
-    }
+      pages: Math.ceil(total / normalizedLimit),
+    },
   };
 };
 
 const getOrderById = async (id) => {
-  const order = await Order.findById(id)
-    .populate('table', 'name')
-    .populate('items.menu_item', 'name image_url price category');
-  if (!order) throw new Error('Không tìm thấy đơn hàng');
+  const order = await getPopulatedOrder(id);
+  if (!order) throw createHttpError('Order not found', 404, 'ORDER_NOT_FOUND');
 
   const [orderWithPayment] = await attachPaymentStatus([order]);
   return orderWithPayment;
@@ -82,9 +98,8 @@ const getOrderById = async (id) => {
 
 const updateOrderStatus = async (id, newStatus) => {
   const order = await Order.findById(id);
-  if (!order) throw new Error('Không tìm thấy đơn hàng');
+  if (!order) throw createHttpError('Order not found', 404, 'ORDER_NOT_FOUND');
 
-  // Validate trạng thái hợp lệ theo luồng
   const validTransitions = {
     dine_in: {
       pending: ['cooking', 'cancelled'],
@@ -94,45 +109,106 @@ const updateOrderStatus = async (id, newStatus) => {
     takeaway: {
       pending: ['cooking', 'cancelled'],
       cooking: ['ready', 'cancelled'],
-      ready: ['picked_up'],
+      ready: ['picked_up', 'cancelled'],
       picked_up: ['paid'],
-    }
+    },
   };
 
   const allowed = validTransitions[order.order_type]?.[order.status] || [];
   if (!allowed.includes(newStatus)) {
-    throw new Error(`Không thể chuyển trạng thái từ '${order.status}' sang '${newStatus}' cho đơn ${order.order_type}`);
+    throw createHttpError(
+      `Cannot transition ${order.order_type} order from ${order.status} to ${newStatus}`,
+      409,
+      'INVALID_ORDER_STATUS_TRANSITION',
+    );
   }
 
   order.status = newStatus;
-  const updated = await order.save();
-  const populated = await Order.findById(updated._id)
-    .populate('table', 'name')
-    .populate('items.menu_item', 'name image_url');
+  if (newStatus === 'cancelled') {
+    order.items.forEach((item) => {
+      item.status = 'cancelled';
+    });
+  }
+  if (newStatus === 'cooking') {
+    order.items.forEach((item) => {
+      if (item.status === 'pending') item.status = 'cooking';
+    });
+  }
+  if (newStatus === 'served') {
+    order.items.forEach((item) => {
+      if (item.status !== 'cancelled') item.status = 'served';
+    });
+  }
+  if (newStatus === 'ready') {
+    order.items.forEach((item) => {
+      if (item.status !== 'cancelled') item.status = 'ready';
+    });
+  }
 
+  const updated = await order.save();
+  const populated = await getPopulatedOrder(updated._id);
+  const [orderWithPayment] = await attachPaymentStatus([populated]);
+  return orderWithPayment;
+};
+
+function deriveOrderStatusFromItems(order) {
+  if (['paid', 'cancelled'].includes(order.status)) return order.status;
+
+  const itemStatuses = order.items.map((item) => item.status);
+  const activeStatuses = itemStatuses.filter((status) => status !== 'cancelled');
+  if (activeStatuses.length === 0) return 'cancelled';
+
+  if (order.order_type === 'dine_in') {
+    if (activeStatuses.every((status) => status === 'served')) return 'served';
+    if (activeStatuses.some((status) => ['cooking', 'ready', 'served'].includes(status))) return 'cooking';
+    return 'pending';
+  }
+
+  if (activeStatuses.every((status) => ['ready', 'served'].includes(status))) return 'ready';
+  if (activeStatuses.some((status) => ['cooking', 'ready', 'served'].includes(status))) return 'cooking';
+  return 'pending';
+}
+
+const updateOrderItemStatus = async (orderId, itemId, itemStatus) => {
+  const order = await Order.findById(orderId);
+  if (!order) throw createHttpError('Order not found', 404, 'ORDER_NOT_FOUND');
+  if (['paid', 'cancelled'].includes(order.status)) {
+    throw createHttpError('Cannot update items for a closed order', 409, 'ORDER_CLOSED');
+  }
+
+  const item = order.items.id(itemId);
+  if (!item) throw createHttpError('Order item not found', 404, 'ORDER_ITEM_NOT_FOUND');
+
+  item.status = itemStatus;
+  order.status = deriveOrderStatusFromItems(order);
+  const updated = await order.save();
+
+  const populated = await getPopulatedOrder(updated._id);
   const [orderWithPayment] = await attachPaymentStatus([populated]);
   return orderWithPayment;
 };
 
 const cancelOrder = async (id) => {
   const order = await Order.findById(id);
-  if (!order) throw new Error('Không tìm thấy đơn hàng');
+  if (!order) throw createHttpError('Order not found', 404, 'ORDER_NOT_FOUND');
 
   if (['paid', 'cancelled', 'picked_up'].includes(order.status)) {
-    throw new Error(`Không thể hủy đơn có trạng thái '${order.status}'`);
+    throw createHttpError(`Cannot cancel an order with status ${order.status}`, 409, 'ORDER_NOT_CANCELLABLE');
   }
 
   order.status = 'cancelled';
-  return await order.save();
+  order.items.forEach((item) => {
+    item.status = 'cancelled';
+  });
+  return order.save();
 };
 
 const hardDeleteOrder = async (id) => {
   const order = await Order.findById(id);
-  if (!order) throw new Error('Không tìm thấy đơn hàng');
+  if (!order) throw createHttpError('Order not found', 404, 'ORDER_NOT_FOUND');
 
-  // Require cancel first to avoid accidental destructive deletion.
   if (order.status !== 'cancelled') {
-    throw new Error('Chỉ được xóa vĩnh viễn đơn đã hủy');
+    throw createHttpError('Only cancelled orders can be permanently deleted', 409, 'ORDER_NOT_CANCELLED');
   }
 
   await Order.findByIdAndDelete(id);
@@ -150,7 +226,7 @@ const getOrderStats = async () => {
     revenueOrConditions.push({ _id: { $in: completedOnlineOrderIds } });
   }
 
-  const [todayOptions, todayRevenue, statusCounts] = await Promise.all([
+  const [todayOrders, todayRevenue, statusCounts] = await Promise.all([
     Order.countDocuments({ createdAt: { $gte: today } }),
     Order.aggregate([
       {
@@ -159,18 +235,26 @@ const getOrderStats = async () => {
           $or: revenueOrConditions,
         },
       },
-      { $group: { _id: null, total: { $sum: '$total_amount' } } }
+      { $group: { _id: null, total: { $sum: '$total_amount' } } },
     ]),
     Order.aggregate([
-      { $group: { _id: '$status', count: { $sum: 1 } } }
-    ])
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]),
   ]);
 
   return {
-    today_orders: todayOptions,
+    today_orders: todayOrders,
     today_revenue: todayRevenue[0]?.total || 0,
-    by_status: Object.fromEntries(statusCounts.map(s => [s._id, s.count])),
+    by_status: Object.fromEntries(statusCounts.map((s) => [s._id, s.count])),
   };
 };
 
-export { getAllOrders, getOrderById, updateOrderStatus, cancelOrder, hardDeleteOrder, getOrderStats };
+export {
+  getAllOrders,
+  getOrderById,
+  updateOrderStatus,
+  updateOrderItemStatus,
+  cancelOrder,
+  hardDeleteOrder,
+  getOrderStats,
+};

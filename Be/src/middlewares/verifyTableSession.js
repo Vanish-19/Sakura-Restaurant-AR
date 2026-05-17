@@ -1,35 +1,39 @@
 import { extractBearerToken, verifyAccessToken } from '../services/tokenService.js';
+import { assertActiveTableSession } from '../services/tableSessionService.js';
 
-/**
- * Express middleware to verify the table session via JWT token.
- * Expects the token in the Authorization header as "Bearer <token>".
- * 
- * @param {import('express').Request} req - The Express request object.
- * @param {import('express').Response} res - The Express response object.
- * @param {import('express').NextFunction} next - The Express next middleware function.
- * @returns {void}
- */
-export const verifyTableSession = (req, res, next) => {
+export const verifyTableSession = async (req, res, next) => {
   try {
     const token = extractBearerToken(req);
 
     if (!token) {
-      return res.status(401).json({ error: 'Thiếu token xác thực phiên bàn' });
+      return res.status(401).json({ success: false, error: 'Table session token is required' });
     }
 
     const decoded = verifyAccessToken(token);
 
-    if (decoded.type && decoded.type !== 'table') {
-      return res.status(403).json({ error: 'Token phiên bàn không hợp lệ' });
+    if (decoded.type !== 'table') {
+      return res.status(403).json({ success: false, error: 'Invalid table session token' });
     }
 
-    // Attach the decoded payload (table info) to the request object
-    req.table = decoded;
+    if (!decoded.table_id) {
+      return res.status(403).json({ success: false, error: 'Invalid table session payload' });
+    }
 
-    // Proceed to the next middleware or route handler
+    const session = await assertActiveTableSession({
+      sessionId: decoded.session_id,
+      tableId: decoded.table_id,
+    });
+
+    req.table = decoded;
+    req.tableSession = session;
     next();
   } catch (error) {
-    console.error('Session verification failed:', error.message);
-    return res.status(403).json({ error: 'Token phiên bàn không hợp lệ hoặc đã hết hạn' });
+    const status = Number(error?.status || error?.statusCode || 403);
+    return res.status(status).json({
+      success: false,
+      code: error?.code || 'INVALID_TABLE_SESSION',
+      error: error?.message || 'Invalid or expired table session',
+      message: error?.message || 'Invalid or expired table session',
+    });
   }
 };

@@ -20,7 +20,7 @@ const getTakeawayOrdersByPhone = asyncHandler(async (req, res) => {
 
 const getTakeawayOrderById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const order = await svcGetTakeawayOrderById(id);
+  const order = await svcGetTakeawayOrderById(id, req.user?.id);
   res.status(200).json({ success: true, data: order });
 });
 

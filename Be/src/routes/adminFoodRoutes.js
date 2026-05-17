@@ -8,23 +8,33 @@ import * as adminFoodController from '../controllers/adminFoodController.js';
 
 const router = express.Router();
 
+const knownModelMimeTypes = new Set([
+  'model/gltf-binary',
+  'model/vnd.usdz+zip',
+  'application/octet-stream',
+  'application/zip',
+  'application/x-zip-compressed',
+]);
+
 const upload = multer({
-	storage: multer.memoryStorage(),
-	limits: {
-		fileSize: 20 * 1024 * 1024,
-	},
-	fileFilter: (_req, file, cb) => {
-		const extension = path.extname(file.originalname || '').toLowerCase();
-		const isAllowed = extension === '.glb' || extension === '.usdz';
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 20 * 1024 * 1024,
+    files: 1,
+  },
+  fileFilter: (_req, file, cb) => {
+    const extension = path.extname(file.originalname || '').toLowerCase();
+    const hasAllowedExtension = extension === '.glb' || extension === '.usdz';
+    const hasAllowedMime = !file.mimetype || knownModelMimeTypes.has(file.mimetype);
 
-		if (!isAllowed) {
-			const error = new Error('Chỉ hỗ trợ upload file .glb hoặc .usdz');
-			error.status = 400;
-			return cb(error);
-		}
+    if (!hasAllowedExtension || !hasAllowedMime) {
+      const error = new Error('Only .glb or .usdz model uploads are supported');
+      error.status = 400;
+      return cb(error);
+    }
 
-		return cb(null, true);
-	},
+    return cb(null, true);
+  },
 });
 
 router.use(verifyAdmin);

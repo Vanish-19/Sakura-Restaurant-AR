@@ -1,10 +1,11 @@
 import { extractBearerToken, verifyAccessToken } from '../services/tokenService.js';
+import Admin from '../models/Admin.js';
 
 /**
  * Middleware xác thực Admin qua JWT.
  * Expects: Authorization: Bearer <token>
  */
-export const verifyAdmin = (req, res, next) => {
+export const verifyAdmin = async (req, res, next) => {
   try {
     const token = extractBearerToken(req);
 
@@ -33,12 +34,34 @@ export const verifyAdmin = (req, res, next) => {
       return res.status(403).json({ error: 'Không đủ quyền truy cập' });
     }
 
+    const adminId = decoded.sub || decoded.id;
+    const admin = await Admin.findById(adminId).select('username role status email name').lean();
+    if (!admin) {
+      return res.status(403).json({ error: 'Admin account not found' });
+    }
+
+    if (admin.status !== 'Active') {
+      return res.status(403).json({ error: 'Admin account is inactive' });
+    }
+
+    const currentRole =
+      admin.role === 'superAdmin'
+        ? 'super_admin'
+        : admin.role === 'staff'
+          ? 'admin'
+          : admin.role;
+
+    if (!['admin', 'super_admin'].includes(currentRole)) {
+      return res.status(403).json({ error: 'Admin role is invalid' });
+    }
+
     req.admin = {
-      id: decoded.sub || decoded.id,
-      username: decoded.username || '',
-      role: normalizedRole,
-      email: decoded.email || '',
-      name: decoded.name || '',
+      id: String(admin._id),
+      tokenId: adminId,
+      username: admin.username || decoded.username || '',
+      role: currentRole,
+      email: admin.email || decoded.email || '',
+      name: admin.name || decoded.name || '',
     };
     next();
   } catch {

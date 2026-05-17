@@ -1,60 +1,98 @@
-import Order from '../models/Order.js';
+import mongoose from 'mongoose';
 import MenuItem from '../models/MenuItem.js';
+import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
+import { createHttpError } from '../utils/AppError.js';
 import { createSepayPaymentLinkForOrder } from './sepayPaymentService.js';
 
-const createTakeawayOrder = async ({ customer_name, customer_phone, delivery_address, payment_method = 'cod', items }, userId) => {
-  if (!userId) {
-    throw new Error('Cần đăng nhập để đặt đơn giao tận nơi');
-  }
+function normalizeOrderItems(itemsData = [], menuItems = []) {
+  const menuMap = new Map(menuItems.map((item) => [String(item._id), item]));
+  let totalAmount = 0;
 
-  let total_amount = 0;
-  const processedItems = [];
-
-  for (const item of items) {
-    const menuItem = await MenuItem.findById(item.menu_item_id);
-    if (!menuItem || !menuItem.is_available) {
-      throw new Error(`Món ${item.menu_item_id} không tồn tại hoặc đang tạm hết`);
+  const processedItems = itemsData.map((item) => {
+    const menuItem = menuMap.get(String(item.menu_item_id));
+    if (!menuItem) {
+      throw createHttpError(`Menu item ${item.menu_item_id} is unavailable`, 404, 'MENU_ITEM_UNAVAILABLE');
     }
 
-    total_amount += menuItem.price * item.quantity;
-    processedItems.push({
+    const quantity = Number(item.quantity || 1);
+    totalAmount += menuItem.price * quantity;
+
+    return {
       menu_item: menuItem._id,
-      quantity: item.quantity,
+      quantity,
       price_at_order: menuItem.price,
       note: item.note,
-    });
-  }
-
-  const order = new Order({
-    order_type: 'takeaway',
-    user: userId,
-    customer_name,
-    customer_phone,
-    delivery_address,
-    items: processedItems,
-    total_amount,
+      status: 'pending',
+    };
   });
 
-  const saved = await order.save();
-  const createdOrder = await Order.findById(saved._id)
+  return { processedItems, totalAmount };
+}
+
+async function getAvailableMenuItems(itemsData, session) {
+  const menuItemIds = [...new Set(itemsData.map((item) => item.menu_item_id))];
+  return MenuItem.find({
+    _id: { $in: menuItemIds },
+    is_available: true,
+  }).session(session);
+}
+
+const createTakeawayOrder = async (
+  { customer_name, customer_phone, delivery_address, payment_method = 'cod', items },
+  userId,
+) => {
+  if (!userId) {
+    throw createHttpError('Login is required for delivery orders', 401, 'LOGIN_REQUIRED');
+  }
+
+  const session = await mongoose.startSession();
+  let savedOrderId = null;
+  let checkoutUrl = '';
+
+  try {
+    await session.withTransaction(async () => {
+      const menuItems = await getAvailableMenuItems(items, session);
+      const { processedItems, totalAmount } = normalizeOrderItems(items, menuItems);
+
+      const [order] = await Order.create(
+        [
+          {
+            order_type: 'takeaway',
+            user: userId,
+            customer_name,
+            customer_phone,
+            delivery_address,
+            items: processedItems,
+            total_amount: totalAmount,
+          },
+        ],
+        { session },
+      );
+
+      savedOrderId = order._id;
+
+      if (payment_method === 'online') {
+        const paymentResult = await createSepayPaymentLinkForOrder(order, { session });
+        checkoutUrl = paymentResult.checkoutUrl;
+      }
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  const createdOrder = await Order.findById(savedOrderId)
     .populate('items.menu_item', 'name image_url category');
 
   if (payment_method === 'online') {
-    try {
-      const { checkoutUrl } = await createSepayPaymentLinkForOrder(createdOrder);
-      const result = createdOrder.toObject();
-      result.checkout_url = checkoutUrl;
-      result.payment_method = 'online';
-      result.payment = {
-        checkout_url: checkoutUrl,
-        status: 'pending',
-      };
-      return result;
-    } catch (error) {
-      await Order.findByIdAndDelete(saved._id);
-      throw error;
-    }
+    const result = createdOrder.toObject();
+    result.checkout_url = checkoutUrl;
+    result.payment_method = 'online';
+    result.payment = {
+      checkout_url: checkoutUrl,
+      status: 'pending',
+    };
+    return result;
   }
 
   return createdOrder;
@@ -65,15 +103,20 @@ const getTakeawayOrdersByPhone = async (phone, userId) => {
     ? { order_type: 'takeaway', user: userId }
     : { order_type: 'takeaway', customer_phone: phone };
 
-  return await Order.find(query)
+  return Order.find(query)
     .populate('items.menu_item', 'name image_url price')
     .sort({ createdAt: -1 });
 };
 
-const getTakeawayOrderById = async (id) => {
-  const order = await Order.findOne({ _id: id, order_type: 'takeaway' })
+const getTakeawayOrderById = async (id, userId) => {
+  const query = { _id: id, order_type: 'takeaway' };
+  if (userId) query.user = userId;
+
+  const order = await Order.findOne(query)
     .populate('items.menu_item', 'name image_url price category');
-  if (!order) throw new Error('Không tìm thấy đơn giao tận nơi');
+  if (!order) {
+    throw createHttpError('Delivery order not found', 404, 'TAKEAWAY_ORDER_NOT_FOUND');
+  }
 
   const payment = await Payment.findOne({ order: order._id, method: 'online' });
   const orderObject = order.toObject();
@@ -101,16 +144,18 @@ const cancelTakeawayOrder = async (id, userId) => {
   if (userId) orderQuery.user = userId;
 
   const order = await Order.findOne(orderQuery);
-  if (!order) throw new Error('Không tìm thấy đơn giao tận nơi');
+  if (!order) {
+    throw createHttpError('Delivery order not found', 404, 'TAKEAWAY_ORDER_NOT_FOUND');
+  }
 
   if (order.status === 'paid') {
-    throw new Error('Không thể hủy đơn đã thanh toán');
+    throw createHttpError('Cannot cancel a paid order', 409, 'ORDER_ALREADY_PAID');
   }
 
   order.status = 'cancelled';
   const cancelledOrder = await order.save();
 
-  return await Order.findById(cancelledOrder._id)
+  return Order.findById(cancelledOrder._id)
     .populate('items.menu_item', 'name image_url price category');
 };
 

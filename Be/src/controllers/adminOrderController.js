@@ -3,6 +3,7 @@ import {
   getAllOrders as svcGetAllOrders,
   getOrderById as svcGetOrderById,
   updateOrderStatus as svcUpdateOrderStatus,
+  updateOrderItemStatus as svcUpdateOrderItemStatus,
   cancelOrder as svcCancelOrder,
   hardDeleteOrder as svcHardDeleteOrder,
   getOrderStats as svcGetOrderStats
@@ -24,6 +25,12 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: order });
 });
 
+const updateOrderItemStatus = asyncHandler(async (req, res) => {
+  const order = await svcUpdateOrderItemStatus(req.params.id, req.params.itemId, req.body.status);
+  if (req.io) req.io.to('admin').emit('order_updated', order);
+  res.status(200).json({ success: true, data: order });
+});
+
 const cancelOrder = asyncHandler(async (req, res) => {
   const order = await svcCancelOrder(req.params.id);
   if (req.io) req.io.to('admin').emit('order_cancelled', order);
@@ -41,4 +48,12 @@ const getOrderStats = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: stats });
 });
 
-export { getAllOrders, getOrderById, updateOrderStatus, cancelOrder, hardDeleteOrder, getOrderStats };
+export {
+  getAllOrders,
+  getOrderById,
+  updateOrderStatus,
+  updateOrderItemStatus,
+  cancelOrder,
+  hardDeleteOrder,
+  getOrderStats,
+};

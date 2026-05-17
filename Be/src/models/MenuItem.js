@@ -14,4 +14,7 @@ const menuItemSchema = new mongoose.Schema({
   is_available: { type: Boolean, default: true },
 }, { timestamps: true });
 
+menuItemSchema.index({ category: 1, is_available: 1, name: 1 });
+menuItemSchema.index({ is_available: 1, is_best_seller: -1 });
+
 export default mongoose.model('MenuItem', menuItemSchema);

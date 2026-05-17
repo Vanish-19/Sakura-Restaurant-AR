@@ -8,4 +8,6 @@ const tableSchema = new mongoose.Schema({
   capacity: { type: Number, default: 4 },
 }, { timestamps: true });
 
+tableSchema.index({ status: 1, name: 1 });
+
 export default mongoose.model('Table', tableSchema);

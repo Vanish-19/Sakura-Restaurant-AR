@@ -30,4 +30,7 @@ userSchema.set('toJSON', {
   },
 });
 
+userSchema.index({ status: 1, createdAt: -1 });
+userSchema.index({ role: 1, createdAt: -1 });
+
 export default mongoose.model('User', userSchema);

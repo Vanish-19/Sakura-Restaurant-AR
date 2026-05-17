@@ -1,89 +1,133 @@
-import Payment from '../models/Payment.js';
+import mongoose from 'mongoose';
 import Order from '../models/Order.js';
+import Payment from '../models/Payment.js';
+import { createHttpError } from '../utils/AppError.js';
 
 const createPayment = async (orderId, method) => {
-  const order = await Order.findById(orderId);
-  if (!order) throw new Error('Order not found');
+  const session = await mongoose.startSession();
+  let savedPaymentId = null;
 
-  if (order.status === 'paid') throw new Error('Order already paid');
-  if (order.status === 'cancelled') throw new Error('Cannot pay for cancelled order');
+  try {
+    await session.withTransaction(async () => {
+      const order = await Order.findById(orderId).session(session);
+      if (!order) throw createHttpError('Order not found', 404, 'ORDER_NOT_FOUND');
+      if (order.status === 'paid') throw createHttpError('Order already paid', 409, 'ORDER_ALREADY_PAID');
+      if (order.status === 'cancelled') throw createHttpError('Cannot pay for cancelled order', 409, 'ORDER_CANCELLED');
 
-  // Kiểm tra đã có payment chưa
-  const existingPayment = await Payment.findOne({ order: orderId, status: 'completed' });
-  if (existingPayment) throw new Error('Payment already exists for this order');
+      const existingPayment = await Payment.findOne({ order: orderId, method }).session(session);
+      if (existingPayment) {
+        if (existingPayment.status === 'completed') {
+          throw createHttpError('Payment already completed for this order', 409, 'PAYMENT_ALREADY_COMPLETED');
+        }
+        savedPaymentId = existingPayment._id;
+        return;
+      }
 
-  const payment = new Payment({
-    order: orderId,
-    amount: order.total_amount,
-    method,
-    status: method === 'cod' ? 'pending' : 'completed',
-    paid_at: method === 'online' ? new Date() : null,
-  });
+      const [payment] = await Payment.create(
+        [
+          {
+            order: orderId,
+            amount: order.total_amount,
+            method,
+            status: method === 'cod' ? 'pending' : 'completed',
+            paid_at: method === 'online' ? new Date() : null,
+          },
+        ],
+        { session },
+      );
 
-  const savedPayment = await payment.save();
+      if (method === 'online') {
+        order.status = 'paid';
+        await order.save({ session });
+      }
 
-  // Nếu online → cập nhật order status luôn
-  if (method === 'online') {
-    order.status = 'paid';
-    await order.save();
+      savedPaymentId = payment._id;
+    });
+  } finally {
+    await session.endSession();
   }
 
-  return await Payment.findById(savedPayment._id).populate('order');
+  return Payment.findById(savedPaymentId).populate('order');
 };
 
 const getPaymentByOrder = async (orderId) => {
   const payment = await Payment.findOne({ order: orderId }).populate('order');
-  if (!payment) throw new Error('Payment not found for this order');
+  if (!payment) throw createHttpError('Payment not found for this order', 404, 'PAYMENT_NOT_FOUND');
   return payment;
 };
 
 const getAllPayments = async ({ page = 1, limit = 20 }) => {
-  const skip = (page - 1) * limit;
+  const normalizedPage = Math.max(1, Number(page) || 1);
+  const normalizedLimit = Math.min(100, Math.max(1, Number(limit) || 20));
+  const skip = (normalizedPage - 1) * normalizedLimit;
 
   const [payments, total] = await Promise.all([
     Payment.find()
       .populate({ path: 'order', populate: { path: 'table', select: 'name' } })
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit),
-    Payment.countDocuments()
+      .limit(normalizedLimit),
+    Payment.countDocuments(),
   ]);
 
   return {
     payments,
-    pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / limit) }
+    pagination: {
+      page: normalizedPage,
+      limit: normalizedLimit,
+      total,
+      pages: Math.ceil(total / normalizedLimit),
+    },
   };
 };
 
 const refundPayment = async (paymentId) => {
-  const payment = await Payment.findById(paymentId);
-  if (!payment) throw new Error('Payment not found');
-  if (payment.status === 'refunded') throw new Error('Payment already refunded');
-  if (payment.status !== 'completed') throw new Error('Can only refund completed payments');
+  const session = await mongoose.startSession();
+  let savedPaymentId = null;
 
-  payment.status = 'refunded';
-  const saved = await payment.save();
+  try {
+    await session.withTransaction(async () => {
+      const payment = await Payment.findById(paymentId).session(session);
+      if (!payment) throw createHttpError('Payment not found', 404, 'PAYMENT_NOT_FOUND');
+      if (payment.status === 'refunded') throw createHttpError('Payment already refunded', 409, 'PAYMENT_ALREADY_REFUNDED');
+      if (payment.status !== 'completed') throw createHttpError('Can only refund completed payments', 409, 'PAYMENT_NOT_COMPLETED');
 
-  // Revert order status
-  await Order.findByIdAndUpdate(payment.order, { status: 'cancelled' });
+      payment.status = 'refunded';
+      const saved = await payment.save({ session });
 
-  return await Payment.findById(saved._id).populate('order');
+      await Order.findByIdAndUpdate(payment.order, { status: 'cancelled' }, { session });
+      savedPaymentId = saved._id;
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  return Payment.findById(savedPaymentId).populate('order');
 };
 
-// COD: xác nhận đã nhận tiền khi giao hàng
 const confirmCodPayment = async (paymentId) => {
-  const payment = await Payment.findById(paymentId);
-  if (!payment) throw new Error('Payment not found');
-  if (payment.method !== 'cod') throw new Error('This is not a COD payment');
-  if (payment.status !== 'pending') throw new Error('Payment is not in pending status');
+  const session = await mongoose.startSession();
+  let savedPaymentId = null;
 
-  payment.status = 'completed';
-  payment.paid_at = new Date();
-  const saved = await payment.save();
+  try {
+    await session.withTransaction(async () => {
+      const payment = await Payment.findById(paymentId).session(session);
+      if (!payment) throw createHttpError('Payment not found', 404, 'PAYMENT_NOT_FOUND');
+      if (payment.method !== 'cod') throw createHttpError('This is not a COD payment', 400, 'PAYMENT_NOT_COD');
+      if (payment.status !== 'pending') throw createHttpError('Payment is not pending', 409, 'PAYMENT_NOT_PENDING');
 
-  await Order.findByIdAndUpdate(payment.order, { status: 'paid' });
+      payment.status = 'completed';
+      payment.paid_at = new Date();
+      const saved = await payment.save({ session });
 
-  return await Payment.findById(saved._id).populate('order');
+      await Order.findByIdAndUpdate(payment.order, { status: 'paid' }, { session });
+      savedPaymentId = saved._id;
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  return Payment.findById(savedPaymentId).populate('order');
 };
 
 export { createPayment, getPaymentByOrder, getAllPayments, refundPayment, confirmCodPayment };

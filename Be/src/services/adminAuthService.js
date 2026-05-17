@@ -1,4 +1,5 @@
 import Admin from '../models/Admin.js';
+import { createHttpError } from '../utils/AppError.js';
 import {
   signAccessToken,
   signRefreshToken,
@@ -31,10 +32,18 @@ const buildTokenResult = (admin) => {
 
 const login = async (username, password) => {
   const admin = await Admin.findOne({ username });
-  if (!admin) throw new Error('Sai tài khoản hoặc mật khẩu');
+  if (!admin) {
+    throw createHttpError('Invalid username or password', 401, 'INVALID_CREDENTIALS');
+  }
+
+  if (admin.status !== 'Active') {
+    throw createHttpError('Admin account is inactive', 403, 'ADMIN_INACTIVE');
+  }
 
   const isMatch = await admin.comparePassword(password);
-  if (!isMatch) throw new Error('Sai tài khoản hoặc mật khẩu');
+  if (!isMatch) {
+    throw createHttpError('Invalid username or password', 401, 'INVALID_CREDENTIALS');
+  }
 
   const { _id: id, role } = admin;
   const { accessToken, refreshToken } = buildTokenResult(admin);
@@ -59,25 +68,35 @@ const login = async (username, password) => {
 
 const register = async (username, password, name, email, role = 'admin') => {
   const existing = await Admin.findOne({ $or: [{ username }, { email }] });
-  if (existing) throw new Error('Tên đăng nhập hoặc email đã tồn tại');
+  if (existing) {
+    throw createHttpError('Username or email already exists', 409, 'ADMIN_DUPLICATE');
+  }
 
   const admin = new Admin({ username, password, name, email, role: normalizeAdminRole(role) });
   const saved = await admin.save();
-  
+
   const { _id: id } = saved;
   return { id, username, role: normalizeAdminRole(saved.role), name, email };
 };
 
 const refresh = async (refreshToken) => {
-  if (!refreshToken) throw new Error('Thiếu refresh token');
+  if (!refreshToken) {
+    throw createHttpError('Refresh token is required', 400, 'REFRESH_TOKEN_REQUIRED');
+  }
 
   const decoded = verifyRefreshToken(refreshToken);
-  if (decoded.type !== 'admin') throw new Error('Loại refresh token không hợp lệ');
+  if (decoded.type !== 'admin') {
+    throw createHttpError('Invalid refresh token type', 403, 'INVALID_REFRESH_TOKEN');
+  }
 
   const adminId = decoded.sub || decoded.id;
   const admin = await Admin.findById(adminId);
   if (!admin || admin.refreshToken !== refreshToken) {
-    throw new Error('Refresh token không hợp lệ');
+    throw createHttpError('Invalid refresh token', 403, 'INVALID_REFRESH_TOKEN');
+  }
+
+  if (admin.status !== 'Active') {
+    throw createHttpError('Admin account is inactive', 403, 'ADMIN_INACTIVE');
   }
 
   const nextTokens = buildTokenResult(admin);
@@ -103,5 +122,4 @@ const logout = async (adminId) => {
   await Admin.findByIdAndUpdate(adminId, { refreshToken: '' });
 };
 
-// ======= MODULE EXPORTS =======
 export { login, register, refresh, logout };

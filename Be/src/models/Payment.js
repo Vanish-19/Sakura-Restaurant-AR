@@ -13,4 +13,18 @@ const paymentSchema = new mongoose.Schema({
   currency: { type: String, default: 'vnd' },
 }, { timestamps: true });
 
+paymentSchema.index({ order: 1, method: 1 }, { unique: true });
+paymentSchema.index(
+  { provider: 1, provider_ref: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      provider: { $exists: true },
+      provider_ref: { $exists: true, $type: 'string' },
+    },
+  },
+);
+paymentSchema.index({ order_code: 1 }, { unique: true, sparse: true });
+paymentSchema.index({ status: 1, createdAt: -1 });
+
 export default mongoose.model('Payment', paymentSchema);

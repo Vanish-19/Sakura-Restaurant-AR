@@ -1,5 +1,6 @@
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
+import mongoose from 'mongoose';
 
 function getFrontendUrl() {
   return process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -38,7 +39,7 @@ function verifyWebhookAuthorization(authorization, apiKey) {
   if (!apiKey) return true;
 
   const headerValue = String(authorization || '').trim();
-  if (!headerValue) return true;
+  if (!headerValue) return false;
 
   const normalized = headerValue.toLowerCase();
   const expectedApikey = `apikey ${apiKey}`.toLowerCase();
@@ -90,7 +91,18 @@ function extractAmount(payload) {
   return 0;
 }
 
-export async function createSepayPaymentLinkForOrder(order) {
+export async function createSepayPaymentLinkForOrder(order, { session } = {}) {
+  const existingPaymentQuery = Payment.findOne({ order: order._id, method: 'online' });
+  if (session) existingPaymentQuery.session(session);
+  const existingPayment = await existingPaymentQuery;
+  if (existingPayment?.checkout_url && existingPayment.status === 'pending') {
+    return {
+      checkoutUrl: existingPayment.checkout_url,
+      payment: existingPayment,
+      txnRef: existingPayment.provider_ref,
+    };
+  }
+
   const config = getSepayConfig();
   const txnRef = buildTxnRef(order._id);
   const checkoutUrl = new URL(config.checkoutBaseUrl);
@@ -129,7 +141,7 @@ export async function createSepayPaymentLinkForOrder(order) {
       order_code: Number(txnRef),
       currency: 'vnd',
     },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
+    { upsert: true, new: true, setDefaultsOnInsert: true, session }
   );
 
   return { checkoutUrl: checkoutUrl.toString(), payment, txnRef };
@@ -150,51 +162,74 @@ export async function handleSepayWebhookEvent(payload, authorization) {
 
   const incomingAmount = extractAmount(payload);
 
-  let payment = await Payment.findOne({ method: 'online', provider: 'sepay', provider_ref: txnRef });
+  const session = await mongoose.startSession();
+  let result;
 
-  if (!payment && Number.isFinite(incomingAmount) && incomingAmount > 0) {
-    payment = await Payment.findOne({
-      method: 'online',
-      provider: 'sepay',
-      status: 'pending',
-      amount: incomingAmount,
-    }).sort({ createdAt: -1 });
-  }
+  try {
+    await session.withTransaction(async () => {
+      let payment = await Payment.findOne({
+        method: 'online',
+        provider: 'sepay',
+        provider_ref: txnRef,
+      }).session(session);
 
-  if (!payment && Number.isFinite(Number(txnRef))) {
-    payment = await Payment.findOne({
-      method: 'online',
-      provider: 'sepay',
-      order_code: Number(txnRef),
+      if (!payment && Number.isFinite(incomingAmount) && incomingAmount > 0) {
+        const amountMatches = await Payment.find({
+          method: 'online',
+          provider: 'sepay',
+          status: 'pending',
+          amount: incomingAmount,
+        }).sort({ createdAt: -1 }).limit(2).session(session);
+
+        if (amountMatches.length === 1) {
+          payment = amountMatches[0];
+        }
+      }
+
+      if (!payment && Number.isFinite(Number(txnRef))) {
+        payment = await Payment.findOne({
+          method: 'online',
+          provider: 'sepay',
+          order_code: Number(txnRef),
+        }).session(session);
+      }
+
+      if (!payment) {
+        result = { handled: false, rspCode: '01', message: 'Order not found' };
+        return;
+      }
+
+      if (incomingAmount > 0 && Number(payment.amount) !== Number(incomingAmount)) {
+        result = { handled: false, rspCode: '04', message: 'Invalid amount' };
+        return;
+      }
+
+      if (payment.status === 'completed') {
+        result = { handled: true, rspCode: '02', message: 'Order already confirmed', payment };
+        return;
+      }
+
+      const status = normalizeStatus(payload?.status);
+      if (status !== 'completed' && !isIncomingTransfer(payload)) {
+        result = { handled: false, rspCode: '00', message: 'Payment not completed', payment };
+        return;
+      }
+
+      payment.status = 'completed';
+      payment.paid_at = new Date();
+      payment.provider = 'sepay';
+      payment.provider_ref = txnRef;
+
+      const saved = await payment.save({ session });
+      await Order.findByIdAndUpdate(payment.order, { status: 'paid' }, { session });
+      const populatedPayment = await Payment.findById(saved._id).populate('order').session(session);
+      result = { handled: true, rspCode: '00', message: 'Confirm Success', payment: populatedPayment };
     });
+  } finally {
+    await session.endSession();
   }
 
-  if (!payment) {
-    return { handled: false, rspCode: '01', message: 'Order not found' };
-  }
-
-  if (incomingAmount > 0 && Number(payment.amount) !== Number(incomingAmount)) {
-    return { handled: false, rspCode: '04', message: 'Invalid amount' };
-  }
-
-  if (payment.status === 'completed') {
-    return { handled: true, rspCode: '02', message: 'Order already confirmed', payment };
-  }
-
-  const status = normalizeStatus(payload?.status);
-  if (status !== 'completed' && !isIncomingTransfer(payload)) {
-    return { handled: false, rspCode: '00', message: 'Payment not completed', payment };
-  }
-
-  payment.status = 'completed';
-  payment.paid_at = new Date();
-  payment.provider = 'sepay';
-  payment.provider_ref = txnRef;
-
-  const saved = await payment.save();
-  await Order.findByIdAndUpdate(payment.order, { status: 'paid' });
-  const populatedPayment = await Payment.findById(saved._id).populate('order');
-  return { handled: true, rspCode: '00', message: 'Confirm Success', payment: populatedPayment };
+  return result;
 }
 
 export function buildSepayReturnRedirectUrl(query) {

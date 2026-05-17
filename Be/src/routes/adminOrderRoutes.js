@@ -5,6 +5,7 @@ import {
   getOrdersSchema,
   getOrderByIdSchema,
   updateAdminOrderStatusSchema,
+  updateOrderItemStatusSchema,
   cancelOrderSchema,
   hardDeleteOrderSchema,
 } from '../validations/adminOrderValidation.js';
@@ -13,6 +14,7 @@ import {
   getAllOrders,
   getOrderById,
   updateOrderStatus,
+  updateOrderItemStatus,
   cancelOrder,
   hardDeleteOrder,
 } from '../controllers/adminOrderController.js';
@@ -26,6 +28,7 @@ router.get('/stats', getOrderStats);
 router.get('/', validateParams(getOrdersSchema), getAllOrders);
 router.get('/:id', validateParams(getOrderByIdSchema), getOrderById);
 router.patch('/:id', validateParams(updateAdminOrderStatusSchema), updateOrderStatus);
+router.patch('/:id/items/:itemId/status', validateParams(updateOrderItemStatusSchema), updateOrderItemStatus);
 router.patch('/:id/cancel', validateParams(cancelOrderSchema), cancelOrder);
 router.delete('/:id', validateParams(hardDeleteOrderSchema), hardDeleteOrder);
 
