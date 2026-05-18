@@ -79,3 +79,26 @@ export async function uploadRawBufferToCloudinary({ buffer, originalFilename, fo
     signed_url: signedUrl,
   };
 }
+
+export async function uploadImageBufferToCloudinary({ buffer, originalFilename, folder }) {
+  ensureCloudinaryConfig();
+
+  const uploadResult = await new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: 'image',
+        folder,
+        use_filename: true,
+        unique_filename: true,
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        return resolve(result);
+      }
+    );
+
+    uploadStream.end(buffer);
+  });
+
+  return uploadResult;
+}
