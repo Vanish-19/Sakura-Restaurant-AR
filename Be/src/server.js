@@ -25,6 +25,7 @@ import adminDashboardRoutes from './routes/adminDashboardRoutes.js';
 import userAuthRoutes from './routes/userAuthRoutes.js';
 import userOrderRoutes from './routes/userOrderRoutes.js';
 import careerApplicationRoutes from './routes/careerApplicationRoutes.js';
+import articleRoutes from './routes/articleRoutes.js';
 import { handleSepayWebhookEvent, buildSepayReturnRedirectUrl } from './services/sepayPaymentService.js';
 import { ensureJwtConfig } from './services/tokenService.js';
 
@@ -195,6 +196,7 @@ app.use('/api/v1/takeaway', takeawayRoutes);     // Takeaway/Delivery ordering
 app.use('/api/v1/auth', userAuthRoutes);         // Customer auth
 app.use('/api/v1/user/orders', userOrderRoutes); // Customer order history
 app.use('/api/v1/careers', careerApplicationRoutes); // Career applications
+app.use('/api/v1/articles', articleRoutes);      // Public blog articles
 
 // ========== Admin Routes ==========
 app.use('/api/v1/admin/auth', adminAuthRoutes);       // Login/Register

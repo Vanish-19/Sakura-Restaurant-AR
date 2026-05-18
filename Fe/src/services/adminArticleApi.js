@@ -24,3 +24,12 @@ export async function updateArticle(id, payload) {
 export async function deleteArticle(id) {
   return apiRequest(`/admin/articles/${id}`, { method: 'DELETE' });
 }
+
+export async function uploadArticleImage(file) {
+  const formData = new FormData();
+  formData.append('image', file);
+  return apiRequest('/admin/articles/upload-image', {
+    method: 'POST',
+    body: formData,
+  });
+}

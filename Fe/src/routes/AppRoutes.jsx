@@ -7,6 +7,8 @@ import AppLayout from '../components/templates/AppLayout.jsx'
 import AboutPage from '../pages/static/AboutPage.jsx'
 import CartPage from '../pages/CartPage.jsx'
 import CareerPage from '../pages/static/CareerPage.jsx'
+import BlogPage from '../pages/BlogPage.jsx'
+import BlogDetailPage from '../pages/BlogDetailPage.jsx'
 import ContactPage from '../pages/static/ContactPage.jsx'
 import HomePage from '../pages/HomePage.jsx'
 import OrderHistoryPage from '../pages/OrderHistoryPage.jsx'
@@ -37,6 +39,8 @@ export default function AppRoutes() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/career" element={<CareerPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/:id" element={<BlogDetailPage />} />
           <Route path="/order" element={<HomePage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/orders/history" element={<OrderHistoryPage />} />
