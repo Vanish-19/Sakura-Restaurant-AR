@@ -30,8 +30,14 @@ const buildTokenResult = (admin) => {
   return { accessToken, refreshToken };
 };
 
-const login = async (username, password) => {
-  const admin = await Admin.findOne({ username });
+const login = async (identity, password) => {
+  const normalizedIdentity = String(identity || '').trim();
+  const admin = await Admin.findOne({
+    $or: [
+      { username: normalizedIdentity },
+      { email: normalizedIdentity.toLowerCase() },
+    ],
+  });
   if (!admin) {
     throw createHttpError('Invalid username or password', 401, 'INVALID_CREDENTIALS');
   }
@@ -45,7 +51,7 @@ const login = async (username, password) => {
     throw createHttpError('Invalid username or password', 401, 'INVALID_CREDENTIALS');
   }
 
-  const { _id: id, role } = admin;
+  const { _id: id, role, username } = admin;
   const { accessToken, refreshToken } = buildTokenResult(admin);
 
   admin.lastLogin = new Date();

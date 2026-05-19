@@ -9,8 +9,19 @@ import {
   WifiOutlined,
 } from '@ant-design/icons'
 import { Button, Card, Form, Input, Select, Typography, message } from 'antd'
+import useStaticPageContent from '../../hooks/useStaticPageContent.js'
 
 const { Paragraph, Text, Title } = Typography
+
+const defaultContactContent = {
+  hero: {
+    title: 'Liên Hệ & Đặt Bàn',
+    subtitle: 'Kết Nối Với Không Gian Ẩm Thực Tương Lai',
+    description:
+      'Tại Sakura, chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn. Dù bạn có thắc mắc, cần đặt bàn hay muốn hợp tác, hãy liên hệ với chúng tôi qua các kênh dưới đây.',
+    backgroundImage: '/bgheadContact.png',
+  },
+}
 
 const contactItems = [
   {
@@ -63,6 +74,8 @@ const serviceCards = [
 
 export default function ContactPage() {
   const [form] = Form.useForm()
+  const pageContent = useStaticPageContent('contact', defaultContactContent)
+  const hero = pageContent.hero || defaultContactContent.hero
 
   const handleSubmit = () => {
     message.success('Cảm ơn bạn. Sakura Restaurant sẽ liên hệ lại trong thời gian sớm nhất.')
@@ -80,7 +93,7 @@ export default function ContactPage() {
           }}
         >
           <img
-            src="/bgheadContact.png"
+            src={hero.backgroundImage}
             alt="Không gian liên hệ Sakura Restaurant"
             className="absolute inset-0 h-full w-full object-cover object-center"
           />
@@ -91,14 +104,14 @@ export default function ContactPage() {
         <div className="relative z-10 mx-auto flex min-h-[500px] max-w-7xl items-center justify-center px-5 pb-24 pt-10 text-center sm:px-8 md:min-h-[570px] md:pb-28 xl:min-h-[620px] xl:px-10">
           <div className="max-w-3xl">
             <Title level={1} className="!mb-3 !text-4xl !font-extrabold !tracking-tight !text-slate-950 md:!text-5xl xl:!text-6xl">
-              Liên Hệ & Đặt Bàn
+              {hero.title}
             </Title>
             <div className="mx-auto mb-5 h-1 w-16 rounded-full bg-[#8B0000]" />
             <Text className="!block !text-base !font-bold !text-slate-900 md:!text-lg">
-              Kết Nối Với Không Gian Ẩm Thực Tương Lai
+              {hero.subtitle}
             </Text>
             <Paragraph className="!mx-auto !mt-4 !mb-0 !max-w-2xl !text-sm !font-medium !leading-7 !text-slate-700 md:!text-base">
-              Tại Sakura, chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn. Dù bạn có thắc mắc, cần đặt bàn hay muốn hợp tác, hãy liên hệ với chúng tôi qua các kênh dưới đây.
+              {hero.description}
             </Paragraph>
           </div>
         </div>

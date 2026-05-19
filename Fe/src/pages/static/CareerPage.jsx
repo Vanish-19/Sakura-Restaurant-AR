@@ -18,9 +18,25 @@ import {
 } from '@ant-design/icons'
 import { Button, Card, DatePicker, Form, Input, Modal, Radio, Select, Tag, Typography, Upload, message } from 'antd'
 import { useState } from 'react'
+import useStaticPageContent from '../../hooks/useStaticPageContent.js'
 import { submitCareerApplication } from '../../services/careerApi.js'
 
 const { Paragraph, Text, Title } = Typography
+
+const defaultCareerContent = {
+  hero: {
+    eyebrow: 'Tuyển dụng',
+    title: 'Cơ Hội Nghề Nghiệp',
+    subtitle: 'Khởi Đầu Tương Lai Cùng Ngành Ẩm Thực Công Nghệ',
+    description:
+      'Tại Sakura Restaurant, chúng tôi không chỉ đơn thuần phục vụ những món ăn ngon. Chúng tôi đang kiến tạo một trải nghiệm ẩm thực đa giác quan, nơi truyền thống Nhật Bản hòa quyện cùng công nghệ tương lai.',
+    backgroundImage: '/headbgPrivacy.png',
+  },
+  application: {
+    email: 'phunganhvan13122004@gmail.com',
+    hotline: '0966 490 431',
+  },
+}
 
 const featuredJobs = [
   {
@@ -146,6 +162,9 @@ const extraJobs = [
 
 export default function CareerPage() {
   const [form] = Form.useForm()
+  const pageContent = useStaticPageContent('career', defaultCareerContent)
+  const hero = pageContent.hero || defaultCareerContent.hero
+  const application = pageContent.application || defaultCareerContent.application
   const [showAllJobs, setShowAllJobs] = useState(false)
   const [selectedJob, setSelectedJob] = useState(null)
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false)
@@ -211,7 +230,7 @@ export default function CareerPage() {
     <div className="bg-[#fffafa] text-[#111827]">
       <section className="relative min-h-[360px] overflow-hidden md:min-h-[430px]">
         <img
-          src="/headbgPrivacy.png"
+          src={hero.backgroundImage}
           alt="Không gian Sakura Restaurant"
           className="absolute inset-0 h-full w-full object-cover object-center"
         />
@@ -221,18 +240,18 @@ export default function CareerPage() {
           <div className="mx-auto mb-5 flex items-center gap-4">
             <span className="h-0.5 w-12 bg-[#d8001e]" />
             <Text className="!text-xs !font-extrabold !uppercase !tracking-[0.16em] !text-[#d8001e] md:!text-sm">
-              Tuyển dụng
+              {hero.eyebrow}
             </Text>
             <span className="h-0.5 w-12 bg-[#d8001e]" />
           </div>
           <Title level={1} className="!mb-4 !text-3xl !font-black !uppercase !leading-tight !tracking-tight !text-[#090b16] md:!text-5xl">
-            Cơ Hội Nghề Nghiệp
+            {hero.title}
           </Title>
           <Text className="!block !text-base !font-semibold !text-slate-700 md:!text-lg">
-            Khởi Đầu Tương Lai Cùng Ngành Ẩm Thực Công Nghệ
+            {hero.subtitle}
           </Text>
           <Paragraph className="!mx-auto !mt-6 !mb-0 !max-w-3xl !text-sm !leading-7 !text-slate-600 md:!text-base">
-            Tại Sakura Restaurant, chúng tôi không chỉ đơn thuần phục vụ những món ăn ngon. Chúng tôi đang kiến tạo một trải nghiệm ẩm thực đa giác quan, nơi truyền thống Nhật Bản hòa quyện cùng công nghệ tương lai.
+            {hero.description}
           </Paragraph>
         </div>
       </section>
@@ -293,11 +312,11 @@ export default function CareerPage() {
           <div className="mt-7 flex flex-col items-center justify-center gap-4 text-sm font-bold text-slate-700 sm:flex-row sm:gap-8">
             <span className="flex items-center gap-2">
               <MailOutlined className="text-[#d8001e]" />
-              phunganhvan13122004@gmail.com
+              {application.email}
             </span>
             <span className="flex items-center gap-2">
               <PhoneOutlined className="text-[#d8001e]" />
-              Hotline: 0966 490 431
+              Hotline: {application.hotline}
             </span>
           </div>
         </div>
