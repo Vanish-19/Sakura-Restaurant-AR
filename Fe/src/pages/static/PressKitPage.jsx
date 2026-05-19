@@ -29,9 +29,9 @@ const defaultPressKitContent = {
     backgroundImage: `${pressKitPath}/bgheadpress.png`,
   },
   mediaContact: {
-    representative: 'Ms. Linh Nguyen',
-    email: 'press@sakura-restaurant.com',
-    hotline: '+84 (0) 90 123 4567',
+    representative: 'Mr Phung Van',
+    email: 'van.pa@tinasoft.vn',
+    hotline: '+84 (0) 966 490 431',
   },
 }
 
