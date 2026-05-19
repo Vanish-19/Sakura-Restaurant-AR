@@ -85,7 +85,9 @@ async function tryRefreshAdminToken() {
 
 export async function apiRequest(path, { method = 'GET', headers, body, _retry = false } = {}) {
   const normalizedPath = String(path || '')
-  const isAdminApi = normalizedPath.startsWith('/admin')
+  const isAdminApi =
+    normalizedPath.startsWith('/admin') ||
+    normalizedPath.startsWith('/static-pages/admin')
   const needsUserAuth =
     normalizedPath.startsWith('/takeaway/orders') ||
     normalizedPath.startsWith('/user/') ||

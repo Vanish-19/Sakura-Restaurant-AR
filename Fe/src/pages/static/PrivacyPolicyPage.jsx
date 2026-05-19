@@ -17,8 +17,18 @@ import {
 } from '@ant-design/icons'
 import { Button, Card, Typography } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import useStaticPageContent from '../../hooks/useStaticPageContent.js'
 
 const { Paragraph, Text, Title } = Typography
+
+const defaultPrivacyContent = {
+  hero: {
+    eyebrow: 'Last updated: October 2023',
+    title: 'CHÍNH SÁCH BẢO MẬT DỮ LIỆU',
+    subtitle: '(PRIVACY POLICY) - Sakura Restaurant',
+    backgroundImage: '/headbgPrivacy.png',
+  },
+}
 
 const sections = [
   {
@@ -112,6 +122,8 @@ const purposeItems = [
 ]
 
 export default function PrivacyPolicyPage() {
+  const pageContent = useStaticPageContent('privacy-policy', defaultPrivacyContent)
+  const hero = pageContent.hero || defaultPrivacyContent.hero
   const sectionRefs = useRef({})
   const [activeSection, setActiveSection] = useState(sections[0].id)
   const [isContentExpanded, setIsContentExpanded] = useState(false)
@@ -181,7 +193,7 @@ export default function PrivacyPolicyPage() {
     <div className="bg-[#fffafa] text-[#1C1C1E]">
       <section className="relative min-h-[360px] overflow-hidden md:min-h-[430px]">
         <img
-          src="/headbgPrivacy.png"
+          src={hero.backgroundImage}
           alt="Không gian Sakura Restaurant"
           className="absolute inset-0 h-full w-full object-cover object-center"
         />
@@ -191,14 +203,14 @@ export default function PrivacyPolicyPage() {
           <div className="mb-5 flex items-center gap-4">
             <span className="h-0.5 w-12 bg-[#d8001e]" />
             <Text className="!text-sm !font-extrabold !uppercase !tracking-[0.08em] !text-[#d8001e]">
-              Last updated: October 2023
+              {hero.eyebrow}
             </Text>
           </div>
           <Title level={1} className="!mb-4 !max-w-3xl !text-3xl !font-extrabold !leading-tight !tracking-tight !text-[#090b16] md:!text-4xl xl:!text-5xl">
-            CHÍNH SÁCH BẢO MẬT DỮ LIỆU
+            {hero.title}
           </Title>
           <Text className="!text-lg !font-bold !text-slate-700">
-            (PRIVACY POLICY) - Sakura Restaurant
+            {hero.subtitle}
           </Text>
         </div>
       </section>

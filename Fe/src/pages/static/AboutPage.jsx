@@ -6,8 +6,18 @@ import {
   ScanOutlined,
 } from '@ant-design/icons'
 import { Card, Col, Row, Typography } from 'antd'
+import useStaticPageContent from '../../hooks/useStaticPageContent.js'
 
 const { Paragraph, Text, Title } = Typography
+
+const defaultAboutContent = {
+  hero: {
+    title: 'Về Chúng Tôi -',
+    accent: 'Sakura Restaurant',
+    subtitle: 'Nơi Giao Thoa Giữa Di Sản Ẩm Thực Truyền Thống Và Công Nghệ Tương Lai',
+    backgroundImage: '/about1.png',
+  },
+}
 
 const values = [
   {
@@ -48,11 +58,14 @@ const arFeatures = [
 ]
 
 export default function AboutPage() {
+  const pageContent = useStaticPageContent('about', defaultAboutContent)
+  const hero = pageContent.hero || defaultAboutContent.hero
+
   return (
     <div className="bg-white text-slate-950">
       <section className="relative min-h-[430px] overflow-hidden border-b border-slate-200">
         <img
-          src="/about1.png"
+          src={hero.backgroundImage}
           alt="Không gian Nhật Bản tại Sakura Restaurant"
           className="absolute inset-0 h-full w-full object-cover"
         />
@@ -64,11 +77,11 @@ export default function AboutPage() {
               level={1}
               className="!mb-2 !text-4xl !font-extrabold !leading-tight !text-slate-950 md:!text-5xl"
             >
-              Về Chúng Tôi - <br className="sm:hidden" />
-              <span className="text-[#d8001e]">Sakura Restaurant</span>
+              {hero.title} <br className="sm:hidden" />
+              <span className="text-[#d8001e]">{hero.accent}</span>
             </Title>
             <Paragraph className="!mx-auto !mb-0 !max-w-xl !text-sm !font-medium !leading-relaxed !text-slate-600 md:!text-base">
-              Nơi Giao Thoa Giữa Di Sản Ẩm Thực Truyền Thống Và Công Nghệ Tương Lai
+              {hero.subtitle}
             </Paragraph>
           </div>
         </div>

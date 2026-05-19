@@ -20,8 +20,18 @@ import LegalDocumentLayout, {
   LegalIconParagraph,
   LegalSectionHeading,
 } from '../../components/templates/static/LegalDocumentLayout.jsx'
+import useStaticPageContent from '../../hooks/useStaticPageContent.js'
 
 const { Paragraph, Text } = Typography
+
+const defaultTermsContent = {
+  hero: {
+    eyebrow: 'Last updated: October 2023',
+    title: 'ĐIỀU KHOẢN DỊCH VỤ',
+    subtitle: '(TERMS OF SERVICE) - Sakura Restaurant',
+    backgroundImage: '/headbgPrivacy.png',
+  },
+}
 
 const sections = [
   { id: 'acceptance', number: '01.', title: 'Chấp Thuận Điều Khoản', icon: <FileDoneOutlined /> },
@@ -82,11 +92,16 @@ const paymentCards = [
 ]
 
 export default function TermsOfServicePage() {
+  const pageContent = useStaticPageContent('terms-of-service', defaultTermsContent)
+  const hero = pageContent.hero || defaultTermsContent.hero
+
   return (
     <LegalDocumentLayout
       sections={sections}
-      title="ĐIỀU KHOẢN DỊCH VỤ"
-      subtitle="(TERMS OF SERVICE) - Sakura Restaurant"
+      title={hero.title}
+      subtitle={hero.subtitle}
+      updatedLabel={hero.eyebrow}
+      backgroundImage={hero.backgroundImage}
       supportTitle="Cần hỗ trợ?"
       supportText="Nếu bạn có bất kỳ câu hỏi nào về Điều khoản dịch vụ, vui lòng liên hệ với chúng tôi."
       contentMoreLabel="Xem tất cả điều khoản chi tiết bên dưới"

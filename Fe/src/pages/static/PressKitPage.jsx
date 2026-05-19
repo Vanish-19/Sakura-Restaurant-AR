@@ -13,10 +13,27 @@ import {
   UserOutlined,
 } from '@ant-design/icons'
 import { Button, Card, Typography } from 'antd'
+import useStaticPageContent from '../../hooks/useStaticPageContent.js'
 
 const { Paragraph, Text, Title } = Typography
 
 const pressKitPath = '/presskit'
+
+const defaultPressKitContent = {
+  hero: {
+    eyebrow: 'Press Kit',
+    title: 'Tài Nguyên Truyền Thông',
+    subtitle: 'Kết nối di sản ẩm thực truyền thống với công nghệ AR tương lai.',
+    description:
+      'Bộ tài nguyên truyền thông chính thức của Sakura Restaurant dành cho báo chí, đối tác và các đơn vị truyền thông. Vui lòng tuân thủ các quy định sử dụng khi khai thác tài liệu.',
+    backgroundImage: `${pressKitPath}/bgheadpress.png`,
+  },
+  mediaContact: {
+    representative: 'Ms. Linh Nguyen',
+    email: 'press@sakura-restaurant.com',
+    hotline: '+84 (0) 90 123 4567',
+  },
+}
 
 const overviewCards = [
   {
@@ -96,11 +113,15 @@ const usageGuides = [
 ]
 
 export default function PressKitPage() {
+  const pageContent = useStaticPageContent('press-kit', defaultPressKitContent)
+  const hero = pageContent.hero || defaultPressKitContent.hero
+  const mediaContact = pageContent.mediaContact || defaultPressKitContent.mediaContact
+
   return (
     <div className="bg-[#fffafa] text-[#111827]">
       <section className="relative min-h-[560px] overflow-hidden md:min-h-[640px]">
         <img
-          src={`${pressKitPath}/bgheadpress.png`}
+          src={hero.backgroundImage}
           alt="Không gian Sakura Restaurant"
           className="absolute inset-0 h-full w-full object-cover object-center"
         />
@@ -109,16 +130,16 @@ export default function PressKitPage() {
 
         <div className="relative z-10 mx-auto flex min-h-[560px] max-w-7xl flex-col justify-center px-5 pt-8 md:min-h-[640px] md:px-8 xl:px-10">
           <Text className="!mb-5 !block !text-sm !font-black !uppercase !tracking-[0.08em] !text-[#d8001e]">
-            Press Kit
+            {hero.eyebrow}
           </Text>
           <Title level={1} className="!mb-6 !max-w-2xl !text-5xl !font-black !uppercase !leading-tight !tracking-tight !text-[#05070f] md:!text-5xl xl:!text-6xl">
-            Tài Nguyên Truyền Thông
+            {hero.title}
           </Title>
           <Text className="!block !max-w-2xl !text-base !font-extrabold !text-slate-700 md:!text-lg">
-            Kết nối di sản ẩm thực truyền thống với công nghệ AR tương lai.
+            {hero.subtitle}
           </Text>
           <Paragraph className="!mt-10 !mb-0 !max-w-2xl !text-base !font-semibold !leading-8 !text-slate-700">
-            Bộ tài nguyên truyền thông chính thức của Sakura Restaurant dành cho báo chí, đối tác và các đơn vị truyền thông. Vui lòng tuân thủ các quy định sử dụng khi khai thác tài liệu.
+            {hero.description}
           </Paragraph>
         </div>
       </section>
@@ -202,9 +223,9 @@ export default function PressKitPage() {
             </div>
 
             <div className="relative z-10 grid border-t border-white/14 bg-black/32 text-white backdrop-blur-sm md:grid-cols-3">
-              <ContactItem icon={<UserOutlined />} title="Đại diện truyền thông" text="Ms. Linh Nguyen" />
-              <ContactItem icon={<MailOutlined />} title="Email" text="press@sakura-restaurant.com" />
-              <ContactItem icon={<PhoneOutlined />} title="Hotline (Press only)" text="+84 (0) 90 123 4567" />
+              <ContactItem icon={<UserOutlined />} title="Đại diện truyền thông" text={mediaContact.representative} />
+              <ContactItem icon={<MailOutlined />} title="Email" text={mediaContact.email} />
+              <ContactItem icon={<PhoneOutlined />} title="Hotline (Press only)" text={mediaContact.hotline} />
             </div>
           </div>
         </Card>

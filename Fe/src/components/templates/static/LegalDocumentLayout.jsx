@@ -37,6 +37,7 @@ export default function LegalDocumentLayout({
   title,
   subtitle,
   updatedLabel = 'Last updated: October 2023',
+  backgroundImage = '/headbgPrivacy.png',
   supportTitle = 'Bạn có thắc mắc?',
   supportText = 'Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ bạn.',
   contentMoreLabel = 'Xem tất cả nội dung chi tiết bên dưới',
@@ -111,7 +112,7 @@ export default function LegalDocumentLayout({
     <div className="bg-[#fffafa] text-[#1C1C1E]">
       <section className="relative min-h-[360px] overflow-hidden md:min-h-[430px]">
         <img
-          src="/headbgPrivacy.png"
+          src={backgroundImage}
           alt="Không gian Sakura Restaurant"
           className="absolute inset-0 h-full w-full object-cover object-center"
         />

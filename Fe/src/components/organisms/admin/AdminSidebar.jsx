@@ -7,6 +7,7 @@ import {
   SettingOutlined,
   TableOutlined,
   TeamOutlined,
+  ToolOutlined,
   UserSwitchOutlined,
 } from '@ant-design/icons'
 import { Form, Input, Modal, Select, Tooltip } from 'antd'
@@ -21,6 +22,7 @@ const navItems = [
   { key: '/admin/users', label: 'User Management', icon: <TeamOutlined /> },
   { key: '/admin/admins', label: 'Admin Management', icon: <UserSwitchOutlined /> },
   { key: '/admin/content', label: 'Content Management', icon: <ReadOutlined /> },
+  { key: '/admin/resources', label: 'Resource Management', icon: <ToolOutlined /> },
 ]
 
 export default function AdminSidebar({ adminSettings, onUpdateSettings }) {
