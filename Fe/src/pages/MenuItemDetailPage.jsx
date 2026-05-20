@@ -1,12 +1,13 @@
 import {
   ArrowLeftOutlined,
   CheckCircleFilled,
-  InfoCircleOutlined,
+  MinusOutlined,
+  PlusOutlined,
   ScanOutlined,
   ShoppingCartOutlined,
   StarFilled,
 } from '@ant-design/icons'
-import { Breadcrumb, Button, Card, Empty, Skeleton, Tag, message } from 'antd'
+import { Breadcrumb, Button, Card, Empty, InputNumber, Skeleton, Tag, message } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useCart } from '../contexts/CartContext.jsx'
@@ -38,6 +39,7 @@ export default function MenuItemDetailPage() {
   const [relatedItems, setRelatedItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [quantity, setQuantity] = useState(1)
 
   useEffect(() => {
     let active = true
@@ -57,6 +59,7 @@ export default function MenuItemDetailPage() {
         }
 
         setItem(detail)
+        setQuantity(1)
 
         const menu = await getMenuItems(detail.category)
         if (!active) return
@@ -92,8 +95,8 @@ export default function MenuItemDetailPage() {
 
   const handleAddToCart = () => {
     if (!item?.id) return
-    addItem(item.id, 1)
-    message.success('Đã thêm món vào giỏ hàng')
+    addItem(item.id, quantity)
+    message.success(`Đã thêm ${quantity} món vào giỏ hàng`)
   }
 
   if (loading) {
@@ -163,11 +166,40 @@ export default function MenuItemDetailPage() {
 
             <div className="rounded-[28px] border border-[#ead8cc] bg-white/90 p-6 shadow-[0_12px_32px_rgba(60,33,18,0.06)]">
               <div className="flex items-end justify-between gap-4 border-b border-[#f2e6dd] pb-5">
-                <div>
+                <div className="flex flex-col gap-4">
                   <p className="m-0 text-xs font-bold uppercase tracking-[0.2em] text-[#9f6d4d]">Giá bán</p>
                   <p className="mt-2 mb-0 text-3xl font-black text-[#8b0000]">
                     {currency.format(item.price)}
                   </p>
+
+                  <div>
+                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-[#9f6d4d]">Số lượng</p>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-[#ead8cc] bg-[#fff8f4] p-1">
+                      <Button
+                        type="text"
+                        shape="circle"
+                        icon={<MinusOutlined />}
+                        disabled={quantity <= 1}
+                        onClick={() => setQuantity((current) => Math.max(1, current - 1))}
+                        className="!flex !h-9 !w-9 !items-center !justify-center !text-[#8B0000]"
+                      />
+                      <InputNumber
+                        min={1}
+                        max={99}
+                        value={quantity}
+                        controls={false}
+                        onChange={(value) => setQuantity(Math.max(1, Number(value || 1)))}
+                        className="menu-detail-quantity-input !w-16 !border-0 !bg-transparent !text-center"
+                      />
+                      <Button
+                        type="text"
+                        shape="circle"
+                        icon={<PlusOutlined />}
+                        onClick={() => setQuantity((current) => Math.min(99, current + 1))}
+                        className="!flex !h-9 !w-9 !items-center !justify-center !text-[#8B0000]"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <Button
