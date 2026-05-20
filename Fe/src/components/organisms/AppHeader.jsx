@@ -12,7 +12,7 @@ import { getOrderSource } from '../../utils/orderSource.js'
 const { Header } = Layout
 
 export default function AppHeader({ variant = 'desktop' }) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { totalItems, clearAllCarts } = useCart()
   const location = useLocation()
   const navigate = useNavigate()
@@ -32,12 +32,6 @@ export default function AppHeader({ variant = 'desktop' }) {
     { key: 'about', label: t('navigation.about'), to: '/about', match: ['/about'] },
     { key: 'blog', label: t('navigation.blog'), to: '/blog', match: ['/blog'] },
     { key: 'contact', label: t('navigation.contact'), to: '/contact', match: ['/contact'] },
-  ]
-  const activeLanguage = i18n.resolvedLanguage || i18n.language || 'vi'
-  const languageOptions = [
-    { key: 'vi', label: 'VN' },
-    { key: 'en', label: 'EN' },
-    { key: 'jpn', label: 'JP' },
   ]
 
   const handleLogout = async () => {
@@ -112,21 +106,6 @@ export default function AppHeader({ variant = 'desktop' }) {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden items-center gap-2 text-xs font-semibold text-slate-500 sm:flex">
-            {languageOptions.map((item, index) => (
-              <span key={item.key} className="inline-flex items-center gap-2">
-                {index > 0 ? <span className="text-slate-300">|</span> : null}
-                <button
-                  type="button"
-                  className={`header-lang ${activeLanguage === item.key ? 'header-lang--active' : ''}`}
-                  onClick={() => i18n.changeLanguage(item.key)}
-                >
-                  {item.label}
-                </button>
-              </span>
-            ))}
-          </div>
-
           {isUserLoggedIn ? (
             <>
               <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 md:inline-flex">
