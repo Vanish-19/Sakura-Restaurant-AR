@@ -29,6 +29,11 @@ function parseJson(value) {
   }
 }
 
+function parseOptionalJson(value) {
+  if (!String(value || '').trim()) return {}
+  return parseJson(value)
+}
+
 export default function StaticResourcesAdminPage() {
   const [form] = Form.useForm()
   const [pages, setPages] = useState([])
@@ -52,6 +57,8 @@ export default function StaticResourcesAdminPage() {
       heroSubtitle: content.hero?.subtitle,
       heroDescription: content.hero?.description,
       heroBackgroundImage: content.hero?.backgroundImage,
+      translationsEnJson: stringifyContent(content.translations?.en || {}),
+      translationsJpnJson: stringifyContent(content.translations?.jpn || {}),
       contentJson: stringifyContent(content),
     })
   }, [activeSlug, form])
@@ -104,7 +111,7 @@ export default function StaticResourcesAdminPage() {
   const handleSave = async () => {
     try {
       const values = await form.validateFields()
-      const content =
+      const baseContent =
         activeSlug === 'about'
           ? values.about
           : activeSlug === 'contact'
@@ -118,6 +125,23 @@ export default function StaticResourcesAdminPage() {
                   : activeSlug === 'press-kit'
                     ? values.pressKit
                     : buildGenericContent(values)
+      if (!baseContent) return
+
+      const enTranslation = parseOptionalJson(values.translationsEnJson)
+      const jpnTranslation = parseOptionalJson(values.translationsJpnJson)
+      if (!enTranslation || !jpnTranslation) {
+        message.error('JSON bản dịch không hợp lệ')
+        return
+      }
+
+      const content = {
+        ...baseContent,
+        translations: {
+          ...(baseContent.translations || {}),
+          en: enTranslation,
+          jpn: jpnTranslation,
+        },
+      }
       if (!content) return
 
       setSaving(true)
@@ -164,6 +188,7 @@ export default function StaticResourcesAdminPage() {
           {activeSlug === 'terms-of-service' ? <TermsResourceForm /> : null}
           {activeSlug === 'career' ? <CareerResourceForm /> : null}
           {activeSlug === 'press-kit' ? <PressKitResourceForm /> : null}
+          <TranslationsJsonForm />
           {!['about', 'contact', 'privacy-policy', 'terms-of-service', 'career', 'press-kit'].includes(activeSlug) ? <GenericResourceForm /> : null}
         </Form>
       </Card>
@@ -210,6 +235,32 @@ function GenericResourceForm() {
         </Form.Item>
       </Card>
     </div>
+  )
+}
+
+function TranslationsJsonForm() {
+  return (
+    <Card title="Bản dịch theo ngôn ngữ" className="!mt-8 !rounded-lg !border-zinc-200">
+      <Paragraph className="!mb-4 !text-sm !leading-6 !text-zinc-500">
+        Nhập phần nội dung cần ghi đè theo ngôn ngữ. Cấu trúc JSON phải giống với content gốc của trang. Client sẽ tự dùng <Text strong>translations.en</Text> khi chọn EN và <Text strong>translations.jpn</Text> khi chọn JP.
+      </Paragraph>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Form.Item
+          name="translationsEnJson"
+          label="English JSON - translations.en"
+          rules={[{ validator: (_, value) => (parseOptionalJson(value) ? Promise.resolve() : Promise.reject(new Error('JSON EN không hợp lệ'))) }]}
+        >
+          <Input.TextArea rows={18} className="!font-mono !text-xs" spellCheck={false} />
+        </Form.Item>
+        <Form.Item
+          name="translationsJpnJson"
+          label="Japanese JSON - translations.jpn"
+          rules={[{ validator: (_, value) => (parseOptionalJson(value) ? Promise.resolve() : Promise.reject(new Error('JSON JPN không hợp lệ'))) }]}
+        >
+          <Input.TextArea rows={18} className="!font-mono !text-xs" spellCheck={false} />
+        </Form.Item>
+      </div>
+    </Card>
   )
 }
 
