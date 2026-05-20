@@ -7,13 +7,13 @@ export default function Brand({ className = '' }) {
   const clientTagline = settings?.clientTagline || 'Premium Japanese AR Dining'
 
   return (
-    <div className={['flex items-center gap-3', className].join(' ')}>
-      <RestOutlined className="text-2xl -rotate-12" />
-      <div className="leading-tight">
-        <div className="text-lg font-semibold tracking-wide font-[var(--font-heading)]">
+    <div className={['flex min-w-0 items-center gap-2 sm:gap-3', className].join(' ')}>
+      <RestOutlined className="shrink-0 -rotate-12 text-xl sm:text-2xl" />
+      <div className="min-w-0 leading-tight">
+        <div className="max-w-[120px] truncate text-sm font-semibold tracking-wide font-[var(--font-heading)] sm:max-w-none sm:text-lg">
           {clientWebsiteName}
         </div>
-        <div className="text-xs opacity-90 font-[var(--font-jp)] truncate max-w-[240px]" title={clientTagline}>
+        <div className="hidden max-w-[240px] truncate text-xs opacity-90 font-[var(--font-jp)] sm:block" title={clientTagline}>
           {clientTagline}
         </div>
       </div>
