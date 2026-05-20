@@ -1,0 +1,190 @@
+{
+  "common": {
+    "brandName": "Sakura Restaurant",
+    "brandTagline": "Premium Japanese AR Dining",
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "language": "Language",
+    "vietnamese": "Vietnamese",
+    "english": "English",
+    "japanese": "Japanese",
+    "home": "Home",
+    "about": "About",
+    "blog": "Blog",
+    "contact": "Contact",
+    "cart": "Cart",
+    "search": "Search",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "viewDetail": "View details",
+    "applyNow": "Apply now",
+    "download": "Download",
+    "learnMore": "Learn more",
+    "readMore": "Read more",
+    "loading": "Loading...",
+    "success": "Success",
+    "error": "Something went wrong",
+    "required": "This field is required"
+    ,
+    "greeting": "Hello,"
+  },
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "blog": "Blog",
+    "contact": "Contact",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "careers": "Careers",
+    "pressKit": "Press Kit"
+  },
+  "home": {
+    "title": "Welcome to Sakura Restaurant",
+    "subtitle": "Experience modern ordering with AR Menu",
+    "description": "Japanese culinary heritage meets modern AR technology for an immersive and memorable dining experience.",
+    "ctaPrimary": "Explore menu",
+    "ctaSecondary": "Book a table",
+    "featuresTitle": "A Different Experience",
+    "arMenuTitle": "AR Menu",
+    "arMenuDescription": "Preview dishes in interactive 3D before ordering.",
+    "fineDiningTitle": "Fine Dining",
+    "fineDiningDescription": "Selected ingredients and Japanese-standard preparation.",
+    "serviceTitle": "Thoughtful Service",
+    "serviceDescription": "A professional team supports every moment of your visit."
+  },
+  "about": {
+    "heroTitle": "About Us - Sakura Restaurant",
+    "heroSubtitle": "Where culinary heritage meets future technology",
+    "brandStoryEyebrow": "Brand story",
+    "brandStoryTitle": "The origin of a distinctive experience",
+    "visionMissionTitle": "Vision & Mission",
+    "coreValuesTitle": "Four Values That Shape Sakura",
+    "arExperienceTitle": "Exclusive AR Experience",
+    "chefStoryTitle": "The artisans behind the flavor"
+  },
+  "contact": {
+    "heroTitle": "Contact & Reservations",
+    "heroSubtitle": "Connect with the future of dining",
+    "heroDescription": "At Sakura, we are always ready to listen and support you.",
+    "contactInfoTitle": "Contact Information",
+    "address": "Address",
+    "hotline": "Hotline",
+    "email": "Email",
+    "serviceHours": "Service Hours",
+    "formTitle": "Send Us a Message",
+    "fullName": "Full name",
+    "phone": "Phone number",
+    "purpose": "Contact purpose",
+    "guestCount": "Number of guests",
+    "message": "Special request / Message",
+    "submitLabel": "Send your request",
+    "successMessage": "Thank you. Sakura Restaurant will contact you as soon as possible.",
+    "supportTitle": "Having trouble with your AR experience?",
+    "supportAction": "AR technical support"
+  },
+  "privacyPolicy": {
+    "updatedLabel": "Last updated: October 2023",
+    "title": "Data Privacy Policy",
+    "subtitle": "(PRIVACY POLICY) - Sakura Restaurant",
+    "tocTitle": "Table of Contents",
+    "supportTitle": "Questions about this privacy policy?",
+    "supportText": "Our team is always ready to support you.",
+    "supportButton": "Contact now",
+    "showMore": "View all detailed policy sections below",
+    "collapse": "Collapse content"
+  },
+  "termsOfService": {
+    "updatedLabel": "Last updated: October 2023",
+    "title": "Terms of Service",
+    "subtitle": "(TERMS OF SERVICE) - Sakura Restaurant",
+    "tocTitle": "Table of Contents",
+    "supportTitle": "Need support?",
+    "supportText": "If you have any questions about the Terms of Service, please contact us.",
+    "supportButton": "Contact now",
+    "showMore": "View all detailed terms below",
+    "collapse": "Collapse content"
+  },
+  "careers": {
+    "heroEyebrow": "Recruitment",
+    "heroTitle": "Career Opportunities",
+    "heroSubtitle": "Start your future in AR/VR culinary technology",
+    "jobsTitle": "Open Positions",
+    "jobsDescription": "Discover career opportunities and become part of Sakura's innovation journey.",
+    "jobDescription": "Job description:",
+    "requirements": "Requirements:",
+    "benefits": "Benefits:",
+    "showAllJobs": "View all open positions",
+    "collapseJobs": "Collapse open positions",
+    "applicationMethod": "How to apply",
+    "applyModalTitle": "Apply for position",
+    "personalInfo": "Personal information",
+    "applicationInfo": "Application information",
+    "applicationFiles": "Application documents",
+    "coverLetter": "Cover letter (optional)",
+    "submitApplication": "Submit application",
+    "successMessage": "Application submitted successfully"
+  },
+  "pressKit": {
+    "heroEyebrow": "Press Kit",
+    "heroTitle": "Media Resources",
+    "heroSubtitle": "Connecting culinary heritage with future AR technology.",
+    "brandAssets": "Brand Assets",
+    "logoHeading": "Logo & Formats",
+    "mediaHeading": "Press Images",
+    "downloadAll": "Download full image set",
+    "usageHeading": "Usage Guidelines",
+    "mediaContact": "Media Contact",
+    "contactNow": "Contact now",
+    "representative": "Media representative",
+    "pressOnlyHotline": "Hotline (Press only)"
+  },
+  "footer": {
+    "description": "Sakura Restaurant blends Japanese culinary heritage with modern AR technology, creating a vivid and memorable dining experience.",
+    "newsletterTitle": "Subscribe to updates",
+    "newsletterDescription": "Receive the latest offers and event news",
+    "emailPlaceholder": "Enter your email",
+    "socialTitle": "Connect with us",
+    "copyright": "© 2026 Sakura Restaurant. Experience Japanese cuisine in AR/VR.",
+    "secondaryCopyright": "Sakura Restaurant - Japanese cuisine experienced in AR/VR",
+    "highlights": {
+      "japaneseCuisine": {
+        "title": "Japanese Culinary Essence",
+        "text": "Fresh ingredients with Japanese standards"
+      },
+      "arTechnology": {
+        "title": "Distinctive AR Technology",
+        "text": "An immersive culinary experience"
+      },
+      "refinedSpace": {
+        "title": "Refined Space",
+        "text": "Design inspired by Japanese aesthetics"
+      },
+      "dedicatedService": {
+        "title": "Dedicated Service",
+        "text": "A professional team serving with care"
+      }
+    }
+  },
+  "auth": {
+    "adminLoginTitle": "Admin Login",
+    "emailOrUsername": "Email or username",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "loginFailed": "Admin login failed",
+    "invalidCredentials": "Invalid account or password."
+    ,
+    "logoutSuccess": "Logged out successfully"
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "resources": "Resource Management",
+    "staticResources": "Static Page Resources",
+    "saveChanges": "Save changes",
+    "resourceSaved": "Static page resource saved",
+    "contentJson": "Extended JSON content"
+  }
+}

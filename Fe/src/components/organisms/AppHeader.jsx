@@ -1,6 +1,7 @@
 import { ShoppingCartOutlined } from '@ant-design/icons'
 import { Badge, Button, Layout, message } from 'antd'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import Brand from '../atoms/Brand.jsx'
 import { userLogout } from '../../services/authApi.js'
@@ -11,12 +12,13 @@ import { getOrderSource } from '../../utils/orderSource.js'
 const { Header } = Layout
 
 export default function AppHeader({ variant = 'desktop' }) {
+  const { t, i18n } = useTranslation()
   const { totalItems, clearAllCarts } = useCart()
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const orderSource = getOrderSource(searchParams)
-  const [userProfile, setUserProfile] = useState(() => getUserProfile())
+  const userProfile = getUserProfile()
   const userDisplayName =
     userProfile?.name ||
     userProfile?.email ||
@@ -26,15 +28,17 @@ export default function AppHeader({ variant = 'desktop' }) {
   const homePath = orderSource.mode === 'dine-in' ? '/order' : '/'
   const scopeKeyRef = useRef(null)
   const navItems = [
-    { key: 'home', label: 'Home', to: homePath, match: ['/', '/order'] },
-    { key: 'about', label: 'About', to: '/about', match: ['/about'] },
-    { key: 'blog', label: 'Blog', to: '/blog', match: ['/blog'] },
-    { key: 'contact', label: 'Contact', to: '/contact', match: ['/contact'] },
+    { key: 'home', label: t('navigation.home'), to: homePath, match: ['/', '/order'] },
+    { key: 'about', label: t('navigation.about'), to: '/about', match: ['/about'] },
+    { key: 'blog', label: t('navigation.blog'), to: '/blog', match: ['/blog'] },
+    { key: 'contact', label: t('navigation.contact'), to: '/contact', match: ['/contact'] },
   ]
-
-  useEffect(() => {
-    setUserProfile(getUserProfile())
-  }, [location.pathname, location.search])
+  const activeLanguage = i18n.resolvedLanguage || i18n.language || 'vi'
+  const languageOptions = [
+    { key: 'vi', label: 'VN' },
+    { key: 'en', label: 'EN' },
+    { key: 'jpn', label: 'JP' },
+  ]
 
   const handleLogout = async () => {
     try {
@@ -45,8 +49,7 @@ export default function AppHeader({ variant = 'desktop' }) {
 
     clearUserSession()
     clearAllCarts()
-    setUserProfile(null)
-    message.success('Đăng xuất thành công')
+    message.success(t('auth.logoutSuccess', { defaultValue: 'Đăng xuất thành công' }))
     navigate('/', { replace: true })
   }
 
@@ -110,15 +113,24 @@ export default function AppHeader({ variant = 'desktop' }) {
 
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="hidden items-center gap-2 text-xs font-semibold text-slate-500 sm:flex">
-            <button type="button" className="header-lang header-lang--active">VN</button>
-            <span className="text-slate-300">|</span>
-            <button type="button" className="header-lang">JP</button>
+            {languageOptions.map((item, index) => (
+              <span key={item.key} className="inline-flex items-center gap-2">
+                {index > 0 ? <span className="text-slate-300">|</span> : null}
+                <button
+                  type="button"
+                  className={`header-lang ${activeLanguage === item.key ? 'header-lang--active' : ''}`}
+                  onClick={() => i18n.changeLanguage(item.key)}
+                >
+                  {item.label}
+                </button>
+              </span>
+            ))}
           </div>
 
           {isUserLoggedIn ? (
             <>
               <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 md:inline-flex">
-                <span className="text-slate-400">Xin chào,</span>
+                <span className="text-slate-400">{t('common.greeting', { defaultValue: 'Xin chào,' })}</span>
                 <span className="max-w-[140px] truncate font-semibold text-slate-800">{userDisplayName}</span>
               </div>
 
@@ -127,7 +139,7 @@ export default function AppHeader({ variant = 'desktop' }) {
                 onClick={handleLogout}
                 className="!h-9 !rounded-full !border !border-red-200 !bg-white !px-4 !font-semibold !text-[#b10b22] !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!border-[#c6001e] hover:!bg-[#fff1f3] hover:!text-[#b10b22] hover:!shadow-[0_10px_22px_rgba(177,11,34,0.12)] active:!translate-y-0"
               >
-                Đăng xuất
+                {t('common.logout')}
               </Button>
             </>
           ) : (
@@ -137,7 +149,7 @@ export default function AppHeader({ variant = 'desktop' }) {
                   type="text"
                   className="!h-9 !rounded-full !border !border-slate-200 !bg-white !px-4 !font-semibold !text-slate-700 !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!border-[#c6001e] hover:!bg-[#fff1f3] hover:!text-[#b10b22] hover:!shadow-[0_10px_22px_rgba(177,11,34,0.12)] active:!translate-y-0"
                 >
-                  Đăng nhập
+                  {t('common.login')}
                 </Button>
               </Link>
 
@@ -146,7 +158,7 @@ export default function AppHeader({ variant = 'desktop' }) {
                   type="text"
                   className="!h-9 !rounded-full !border-0 !bg-[#8B0000] !px-4 !font-semibold !text-white !shadow-[0_8px_18px_rgba(139,0,0,0.18)] !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!bg-[#700000] hover:!shadow-[0_14px_28px_rgba(139,0,0,0.28)] active:!translate-y-0"
                 >
-                  Đăng ký
+                  {t('common.register')}
                 </Button>
               </Link>
             </>

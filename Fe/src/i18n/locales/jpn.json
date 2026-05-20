@@ -1,0 +1,190 @@
+{
+  "common": {
+    "brandName": "Sakura Restaurant",
+    "brandTagline": "プレミアム日本食 AR ダイニング",
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "register": "登録",
+    "language": "言語",
+    "vietnamese": "ベトナム語",
+    "english": "英語",
+    "japanese": "日本語",
+    "home": "ホーム",
+    "about": "私たちについて",
+    "blog": "ブログ",
+    "contact": "お問い合わせ",
+    "cart": "カート",
+    "search": "検索",
+    "submit": "送信",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "edit": "編集",
+    "delete": "削除",
+    "viewDetail": "詳細を見る",
+    "applyNow": "今すぐ応募",
+    "download": "ダウンロード",
+    "learnMore": "詳しく見る",
+    "readMore": "続きを読む",
+    "loading": "読み込み中...",
+    "success": "成功",
+    "error": "エラーが発生しました",
+    "required": "この項目は必須です"
+    ,
+    "greeting": "こんにちは,"
+  },
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "blog": "Blog",
+    "contact": "Contact",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "careers": "Careers",
+    "pressKit": "Press Kit"
+  },
+  "home": {
+    "title": "Sakura Restaurantへようこそ",
+    "subtitle": "ARメニューで現代的な注文体験を",
+    "description": "日本の食文化と最新のAR技術を融合し、臨場感のある記憶に残る食体験を提供します。",
+    "ctaPrimary": "メニューを見る",
+    "ctaSecondary": "席を予約する",
+    "featuresTitle": "特別な体験",
+    "arMenuTitle": "ARメニュー",
+    "arMenuDescription": "注文前に料理を3Dで直感的に確認できます。",
+    "fineDiningTitle": "上質な料理",
+    "fineDiningDescription": "厳選された食材と日本基準の調理技術。",
+    "serviceTitle": "心を込めたサービス",
+    "serviceDescription": "専門スタッフが一つひとつの体験を丁寧に支えます。"
+  },
+  "about": {
+    "heroTitle": "私たちについて - Sakura Restaurant",
+    "heroSubtitle": "伝統的な食文化と未来のテクノロジーが出会う場所",
+    "brandStoryEyebrow": "ブランドストーリー",
+    "brandStoryTitle": "特別な体験のはじまり",
+    "visionMissionTitle": "ビジョン & ミッション",
+    "coreValuesTitle": "Sakuraを形づくる4つの価値",
+    "arExperienceTitle": "独自のAR体験",
+    "chefStoryTitle": "味を支える職人たち"
+  },
+  "contact": {
+    "heroTitle": "お問い合わせ・ご予約",
+    "heroSubtitle": "未来の食体験とつながる",
+    "heroDescription": "Sakuraでは、お客様のご質問やご要望にいつでも対応いたします。",
+    "contactInfoTitle": "連絡先情報",
+    "address": "住所",
+    "hotline": "ホットライン",
+    "email": "メール",
+    "serviceHours": "営業時間",
+    "formTitle": "メッセージを送る",
+    "fullName": "氏名",
+    "phone": "電話番号",
+    "purpose": "お問い合わせ目的",
+    "guestCount": "人数",
+    "message": "特別なご要望 / メッセージ",
+    "submitLabel": "リクエストを送信",
+    "successMessage": "ありがとうございます。Sakura Restaurantより順次ご連絡いたします。",
+    "supportTitle": "AR体験でお困りですか？",
+    "supportAction": "AR技術サポート"
+  },
+  "privacyPolicy": {
+    "updatedLabel": "最終更新: 2023年10月",
+    "title": "データプライバシーポリシー",
+    "subtitle": "(PRIVACY POLICY) - Sakura Restaurant",
+    "tocTitle": "目次",
+    "supportTitle": "プライバシーポリシーについてご質問がありますか？",
+    "supportText": "私たちのチームがいつでもサポートいたします。",
+    "supportButton": "今すぐ連絡",
+    "showMore": "詳細なポリシーをすべて表示",
+    "collapse": "内容を折りたたむ"
+  },
+  "termsOfService": {
+    "updatedLabel": "最終更新: 2023年10月",
+    "title": "利用規約",
+    "subtitle": "(TERMS OF SERVICE) - Sakura Restaurant",
+    "tocTitle": "目次",
+    "supportTitle": "サポートが必要ですか？",
+    "supportText": "利用規約についてご質問がある場合は、お気軽にお問い合わせください。",
+    "supportButton": "今すぐ連絡",
+    "showMore": "詳細な規約をすべて表示",
+    "collapse": "内容を折りたたむ"
+  },
+  "careers": {
+    "heroEyebrow": "採用情報",
+    "heroTitle": "キャリアチャンス",
+    "heroSubtitle": "AR/VR食体験テクノロジーで未来を始める",
+    "jobsTitle": "募集中の職種",
+    "jobsDescription": "Sakuraの革新の旅に参加できるキャリア機会をご覧ください。",
+    "jobDescription": "仕事内容:",
+    "requirements": "応募条件:",
+    "benefits": "福利厚生:",
+    "showAllJobs": "すべての募集職種を見る",
+    "collapseJobs": "募集職種を折りたたむ",
+    "applicationMethod": "応募方法",
+    "applyModalTitle": "職種に応募",
+    "personalInfo": "個人情報",
+    "applicationInfo": "応募情報",
+    "applicationFiles": "応募書類",
+    "coverLetter": "カバーレター（任意）",
+    "submitApplication": "応募を送信",
+    "successMessage": "応募が正常に送信されました"
+  },
+  "pressKit": {
+    "heroEyebrow": "プレスキット",
+    "heroTitle": "メディアリソース",
+    "heroSubtitle": "伝統的な食文化と未来のAR技術をつなぐ。",
+    "brandAssets": "ブランドアセット",
+    "logoHeading": "ロゴ & フォーマット",
+    "mediaHeading": "プレス画像",
+    "downloadAll": "画像セットをすべてダウンロード",
+    "usageHeading": "利用ガイドライン",
+    "mediaContact": "メディアお問い合わせ",
+    "contactNow": "今すぐ連絡",
+    "representative": "メディア担当者",
+    "pressOnlyHotline": "ホットライン（プレス専用）"
+  },
+  "footer": {
+    "description": "Sakura Restaurantは、日本の食文化と最新のAR技術を融合し、臨場感のある記憶に残る食体験を提供します。",
+    "newsletterTitle": "ニュースを受け取る",
+    "newsletterDescription": "最新の特典やイベント情報をお届けします",
+    "emailPlaceholder": "メールアドレスを入力",
+    "socialTitle": "私たちとつながる",
+    "copyright": "© 2026 Sakura Restaurant. Experience Japanese cuisine in AR/VR.",
+    "secondaryCopyright": "さくらレストラン - AR/VRで日本料理を体験",
+    "highlights": {
+      "japaneseCuisine": {
+        "title": "日本料理の真髄",
+        "text": "日本基準の新鮮な食材"
+      },
+      "arTechnology": {
+        "title": "独自のAR技術",
+        "text": "臨場感のある食体験"
+      },
+      "refinedSpace": {
+        "title": "洗練された空間",
+        "text": "日本美を感じるデザイン"
+      },
+      "dedicatedService": {
+        "title": "心を込めたサービス",
+        "text": "専門スタッフが丁寧に対応"
+      }
+    }
+  },
+  "auth": {
+    "adminLoginTitle": "管理者ログイン",
+    "emailOrUsername": "メールまたはユーザー名",
+    "password": "パスワード",
+    "forgotPassword": "パスワードをお忘れですか？",
+    "loginFailed": "管理者ログインに失敗しました",
+    "invalidCredentials": "アカウントまたはパスワードが正しくありません。"
+    ,
+    "logoutSuccess": "ログアウトしました"
+  },
+  "admin": {
+    "dashboard": "ダッシュボード",
+    "resources": "リソース管理",
+    "staticResources": "静的ページリソース",
+    "saveChanges": "変更を保存",
+    "resourceSaved": "静的ページリソースを保存しました",
+    "contentJson": "拡張JSONコンテンツ"
+  }
+}

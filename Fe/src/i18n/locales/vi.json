@@ -1,0 +1,190 @@
+{
+  "common": {
+    "brandName": "Sakura Restaurant",
+    "brandTagline": "Nhà hàng Nhật Bản AR cao cấp",
+    "login": "Đăng nhập",
+    "logout": "Đăng xuất",
+    "register": "Đăng ký",
+    "language": "Ngôn ngữ",
+    "vietnamese": "Tiếng Việt",
+    "english": "Tiếng Anh",
+    "japanese": "Tiếng Nhật",
+    "home": "Trang chủ",
+    "about": "Về chúng tôi",
+    "blog": "Blog",
+    "contact": "Liên hệ",
+    "cart": "Giỏ hàng",
+    "search": "Tìm kiếm",
+    "submit": "Gửi",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "edit": "Chỉnh sửa",
+    "delete": "Xóa",
+    "viewDetail": "Xem chi tiết",
+    "applyNow": "Ứng tuyển ngay",
+    "download": "Tải xuống",
+    "learnMore": "Tìm hiểu thêm",
+    "readMore": "Đọc thêm",
+    "loading": "Đang tải...",
+    "success": "Thành công",
+    "error": "Đã xảy ra lỗi",
+    "required": "Trường này là bắt buộc"
+    ,
+    "greeting": "Xin chào,"
+  },
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "blog": "Blog",
+    "contact": "Contact",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "careers": "Careers",
+    "pressKit": "Press Kit"
+  },
+  "home": {
+    "title": "Chào mừng đến Sakura Restaurant",
+    "subtitle": "Trải nghiệm gọi món hiện đại với AR Menu",
+    "description": "Kết hợp tinh hoa ẩm thực Nhật Bản với công nghệ AR hiện đại để tạo nên trải nghiệm sống động và đáng nhớ.",
+    "ctaPrimary": "Khám phá thực đơn",
+    "ctaSecondary": "Đặt bàn ngay",
+    "featuresTitle": "Trải nghiệm khác biệt",
+    "arMenuTitle": "AR Menu",
+    "arMenuDescription": "Xem món ăn 3D trực quan trước khi gọi món.",
+    "fineDiningTitle": "Ẩm thực tinh tế",
+    "fineDiningDescription": "Nguyên liệu chọn lọc và kỹ thuật chế biến chuẩn Nhật.",
+    "serviceTitle": "Dịch vụ tận tâm",
+    "serviceDescription": "Đội ngũ chuyên nghiệp đồng hành trong từng trải nghiệm."
+  },
+  "about": {
+    "heroTitle": "Về Chúng Tôi - Sakura Restaurant",
+    "heroSubtitle": "Nơi giao thoa giữa di sản ẩm thực truyền thống và công nghệ tương lai",
+    "brandStoryEyebrow": "Câu chuyện thương hiệu",
+    "brandStoryTitle": "Khởi nguồn của một trải nghiệm khác biệt",
+    "visionMissionTitle": "Tầm nhìn & Sứ mệnh",
+    "coreValuesTitle": "Bốn giá trị định hình Sakura",
+    "arExperienceTitle": "Trải nghiệm AR độc quyền",
+    "chefStoryTitle": "Những nghệ nhân của hương vị"
+  },
+  "contact": {
+    "heroTitle": "Liên Hệ & Đặt Bàn",
+    "heroSubtitle": "Kết nối với không gian ẩm thực tương lai",
+    "heroDescription": "Tại Sakura, chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn.",
+    "contactInfoTitle": "Thông tin liên hệ",
+    "address": "Địa chỉ",
+    "hotline": "Hotline",
+    "email": "Email",
+    "serviceHours": "Giờ phục vụ",
+    "formTitle": "Gửi thông điệp cho chúng tôi",
+    "fullName": "Họ và tên",
+    "phone": "Số điện thoại",
+    "purpose": "Mục đích liên hệ",
+    "guestCount": "Số lượng khách",
+    "message": "Yêu cầu đặc biệt / Tin nhắn",
+    "submitLabel": "Gửi yêu cầu của bạn",
+    "successMessage": "Cảm ơn bạn. Sakura Restaurant sẽ liên hệ lại trong thời gian sớm nhất.",
+    "supportTitle": "Trải nghiệm AR của bạn gặp trục trặc?",
+    "supportAction": "Hỗ trợ kỹ thuật AR"
+  },
+  "privacyPolicy": {
+    "updatedLabel": "Cập nhật lần cuối: Tháng 10 năm 2023",
+    "title": "Chính Sách Bảo Mật Dữ Liệu",
+    "subtitle": "(PRIVACY POLICY) - Sakura Restaurant",
+    "tocTitle": "Mục lục",
+    "supportTitle": "Bạn có thắc mắc về chính sách bảo mật?",
+    "supportText": "Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ bạn.",
+    "supportButton": "Liên hệ ngay",
+    "showMore": "Xem tất cả chính sách chi tiết bên dưới",
+    "collapse": "Thu gọn nội dung"
+  },
+  "termsOfService": {
+    "updatedLabel": "Cập nhật lần cuối: Tháng 10 năm 2023",
+    "title": "Điều Khoản Dịch Vụ",
+    "subtitle": "(TERMS OF SERVICE) - Sakura Restaurant",
+    "tocTitle": "Mục lục",
+    "supportTitle": "Cần hỗ trợ?",
+    "supportText": "Nếu bạn có bất kỳ câu hỏi nào về Điều khoản dịch vụ, vui lòng liên hệ với chúng tôi.",
+    "supportButton": "Liên hệ ngay",
+    "showMore": "Xem tất cả điều khoản chi tiết bên dưới",
+    "collapse": "Thu gọn nội dung"
+  },
+  "careers": {
+    "heroEyebrow": "Tuyển dụng",
+    "heroTitle": "Cơ Hội Nghề Nghiệp",
+    "heroSubtitle": "Khởi đầu tương lai cùng ngành ẩm thực công nghệ AR VR",
+    "jobsTitle": "Các vị trí đang tuyển dụng",
+    "jobsDescription": "Khám phá các cơ hội nghề nghiệp hấp dẫn và trở thành một phần của hành trình đổi mới cùng Sakura.",
+    "jobDescription": "Mô tả công việc:",
+    "requirements": "Yêu cầu:",
+    "benefits": "Quyền lợi:",
+    "showAllJobs": "Xem tất cả vị trí tuyển dụng",
+    "collapseJobs": "Thu gọn vị trí tuyển dụng",
+    "applicationMethod": "Cách thức ứng tuyển",
+    "applyModalTitle": "Ứng tuyển vị trí",
+    "personalInfo": "Thông tin cá nhân",
+    "applicationInfo": "Thông tin ứng tuyển",
+    "applicationFiles": "Hồ sơ ứng tuyển",
+    "coverLetter": "Thư ngỏ (tùy chọn)",
+    "submitApplication": "Gửi ứng tuyển",
+    "successMessage": "Đã ứng tuyển thành công"
+  },
+  "pressKit": {
+    "heroEyebrow": "Press Kit",
+    "heroTitle": "Tài Nguyên Truyền Thông",
+    "heroSubtitle": "Kết nối di sản ẩm thực truyền thống với công nghệ AR tương lai.",
+    "brandAssets": "Tài sản thương hiệu",
+    "logoHeading": "Logo & Định dạng",
+    "mediaHeading": "Hình ảnh báo chí",
+    "downloadAll": "Tải toàn bộ bộ ảnh",
+    "usageHeading": "Hướng dẫn sử dụng",
+    "mediaContact": "Liên hệ truyền thông",
+    "contactNow": "Liên hệ ngay",
+    "representative": "Đại diện truyền thông",
+    "pressOnlyHotline": "Hotline (Press only)"
+  },
+  "footer": {
+    "description": "Sakura Restaurant kết hợp tinh hoa ẩm thực Nhật Bản với công nghệ AR hiện đại, mang đến trải nghiệm ẩm thực sống động và đáng nhớ.",
+    "newsletterTitle": "Đăng ký nhận tin",
+    "newsletterDescription": "Nhận thông tin mới nhất về ưu đãi và sự kiện",
+    "emailPlaceholder": "Nhập email của bạn",
+    "socialTitle": "Kết nối với chúng tôi",
+    "copyright": "© 2026 Sakura Restaurant. Experience Japanese cuisine in AR/VR.",
+    "secondaryCopyright": "さくらレストラン - AR/VRで日本料理を体験",
+    "highlights": {
+      "japaneseCuisine": {
+        "title": "Tinh hoa ẩm thực Nhật",
+        "text": "Nguyên liệu tươi ngon chuẩn Nhật"
+      },
+      "arTechnology": {
+        "title": "Công nghệ AR độc đáo",
+        "text": "Trải nghiệm ẩm thực sống động"
+      },
+      "refinedSpace": {
+        "title": "Không gian tinh tế",
+        "text": "Thiết kế mang đậm bản sắc Nhật Bản"
+      },
+      "dedicatedService": {
+        "title": "Dịch vụ tận tâm",
+        "text": "Đội ngũ chuyên nghiệp, phục vụ bằng cả trái tim"
+      }
+    }
+  },
+  "auth": {
+    "adminLoginTitle": "Đăng nhập quản trị",
+    "emailOrUsername": "Email hoặc tên đăng nhập",
+    "password": "Mật khẩu",
+    "forgotPassword": "Quên mật khẩu?",
+    "loginFailed": "Đăng nhập thất bại",
+    "invalidCredentials": "Sai tài khoản hoặc mật khẩu."
+    ,
+    "logoutSuccess": "Đăng xuất thành công"
+  },
+  "admin": {
+    "dashboard": "Bảng điều khiển",
+    "resources": "Quản lý tài nguyên",
+    "staticResources": "Tài nguyên trang static",
+    "saveChanges": "Lưu thay đổi",
+    "resourceSaved": "Đã lưu tài nguyên trang static",
+    "contentJson": "Nội dung mở rộng JSON"
+  }
+}

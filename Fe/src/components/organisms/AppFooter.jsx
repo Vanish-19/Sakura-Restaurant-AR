@@ -10,6 +10,7 @@ import {
   YoutubeFilled,
 } from '@ant-design/icons'
 import { Button, Input, Layout, Typography } from 'antd'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useSiteSettings } from '../../utils/siteSettings.js'
 
@@ -24,46 +25,45 @@ const socialLinks = [
   { label: 'Reviews', icon: <RestOutlined />, href: '#' },
 ]
 
-const highlights = [
-  {
-    icon: <SafetyCertificateOutlined />,
-    title: 'Tinh hoa ẩm thực Nhật',
-    text: 'Nguyên liệu tươi ngon chuẩn Nhật',
-  },
-  {
-    icon: <ApiOutlined />,
-    title: 'Công nghệ AR độc đáo',
-    text: 'Trải nghiệm ẩm thực sống động',
-  },
-  {
-    icon: <GiftOutlined />,
-    title: 'Không gian tinh tế',
-    text: 'Thiết kế mang đậm bản sắc Nhật Bản',
-  },
-  {
-    icon: <HeartOutlined />,
-    title: 'Dịch vụ tận tâm',
-    text: 'Đội ngũ chuyên nghiệp, phục vụ bằng cả trái tim',
-  },
-]
-
-const footerLinks = [
-  { label: 'Privacy Policy', to: '/privacy&policy' },
-  { label: 'Terms Of Service', to: '/term&service' },
-  { label: 'Careers', to: '/career' },
-  { label: 'Press Kit', to: '/press-kit' },
-]
-
 export default function AppFooter() {
+  const { t } = useTranslation()
   const settings = useSiteSettings()
   const clientWebsiteName = settings?.clientWebsiteName || 'Sakura Restaurant'
-  const clientTagline = settings?.clientTagline || 'Premium Japanese AR Dining'
+  const clientTagline = t('common.brandTagline')
   const footerPrimary =
     settings?.footerPrimary ||
-    '© 2026 Sakura Restaurant. Experience Japanese cuisine in AR/VR.'
+    t('footer.copyright')
   const footerSecondary =
     settings?.footerSecondary ||
-    'さくらレストラン - AR/VRで体験する日本の食文化'
+    t('footer.secondaryCopyright')
+  const highlights = [
+    {
+      icon: <SafetyCertificateOutlined />,
+      title: t('footer.highlights.japaneseCuisine.title'),
+      text: t('footer.highlights.japaneseCuisine.text'),
+    },
+    {
+      icon: <ApiOutlined />,
+      title: t('footer.highlights.arTechnology.title'),
+      text: t('footer.highlights.arTechnology.text'),
+    },
+    {
+      icon: <GiftOutlined />,
+      title: t('footer.highlights.refinedSpace.title'),
+      text: t('footer.highlights.refinedSpace.text'),
+    },
+    {
+      icon: <HeartOutlined />,
+      title: t('footer.highlights.dedicatedService.title'),
+      text: t('footer.highlights.dedicatedService.text'),
+    },
+  ]
+  const footerLinks = [
+    { label: t('navigation.privacyPolicy'), to: '/privacy&policy' },
+    { label: t('navigation.termsOfService'), to: '/term&service' },
+    { label: t('navigation.careers'), to: '/career' },
+    { label: t('navigation.pressKit'), to: '/press-kit' },
+  ]
 
   return (
     <Footer className="!mt-auto !w-full !bg-white !px-0 !py-0">
@@ -95,23 +95,23 @@ export default function AppFooter() {
           </div>
 
           <Paragraph className="!mb-0 !max-w-md !text-sm !font-medium !leading-7 !text-[#4A4A4A]">
-            Sakura Restaurant kết hợp tinh hoa ẩm thực Nhật Bản với công nghệ AR hiện đại, mang đến trải nghiệm ẩm thực sống động và đáng nhớ.
+            {t('footer.description')}
           </Paragraph>
 
           <div>
             <Text className="!block !text-sm !font-extrabold !uppercase !tracking-[0.08em] !text-[#1C1C1E]">
-              Đăng ký nhận tin
+              {t('footer.newsletterTitle')}
             </Text>
             <Paragraph className="!mb-4 !mt-2 !text-sm !leading-6 !text-[#6f6666]">
-              Nhận thông tin mới nhất về ưu đãi và sự kiện
+              {t('footer.newsletterDescription')}
             </Paragraph>
             <div className="footer-newsletter flex max-w-[500px] flex-col gap-3 rounded-[28px] border border-[#eadede] bg-white/88 p-2 shadow-[0_12px_28px_rgba(144,0,32,0.08)] backdrop-blur-sm sm:flex-row sm:items-center sm:rounded-full">
               <Input
-                placeholder="Nhập email của bạn"
+                placeholder={t('footer.emailPlaceholder')}
                 className="footer-newsletter__input !h-12 !min-w-0 !flex-1 !rounded-full !border-0 !bg-transparent !px-5 !text-sm !shadow-none placeholder:!text-[#b8adad]"
               />
               <Button className="!h-12 !shrink-0 !rounded-full !border-0 !bg-[#8B0000] !px-8 !font-bold !text-white !shadow-[0_10px_22px_rgba(139,0,0,0.20)] !transition-all !duration-300 hover:!-translate-y-0.5 hover:!bg-[#700000] hover:!shadow-[0_14px_28px_rgba(139,0,0,0.30)]">
-                Đăng ký
+                {t('common.register')}
               </Button>
             </div>
           </div>
@@ -122,7 +122,7 @@ export default function AppFooter() {
         <div className="relative z-10 mx-auto grid w-full max-w-[1680px] gap-8 px-6 py-10 md:grid-cols-[1fr_2.8fr] md:px-14 xl:px-20 2xl:px-28">
           <div>
             <Text className="!block !text-sm !font-extrabold !uppercase !tracking-[0.08em] !text-[#d8001e]">
-              Kết nối với chúng tôi
+              {t('footer.socialTitle')}
             </Text>
             <div className="mt-5 flex flex-wrap gap-3">
               {socialLinks.map((item) => (
