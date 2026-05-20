@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: ./Be
+      dockerfile: Dockerfile.dev
+    container_name: sakura-backend
+    ports:
+      - "3005:3000"
+    volumes:
+      - ./Be:/app
+      # Anonymous volume để tránh ghi đè thư mục node_modules trong container bằng thư mục máy thật
+      - /app/node_modules
+    env_file:
+      - ./Be/.env
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+
+  frontend:
+    build:
+      context: ./Fe
+      dockerfile: Dockerfile.dev
+    container_name: sakura-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./Fe:/app
+      - /app/node_modules
+    environment:
+      - VITE_USE_MOCK_TABLE_SCAN=false
+      - VITE_PROXY_TARGET=http://backend:3000
+    depends_on:
+      - backend
