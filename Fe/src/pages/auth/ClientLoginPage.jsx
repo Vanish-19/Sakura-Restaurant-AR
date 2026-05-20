@@ -1,5 +1,6 @@
 import { ArrowRightOutlined } from '@ant-design/icons'
 import { Button, Checkbox, Form, Input, notification } from 'antd'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { userLogin } from '../../services/authApi.js'
 import { setUserSession } from '../../utils/authSession.js'
@@ -7,34 +8,33 @@ import { setUserSession } from '../../utils/authSession.js'
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,32}$/
 
-const identityRules = [
-  { required: true, message: 'Vui lòng nhập email hoặc tên đăng nhập' },
-  {
-    validator: (_, value) => {
-      const text = String(value || '').trim()
-      if (!text) return Promise.resolve()
-
-      const isEmail = EMAIL_REGEX.test(text)
-      const isUsername = USERNAME_REGEX.test(text)
-
-      if (isEmail || isUsername) return Promise.resolve()
-      return Promise.reject(new Error('Email hoặc tên đăng nhập không hợp lệ (3-32 ký tự)'))
-    },
-  },
-]
-
-const passwordRules = [
-  { required: true, message: 'Vui lòng nhập mật khẩu' },
-  { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
-]
-
 export default function ClientLoginPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const redirectPath = searchParams.get('redirect') || ''
   const registerHref = redirectPath
     ? `/auth/register?redirect=${encodeURIComponent(redirectPath)}`
     : '/auth/register'
+  const identityRules = [
+    { required: true, message: t('auth.validation.identityRequired') },
+    {
+      validator: (_, value) => {
+        const text = String(value || '').trim()
+        if (!text) return Promise.resolve()
+
+        const isEmail = EMAIL_REGEX.test(text)
+        const isUsername = USERNAME_REGEX.test(text)
+
+        if (isEmail || isUsername) return Promise.resolve()
+        return Promise.reject(new Error(t('auth.validation.identityInvalid')))
+      },
+    },
+  ]
+  const passwordRules = [
+    { required: true, message: t('auth.validation.passwordRequired') },
+    { min: 6, message: t('auth.validation.passwordMin6') },
+  ]
 
   const onFinish = async (values) => {
     const identity = values.identity?.trim()
@@ -47,14 +47,14 @@ export default function ClientLoginPage() {
       const user = result?.user || null
 
       if (!accessToken || !refreshToken) {
-        throw new Error('Thiếu thông tin token từ máy chủ')
+        throw new Error(t('auth.missingToken'))
       }
 
       setUserSession({ accessToken, refreshToken, user })
 
       notification.success({
-        message: 'Đăng nhập thành công',
-        description: 'Chào mừng bạn quay lại Sakura Restaurant.',
+        message: t('auth.loginSuccess'),
+        description: t('auth.loginSuccessDescription'),
         placement: 'topRight',
       })
 
@@ -62,8 +62,8 @@ export default function ClientLoginPage() {
       navigate(redirectTo)
     } catch (error) {
       notification.error({
-        message: 'Đăng nhập thất bại',
-        description: error?.message || 'Sai tài khoản hoặc mật khẩu.',
+        message: t('auth.loginFailed'),
+        description: error?.message || t('auth.invalidCredentials'),
         placement: 'topRight',
       })
     }
@@ -79,11 +79,11 @@ export default function ClientLoginPage() {
             SAKURA RESTAURANT
           </p>
           <h1 className="client-auth-hero__headline font-['Cormorant_Garamond',_serif] font-normal italic text-[clamp(32px,4vw,54px)] leading-[1.08] text-[#2c2c2c] tracking-[0.01em] [text-shadow:0_1px_6px_rgba(255,255,255,0.55)] mb-3">
-            <span className="block">Chào mừng</span>
-            <span className="block">quay lại</span>
+            <span className="block">{t('auth.clientLoginTitleLine1')}</span>
+            <span className="block">{t('auth.clientLoginTitleLine2')}</span>
           </h1>
           <p className="text-sm text-[#6b6b6f]">
-            Khám phá tinh hoa ẩm thực Nhật Bản.
+            {t('auth.clientLoginSubtitle')}
           </p>
         </div>
 
@@ -95,11 +95,11 @@ export default function ClientLoginPage() {
           >
             <div className="flex flex-col gap-1">
               <label className="text-[10px] tracking-[0.16em] font-bold text-[#4b1f1f] uppercase">
-                Email hoặc tên đăng nhập
+                {t('auth.emailOrUsername')}
               </label>
               <Form.Item name="identity" rules={identityRules} noStyle>
                 <Input
-                  placeholder="Nhập thông tin đăng nhập"
+                  placeholder={t('auth.identityPlaceholder')}
                   className="!border-0 !border-b !border-[#ddd] !rounded-none !bg-transparent !px-0 !py-2.5 !shadow-none focus:!border-[#b0001a] hover:!border-[#b0001a] transition-colors"
                 />
               </Form.Item>
@@ -112,7 +112,7 @@ export default function ClientLoginPage() {
           >
             <div className="flex flex-col gap-1">
               <label className="text-[10px] tracking-[0.16em] font-bold text-[#4b1f1f] uppercase">
-                Mật khẩu
+                {t('auth.password')}
               </label>
               <Form.Item name="password" rules={passwordRules} noStyle>
                 <Input.Password
@@ -126,13 +126,13 @@ export default function ClientLoginPage() {
           {/* Remember + Forgot */}
           <div className="flex items-center justify-between mt-1 mb-5">
             <Checkbox className="text-[13px] text-[#5f5f61]">
-              Ghi nhớ đăng nhập
+              {t('auth.rememberMe')}
             </Checkbox>
             <Link
               to="/auth/login"
               className="auth-hover-link text-[12px] font-semibold no-underline"
             >
-              Quên mật khẩu?
+              {t('auth.forgotPassword')}
             </Link>
           </div>
 
@@ -144,7 +144,7 @@ export default function ClientLoginPage() {
             iconPosition="end"
             className="client-auth-action-btn !w-full !h-[52px] !border-none !rounded-lg !font-bold !text-[15px] !tracking-wide !text-white"
           >
-            Đăng nhập
+            {t('common.login')}
           </Button>
         </Form>
 
@@ -152,7 +152,7 @@ export default function ClientLoginPage() {
         <div className="relative flex items-center my-5">
           <div className="flex-1 h-px bg-[#ebebeb]" />
           <span className="mx-3 text-[10px] tracking-[0.2em] text-[#a8a8ad] uppercase font-medium">
-            Hoặc tiếp tục với
+            {t('auth.orContinueWith')}
           </span>
           <div className="flex-1 h-px bg-[#ebebeb]" />
         </div>
@@ -185,12 +185,12 @@ export default function ClientLoginPage() {
         {/* Bottom links */}
         <div className="space-y-2 text-center">
           <p className="text-[13px] text-[#5f5f61]">
-            Chưa có tài khoản?{' '}
+            {t('auth.noAccount')}{' '}
             <Link
               to={registerHref}
               className="auth-hover-link font-bold no-underline"
             >
-              Đăng ký ngay
+              {t('auth.registerNow')}
             </Link>
           </p>
           <p className="text-[12px] text-[#a0a0a5]">
@@ -198,7 +198,7 @@ export default function ClientLoginPage() {
               to="/"
               className="auth-hover-link auth-hover-link--muted font-semibold no-underline"
             >
-              ← Vào trang chủ
+              {t('auth.backHome')}
             </Link>
           </p>
         </div>
