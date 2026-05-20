@@ -166,6 +166,48 @@ const defaultCareerContent = {
     experienceOptions: ['Chưa có kinh nghiệm', 'Dưới 1 năm', '1-2 năm', 'Trên 2 năm'],
     referralOptions: ['Website Sakura', 'Facebook', 'LinkedIn', 'Bạn bè giới thiệu', 'Khác'],
     uploadFormats: 'PDF, DOC, DOCX (Tối đa 5MB)',
+    fields: {
+      fullName: { label: 'Họ và tên *', placeholder: 'Nhập họ và tên', requiredMessage: 'Vui lòng nhập họ và tên' },
+      email: { label: 'Email *', placeholder: 'example@email.com', requiredMessage: 'Vui lòng nhập email', invalidMessage: 'Email không hợp lệ' },
+      phone: { label: 'Số điện thoại *', placeholder: '0901 234 567', requiredMessage: 'Vui lòng nhập số điện thoại' },
+      birthDate: { label: 'Ngày sinh', placeholder: 'DD/MM/YYYY' },
+      address: { label: 'Địa chỉ', placeholder: 'Nhập địa chỉ hiện tại' },
+      nationality: { label: 'Quốc tịch', placeholder: 'Chọn quốc tịch' },
+      linkedIn: { label: 'LinkedIn (nếu có)', placeholder: 'https://linkedin.com/in/yourprofile' },
+      position: { label: 'Vị trí ứng tuyển *', placeholder: 'Chọn vị trí', requiredMessage: 'Vui lòng chọn vị trí ứng tuyển' },
+      workType: { label: 'Loại hình công việc *', requiredMessage: 'Vui lòng chọn loại hình công việc' },
+      experience: { label: 'Kinh nghiệm làm việc *', placeholder: 'Chọn kinh nghiệm', requiredMessage: 'Vui lòng chọn kinh nghiệm' },
+      expectedSalary: { label: 'Mức lương mong muốn', placeholder: 'Nhập mức lương mong muốn' },
+      availableStartDate: { label: 'Ngày có thể bắt đầu', placeholder: 'DD/MM/YYYY' },
+      referralSource: { label: 'Nguồn thông tin bạn biết đến vị trí này *', placeholder: 'Chọn nguồn', requiredMessage: 'Vui lòng chọn nguồn thông tin' },
+      resume: { label: 'CV / Resume *', requiredMessage: 'Vui lòng tải lên CV / Resume' },
+      introductionLetter: { label: 'Thư giới thiệu (nếu có)' },
+      coverLetter: { placeholder: 'Nhập thư ngỏ của bạn...' },
+    },
+  },
+  ui: {
+    jobsTitle: 'Các Vị Trí Đang Tuyển Dụng',
+    jobsDescription: 'Khám phá các cơ hội nghề nghiệp hấp dẫn và trở thành một phần của hành trình đổi mới cùng Sakura.',
+    showAllJobsLabel: 'Xem tất cả vị trí tuyển dụng',
+    collapseJobsLabel: 'Thu gọn vị trí tuyển dụng',
+    applyButtonLabel: 'Ứng Tuyển Ngay',
+    compactApplyButtonLabel: 'Ứng tuyển',
+    jobDescriptionLabel: 'Mô tả công việc:',
+    jobRequirementsLabel: 'Yêu cầu:',
+    jobBenefitsLabel: 'Quyền lợi:',
+    hotlineLabel: 'Hotline',
+    applicationSuccessMessage: 'Đã ứng tuyển thành công',
+    applicationErrorMessage: 'Gửi ứng tuyển thất bại. Vui lòng thử lại.',
+    modalEyebrow: 'Ứng tuyển vị trí',
+    modalFallbackTitle: 'Vị trí tuyển dụng',
+    personalInfoTitle: 'Thông tin cá nhân',
+    applicationInfoTitle: 'Thông tin ứng tuyển',
+    applicationFilesTitle: 'Hồ sơ ứng tuyển',
+    coverLetterTitle: 'Thư ngỏ (tùy chọn)',
+    noteTitle: 'Lưu ý',
+    dragUploadText: 'Kéo thả file vào đây hoặc',
+    chooseFileLabel: 'Chọn file',
+    submitApplicationLabel: 'Gửi Ứng Tuyển',
   },
 }
 
@@ -189,6 +231,7 @@ export default function CareerPage() {
   const featuredJobs = pageContent.featuredJobs || defaultCareerContent.featuredJobs
   const extraJobs = pageContent.extraJobs || defaultCareerContent.extraJobs
   const applicationForm = pageContent.applicationForm || defaultCareerContent.applicationForm
+  const ui = { ...defaultCareerContent.ui, ...(pageContent.ui || {}) }
   const [showAllJobs, setShowAllJobs] = useState(false)
   const [selectedJob, setSelectedJob] = useState(null)
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false)
@@ -241,10 +284,10 @@ export default function CareerPage() {
     try {
       setIsSubmitting(true)
       await submitCareerApplication(payload)
-      message.success('Đã ứng tuyển thành công')
+      message.success(ui.applicationSuccessMessage)
       closeApplyModal()
     } catch (error) {
-      message.error(error?.message || 'Gửi ứng tuyển thất bại. Vui lòng thử lại.')
+      message.error(error?.message || ui.applicationErrorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -283,16 +326,16 @@ export default function CareerPage() {
       <section className="mx-auto max-w-7xl px-5 py-12 md:px-8 md:py-16 xl:px-10">
         <div className="text-center">
           <Title level={2} className="!mb-3 !text-2xl !font-black !uppercase !text-[#111827] md:!text-3xl">
-            Các Vị Trí Đang Tuyển Dụng
+            {ui.jobsTitle}
           </Title>
           <Paragraph className="!mx-auto !mb-0 !max-w-2xl !text-sm !leading-6 !text-slate-500">
-            Khám phá các cơ hội nghề nghiệp hấp dẫn và trở thành một phần của hành trình đổi mới cùng Sakura.
+            {ui.jobsDescription}
           </Paragraph>
         </div>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-3">
           {featuredJobs.map((job) => (
-            <FeaturedJobCard key={job.title} job={job} onApply={openApplyModal} />
+            <FeaturedJobCard key={job.title} job={job} onApply={openApplyModal} ui={ui} />
           ))}
         </div>
 
@@ -304,14 +347,14 @@ export default function CareerPage() {
             icon={showAllJobs ? <UpOutlined /> : <DownOutlined />}
             iconPosition="end"
           >
-            {showAllJobs ? 'Thu gọn vị trí tuyển dụng' : 'Xem tất cả vị trí tuyển dụng'}
+            {showAllJobs ? ui.collapseJobsLabel : ui.showAllJobsLabel}
           </Button>
         </div>
 
         {showAllJobs ? (
           <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {extraJobs.map((job) => (
-              <CompactJobCard key={job.title} job={job} onApply={openApplyModal} />
+              <CompactJobCard key={job.title} job={job} onApply={openApplyModal} ui={ui} />
             ))}
           </div>
         ) : null}
@@ -340,7 +383,7 @@ export default function CareerPage() {
             </span>
             <span className="flex items-center gap-2">
               <PhoneOutlined className="text-[#d8001e]" />
-              Hotline: {application.hotline}
+              {ui.hotlineLabel}: {application.hotline}
             </span>
           </div>
         </div>
@@ -354,6 +397,7 @@ export default function CareerPage() {
         extraJobs={extraJobs}
         applicationForm={applicationForm}
         privacyNote={application.privacyNote}
+        ui={ui}
         submitting={isSubmitting}
         onCancel={closeApplyModal}
         onFinish={handleApplySubmit}
@@ -362,7 +406,7 @@ export default function CareerPage() {
   )
 }
 
-function FeaturedJobCard({ job, onApply }) {
+function FeaturedJobCard({ job, onApply, ui = defaultCareerContent.ui }) {
   return (
     <Card
       className="h-full !rounded-lg !border-[#eee3e3] !bg-white !shadow-[0_12px_30px_rgba(17,24,39,0.06)] transition-all duration-300 hover:!-translate-y-1 hover:!border-[#ffc7cf] hover:!shadow-[0_18px_38px_rgba(216,0,30,0.10)]"
@@ -379,9 +423,9 @@ function FeaturedJobCard({ job, onApply }) {
           {job.title}
         </Title>
       </div>
-      <JobSection title="Mô tả công việc:" items={job.highlights} />
-      <JobSection title="Yêu cầu:" items={job.goodFit} />
-      <JobSection title="Quyền lợi:" items={job.benefits} />
+      <JobSection title={ui.jobDescriptionLabel} items={job.highlights} />
+      <JobSection title={ui.jobRequirementsLabel} items={job.goodFit} />
+      <JobSection title={ui.jobBenefitsLabel} items={job.benefits} />
       <Button
         type="text"
         onClick={() => onApply(job)}
@@ -389,7 +433,7 @@ function FeaturedJobCard({ job, onApply }) {
         icon={<ArrowRightOutlined />}
         iconPosition="end"
       >
-        Ứng Tuyển Ngay
+        {ui.applyButtonLabel}
       </Button>
     </Card>
   )
@@ -411,7 +455,7 @@ function JobSection({ title, items }) {
   )
 }
 
-function CompactJobCard({ job, onApply }) {
+function CompactJobCard({ job, onApply, ui = defaultCareerContent.ui }) {
   return (
     <Card
       className="h-full !rounded-xl !border-[#eee3e3] !bg-white !shadow-[0_10px_28px_rgba(17,24,39,0.05)] transition-all duration-300 hover:!-translate-y-1 hover:!border-[#ffc7cf] hover:!shadow-[0_18px_38px_rgba(216,0,30,0.10)]"
@@ -438,7 +482,7 @@ function CompactJobCard({ job, onApply }) {
             icon={<ArrowRightOutlined />}
             iconPosition="end"
           >
-            Ứng tuyển
+            {ui.compactApplyButtonLabel}
           </Button>
         </div>
       </div>
@@ -465,6 +509,7 @@ function ApplicationModal({
   extraJobs,
   applicationForm,
   privacyNote,
+  ui,
   submitting,
   onCancel,
   onFinish,
@@ -473,6 +518,11 @@ function ApplicationModal({
     value: job.title,
     label: job.title,
   }))
+  const fieldContent = {
+    ...(defaultCareerContent.applicationForm.fields || {}),
+    ...(applicationForm.fields || {}),
+  }
+  const getField = (key) => fieldContent[key] || {}
 
   return (
     <Modal
@@ -487,14 +537,14 @@ function ApplicationModal({
       <div className="px-1 py-3 sm:px-4">
         <div className="mb-7 text-center">
           <Text className="!text-sm !font-black !uppercase !tracking-[0.12em] !text-[#d8001e]">
-            Ứng tuyển vị trí
+            {ui.modalEyebrow}
           </Text>
           <div className="mt-4 flex items-center justify-center gap-4">
             <span className="grid h-12 w-12 place-items-center rounded-full bg-[#fff1f3] text-xl text-[#d8001e]">
               {JOB_ICON_MAP[selectedJob?.iconKey] || <CustomerServiceOutlined />}
             </span>
             <Title level={2} className="!mb-0 !text-xl !font-black !text-[#d8001e] md:!text-2xl">
-              {selectedJob?.title || 'Vị trí tuyển dụng'}
+              {selectedJob?.title || ui.modalFallbackTitle}
             </Title>
           </div>
         </div>
@@ -506,79 +556,79 @@ function ApplicationModal({
           className="career-application-form"
           requiredMark={false}
         >
-          <SectionTitle>Thông tin cá nhân</SectionTitle>
+          <SectionTitle>{ui.personalInfoTitle}</SectionTitle>
           <div className="grid gap-x-6 md:grid-cols-2">
-            <Form.Item name="fullName" label="Họ và tên *" rules={[{ required: true, message: 'Vui lòng nhập họ và tên' }]}>
-              <Input placeholder="Nhập họ và tên" />
+            <Form.Item name="fullName" label={getField('fullName').label} rules={[{ required: true, message: getField('fullName').requiredMessage }]}>
+              <Input placeholder={getField('fullName').placeholder} />
             </Form.Item>
-            <Form.Item name="email" label="Email *" rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}>
-              <Input placeholder="example@email.com" />
+            <Form.Item name="email" label={getField('email').label} rules={[{ required: true, message: getField('email').requiredMessage }, { type: 'email', message: getField('email').invalidMessage }]}>
+              <Input placeholder={getField('email').placeholder} />
             </Form.Item>
-            <Form.Item name="phone" label="Số điện thoại *" rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}>
-              <Input placeholder="0901 234 567" />
+            <Form.Item name="phone" label={getField('phone').label} rules={[{ required: true, message: getField('phone').requiredMessage }]}>
+              <Input placeholder={getField('phone').placeholder} />
             </Form.Item>
-            <Form.Item name="birthDate" label="Ngày sinh">
-              <DatePicker className="!w-full" format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
+            <Form.Item name="birthDate" label={getField('birthDate').label}>
+              <DatePicker className="!w-full" format="DD/MM/YYYY" placeholder={getField('birthDate').placeholder} />
             </Form.Item>
-            <Form.Item name="address" label="Địa chỉ" className="md:col-span-2">
-              <Input placeholder="Nhập địa chỉ hiện tại" />
+            <Form.Item name="address" label={getField('address').label} className="md:col-span-2">
+              <Input placeholder={getField('address').placeholder} />
             </Form.Item>
-            <Form.Item name="nationality" label="Quốc tịch">
+            <Form.Item name="nationality" label={getField('nationality').label}>
               <Select
-                placeholder="Chọn quốc tịch"
+                placeholder={getField('nationality').placeholder}
                 options={applicationForm.nationalityOptions.map((value) => ({ value, label: value }))}
               />
             </Form.Item>
-            <Form.Item name="linkedIn" label="LinkedIn (nếu có)">
-              <Input placeholder="https://linkedin.com/in/yourprofile" />
+            <Form.Item name="linkedIn" label={getField('linkedIn').label}>
+              <Input placeholder={getField('linkedIn').placeholder} />
             </Form.Item>
           </div>
 
-          <SectionTitle>Thông tin ứng tuyển</SectionTitle>
+          <SectionTitle>{ui.applicationInfoTitle}</SectionTitle>
           <div className="grid gap-x-6 md:grid-cols-2">
-            <Form.Item name="position" label="Vị trí ứng tuyển *" rules={[{ required: true, message: 'Vui lòng chọn vị trí ứng tuyển' }]}>
-              <Select placeholder="Chọn vị trí" options={positionOptions} />
+            <Form.Item name="position" label={getField('position').label} rules={[{ required: true, message: getField('position').requiredMessage }]}>
+              <Select placeholder={getField('position').placeholder} options={positionOptions} />
             </Form.Item>
-            <Form.Item name="workType" label="Loại hình công việc *" rules={[{ required: true, message: 'Vui lòng chọn loại hình công việc' }]}>
+            <Form.Item name="workType" label={getField('workType').label} rules={[{ required: true, message: getField('workType').requiredMessage }]}>
               <Radio.Group>
                 <Radio value="full-time">Full-time</Radio>
                 <Radio value="part-time">Part-time</Radio>
               </Radio.Group>
             </Form.Item>
-            <Form.Item name="experience" label="Kinh nghiệm làm việc *" rules={[{ required: true, message: 'Vui lòng chọn kinh nghiệm' }]}>
+            <Form.Item name="experience" label={getField('experience').label} rules={[{ required: true, message: getField('experience').requiredMessage }]}>
               <Select
-                placeholder="Chọn kinh nghiệm"
+                placeholder={getField('experience').placeholder}
                 options={applicationForm.experienceOptions.map((value) => ({ value, label: value }))}
               />
             </Form.Item>
-            <Form.Item name="expectedSalary" label="Mức lương mong muốn">
-              <Input placeholder="Nhập mức lương mong muốn" />
+            <Form.Item name="expectedSalary" label={getField('expectedSalary').label}>
+              <Input placeholder={getField('expectedSalary').placeholder} />
             </Form.Item>
-            <Form.Item name="availableStartDate" label="Ngày có thể bắt đầu">
-              <DatePicker className="!w-full" format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
+            <Form.Item name="availableStartDate" label={getField('availableStartDate').label}>
+              <DatePicker className="!w-full" format="DD/MM/YYYY" placeholder={getField('availableStartDate').placeholder} />
             </Form.Item>
-            <Form.Item name="referralSource" label="Nguồn thông tin bạn biết đến vị trí này *" rules={[{ required: true, message: 'Vui lòng chọn nguồn thông tin' }]}>
+            <Form.Item name="referralSource" label={getField('referralSource').label} rules={[{ required: true, message: getField('referralSource').requiredMessage }]}>
               <Select
-                placeholder="Chọn nguồn"
+                placeholder={getField('referralSource').placeholder}
                 options={applicationForm.referralOptions.map((value) => ({ value, label: value }))}
               />
             </Form.Item>
           </div>
 
-          <SectionTitle>Hồ sơ ứng tuyển</SectionTitle>
+          <SectionTitle>{ui.applicationFilesTitle}</SectionTitle>
           <div className="grid gap-6 md:grid-cols-2">
             <Form.Item
               name="resume"
-              label="CV / Resume *"
+              label={getField('resume').label}
               valuePropName="fileList"
               getValueFromEvent={uploadValueFromEvent}
-              rules={[{ required: true, message: 'Vui lòng tải lên CV / Resume' }]}
+              rules={[{ required: true, message: getField('resume').requiredMessage }]}
             >
               <Upload.Dragger {...uploadProps}>
                 <UploadOutlined className="!text-2xl !text-[#d8001e]" />
-                <Text className="!mt-3 !block !font-bold !text-slate-700">Kéo thả file vào đây hoặc</Text>
+                <Text className="!mt-3 !block !font-bold !text-slate-700">{ui.dragUploadText}</Text>
                 <Button className="!mt-3 !h-9 !rounded-full !border-0 !bg-[#fff1f3] !px-5 !font-bold !text-[#d8001e]">
-                  Chọn file
+                  {ui.chooseFileLabel}
                 </Button>
                 <Paragraph className="!mt-3 !mb-0 !text-xs !text-slate-500">
                   Định dạng: {applicationForm.uploadFormats}
@@ -588,15 +638,15 @@ function ApplicationModal({
 
             <Form.Item
               name="introductionLetter"
-              label="Thư giới thiệu (nếu có)"
+              label={getField('introductionLetter').label}
               valuePropName="fileList"
               getValueFromEvent={uploadValueFromEvent}
             >
               <Upload.Dragger {...uploadProps}>
                 <UploadOutlined className="!text-2xl !text-[#d8001e]" />
-                <Text className="!mt-3 !block !font-bold !text-slate-700">Kéo thả file vào đây hoặc</Text>
+                <Text className="!mt-3 !block !font-bold !text-slate-700">{ui.dragUploadText}</Text>
                 <Button className="!mt-3 !h-9 !rounded-full !border-0 !bg-[#fff1f3] !px-5 !font-bold !text-[#d8001e]">
-                  Chọn file
+                  {ui.chooseFileLabel}
                 </Button>
                 <Paragraph className="!mt-3 !mb-0 !text-xs !text-slate-500">
                   Định dạng: {applicationForm.uploadFormats}
@@ -605,19 +655,19 @@ function ApplicationModal({
             </Form.Item>
           </div>
 
-          <SectionTitle>Thư ngỏ (tùy chọn)</SectionTitle>
+          <SectionTitle>{ui.coverLetterTitle}</SectionTitle>
           <Form.Item name="coverLetter">
             <Input.TextArea
               rows={5}
               maxLength={1000}
               showCount
-              placeholder="Nhập thư ngỏ của bạn..."
+              placeholder={getField('coverLetter').placeholder}
             />
           </Form.Item>
 
           <div className="mb-7 flex items-center gap-4 rounded-lg border border-[#ffd5dc] bg-[#fff7f8] px-5 py-4">
             <div className="min-w-0 flex-1">
-              <Text className="!block !font-black !uppercase !text-[#d8001e]">Lưu ý</Text>
+              <Text className="!block !font-black !uppercase !text-[#d8001e]">{ui.noteTitle}</Text>
               <Paragraph className="!mb-0 !mt-2 !text-sm !leading-6 !text-slate-600">
                 {privacyNote}
               </Paragraph>
@@ -633,7 +683,7 @@ function ApplicationModal({
               iconPosition="end"
               className="!h-12 !min-w-[260px] !rounded-lg !border-0 !bg-[#d8001e] !px-8 !font-black !text-white !shadow-[0_14px_28px_rgba(216,0,30,0.22)] hover:!bg-[#b00018]"
             >
-              Gửi Ứng Tuyển
+              {ui.submitApplicationLabel}
             </Button>
           </div>
         </Form>
