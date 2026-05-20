@@ -30,108 +30,43 @@ const defaultPrivacyContent = {
   },
 }
 
-const sections = [
-  {
-    id: 'intro',
-    number: '01.',
-    title: 'Giới thiệu chung',
-    icon: <FileProtectOutlined />,
-  },
-  {
-    id: 'collected-data',
-    number: '02.',
-    title: 'Dữ liệu chúng tôi thu thập',
-    icon: <DatabaseOutlined />,
-  },
-  {
-    id: 'usage-purpose',
-    number: '03.',
-    title: 'Mục đích sử dụng thông tin',
-    icon: <AimOutlined />,
-  },
-  {
-    id: 'security',
-    number: '04.',
-    title: 'Cam kết bảo mật dữ liệu',
-    icon: <SafetyCertificateOutlined />,
-  },
-  {
-    id: 'user-rights',
-    number: '05.',
-    title: 'Quyền kiểm soát của người dùng',
-    icon: <UserOutlined />,
-  },
-  {
-    id: 'updates',
-    number: '06.',
-    title: 'Cập nhật chính sách',
-    icon: <SyncOutlined />,
-  },
-  {
-    id: 'contact',
-    number: '07.',
-    title: 'Liên hệ',
-    icon: <MailOutlined />,
-  },
-]
-
-const dataItems = [
-  {
-    icon: <UserOutlined />,
-    title: 'Thông tin cá nhân (Được cung cấp tự nguyện)',
-    text: 'Khi quý khách đăng ký tài khoản, đặt bàn trực tuyến hoặc điền form liên hệ, chúng tôi sẽ yêu cầu các thông tin cơ bản bao gồm họ và tên, số điện thoại, địa chỉ email, yêu cầu đặc biệt khi đặt bàn và ghi chú dị ứng thực phẩm.',
-  },
-  {
-    icon: <CameraOutlined />,
-    title: 'Quyền truy cập Camera cho tính năng AR',
-    text: 'Để hiển thị mô hình món ăn 3D sống động ngay trên bàn thực tế, hệ thống WebXR/AR của chúng tôi sẽ yêu cầu quyền truy cập Camera trên thiết bị của quý khách.',
-  },
-  {
-    icon: <SafetyCertificateOutlined />,
-    title: 'Cam kết tuyệt đối về Camera',
-    text: 'Chúng tôi không thu thập, lưu trữ, ghi hình hoặc truyền tải bất kỳ dữ liệu hình ảnh hoặc video nào từ camera của quý khách về máy chủ.',
-  },
-  {
-    icon: <BarChartOutlined />,
-    title: 'Dữ liệu hệ thống và tương tác',
-    text: 'Hệ thống tự động ghi nhận các thông tin tiêu chuẩn gồm địa chỉ IP, loại trình duyệt, hệ điều hành, thời gian truy cập, lịch sử tương tác với menu AR và cookies ẩn danh để tối ưu tốc độ tải trang.',
-  },
-]
-
-const purposeItems = [
-  {
-    icon: <ForkOutlined />,
-    title: 'Vận hành dịch vụ',
-    text: 'Khởi tạo tính năng AR, xử lý yêu cầu đặt bàn, gửi email xác nhận và chuẩn bị trước các yêu cầu đặc biệt của khách tại nhà hàng.',
-  },
-  {
-    icon: <CustomerServiceOutlined />,
-    title: 'Hỗ trợ khách hàng',
-    text: 'Phản hồi nhanh chóng các thắc mắc, khiếu nại hoặc hỗ trợ kỹ thuật khi quý khách gặp sự cố với tính năng AR.',
-  },
-  {
-    icon: <SyncOutlined />,
-    title: 'Cải thiện nền tảng',
-    text: 'Dựa trên báo cáo lỗi và dữ liệu tương tác, đội ngũ phát triển sẽ tối ưu giao diện, hiệu suất và tốc độ tải của các tệp 3D.',
-  },
-  {
-    icon: <GiftOutlined />,
-    title: 'Truyền thông & Khuyến mãi',
-    text: 'Gửi thông tin về thực đơn mới, sự kiện ẩm thực hoặc mã giảm giá khi quý khách đồng ý nhận thông báo.',
-  },
-]
+const SECTION_ICON_MAP = {
+  aim: <AimOutlined />,
+  'bar-chart': <BarChartOutlined />,
+  camera: <CameraOutlined />,
+  'customer-service': <CustomerServiceOutlined />,
+  database: <DatabaseOutlined />,
+  'file-protect': <FileProtectOutlined />,
+  fork: <ForkOutlined />,
+  gift: <GiftOutlined />,
+  mail: <MailOutlined />,
+  phone: <PhoneOutlined />,
+  safety: <SafetyCertificateOutlined />,
+  sync: <SyncOutlined />,
+  user: <UserOutlined />,
+}
 
 export default function PrivacyPolicyPage() {
   const pageContent = useStaticPageContent('privacy-policy', defaultPrivacyContent)
   const hero = pageContent.hero || defaultPrivacyContent.hero
+  const sections = useMemo(
+    () =>
+      Array.isArray(pageContent.sections)
+        ? pageContent.sections.map((section) => ({
+            ...section,
+            icon: SECTION_ICON_MAP[section.iconKey] || <FileProtectOutlined />,
+          }))
+        : [],
+    [pageContent.sections],
+  )
   const sectionRefs = useRef({})
-  const [activeSection, setActiveSection] = useState(sections[0].id)
+  const [activeSection, setActiveSection] = useState(sections[0]?.id || 'intro')
   const [isContentExpanded, setIsContentExpanded] = useState(false)
 
-  const sectionIds = useMemo(() => sections.map((section) => section.id), [])
+  const sectionIds = useMemo(() => sections.map((section) => section.id), [sections])
   const visibleContentIds = useMemo(
     () => new Set((isContentExpanded ? sections : sections.slice(0, 6)).map((section) => section.id)),
-    [isContentExpanded],
+    [isContentExpanded, sections],
   )
 
   useEffect(() => {
@@ -188,6 +123,12 @@ export default function PrivacyPolicyPage() {
 
     setIsContentExpanded(true)
   }
+
+  useEffect(() => {
+    if (sections[0]?.id) {
+      setActiveSection((current) => current || sections[0].id)
+    }
+  }, [sections])
 
   return (
     <div className="bg-[#fffafa] text-[#1C1C1E]">
@@ -286,15 +227,9 @@ export default function PrivacyPolicyPage() {
             >
               <SectionHeading section={sections[0]} />
               <div className="space-y-4 text-base leading-8 text-slate-700">
-                <Paragraph>
-                  Chào mừng quý khách đến với Sakura Restaurant. Việc bảo vệ dữ liệu cá nhân và xây dựng niềm tin với khách hàng là một trong những ưu tiên hàng đầu của chúng tôi.
-                </Paragraph>
-                <Paragraph>
-                  Chính sách này giải thích chi tiết về các loại thông tin chúng tôi thu thập khi quý khách truy cập website, trải nghiệm thực đơn Thực tế tăng cường (AR), đặt bàn, gửi yêu cầu hỗ trợ hoặc sử dụng các dịch vụ trực tuyến khác.
-                </Paragraph>
-                <Paragraph>
-                  Bằng việc tiếp tục sử dụng website và dịch vụ của Sakura Restaurant, quý khách xác nhận đã đọc, hiểu và đồng ý với các nguyên tắc xử lý dữ liệu được trình bày dưới đây.
-                </Paragraph>
+                {(pageContent.introParagraphs || []).map((paragraph) => (
+                  <Paragraph key={paragraph}>{paragraph}</Paragraph>
+                ))}
               </div>
             </section>
             ) : null}
@@ -309,11 +244,11 @@ export default function PrivacyPolicyPage() {
             >
               <SectionHeading section={sections[1]} />
               <Paragraph className="!text-base !leading-8 !text-slate-700">
-                Chúng tôi chỉ thu thập những thông tin thực sự cần thiết nhằm mang lại trải nghiệm ẩm thực và dịch vụ tốt nhất cho quý khách.
+                {pageContent.collectedDataIntro}
               </Paragraph>
               <div className="mt-7 space-y-6">
-                {dataItems.map((item) => (
-                  <IconParagraph key={item.title} {...item} />
+                {(pageContent.dataItems || []).map((item) => (
+                  <IconParagraph key={item.title} {...item} icon={SECTION_ICON_MAP[item.iconKey] || <UserOutlined />} />
                 ))}
               </div>
             </section>
@@ -329,13 +264,13 @@ export default function PrivacyPolicyPage() {
             >
               <SectionHeading section={sections[2]} />
               <Paragraph className="!text-base !leading-8 !text-slate-700">
-                Toàn bộ dữ liệu thu thập được hệ thống của Sakura Restaurant xử lý cho các mục đích sau:
+                {pageContent.usagePurposeIntro}
               </Paragraph>
               <div className="mt-7 grid gap-5 md:grid-cols-2">
-                {purposeItems.map((item) => (
+                {(pageContent.purposeItems || []).map((item) => (
                   <Card key={item.title} className="!rounded-lg !border-[#eee3e3] !shadow-none transition-all duration-300 hover:!-translate-y-0.5 hover:!border-[#f0c8ce] hover:!shadow-[0_12px_26px_rgba(144,0,32,0.08)]" bodyStyle={{ padding: 24 }}>
                     <div className="flex gap-4">
-                      <span className="text-3xl text-[#d8001e]">{item.icon}</span>
+                      <span className="text-3xl text-[#d8001e]">{SECTION_ICON_MAP[item.iconKey] || <AimOutlined />}</span>
                       <div>
                         <Text className="!font-extrabold !text-[#1C1C1E]">{item.title}</Text>
                         <Paragraph className="!mt-2 !mb-0 !text-sm !leading-7 !text-slate-600">{item.text}</Paragraph>
@@ -356,11 +291,13 @@ export default function PrivacyPolicyPage() {
               className="scroll-mt-28 border-b border-[#eee3e3] py-12"
             >
               <SectionHeading section={sections[3]} />
-              <Paragraph className="!text-base !leading-8 !text-slate-700">
-                Chúng tôi áp dụng các tiêu chuẩn mã hóa bảo mật tiên tiến, bao gồm giao thức SSL/TLS trong quá trình truyền tải dữ liệu. Mọi thông tin cá nhân của quý khách được lưu trữ an toàn trong hệ cơ sở dữ liệu khép kín và chỉ những nhân sự có thẩm quyền mới được phép truy cập khi cần phục vụ công việc.
-              </Paragraph>
+              {(pageContent.securityParagraphs || []).map((paragraph) => (
+                <Paragraph key={paragraph} className="!text-base !leading-8 !text-slate-700">
+                  {paragraph}
+                </Paragraph>
+              ))}
               <Paragraph className="!mt-5 !text-base !font-extrabold !leading-8 !text-[#d8001e]">
-                Sakura Restaurant cam kết không bán, trao đổi hoặc chia sẻ trái phép dữ liệu cá nhân của quý khách cho bất kỳ bên thứ ba nào vì mục đích thương mại.
+                {pageContent.securityHighlight}
               </Paragraph>
             </section>
             ) : null}
@@ -375,15 +312,10 @@ export default function PrivacyPolicyPage() {
             >
               <SectionHeading section={sections[4]} />
               <Paragraph className="!text-base !leading-8 !text-slate-700">
-                Quý khách hoàn toàn làm chủ dữ liệu của mình. Theo quy định, quý khách có các quyền sau:
+                {pageContent.userRightsIntro}
               </Paragraph>
               <ul className="mt-5 space-y-3 pl-0 text-base text-slate-700">
-                {[
-                  'Yêu cầu trích xuất toàn bộ dữ liệu cá nhân mà chúng tôi đang lưu trữ.',
-                  'Yêu cầu chỉnh sửa hoặc cập nhật các thông tin không còn chính xác.',
-                  'Yêu cầu xóa bỏ hoàn toàn tài khoản và lịch sử đặt bàn khỏi hệ thống của Sakura Restaurant.',
-                  'Rút lại sự đồng ý nhận thông tin khuyến mãi bất kỳ lúc nào.',
-                ].map((item) => (
+                {(pageContent.userRights || []).map((item) => (
                   <li key={item} className="flex gap-3">
                     <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#d8001e]" />
                     <span>{item}</span>
@@ -402,12 +334,11 @@ export default function PrivacyPolicyPage() {
               className="scroll-mt-28 border-b border-[#eee3e3] py-12"
             >
               <SectionHeading section={sections[5]} />
-              <Paragraph className="!text-base !leading-8 !text-slate-700">
-                Chúng tôi có quyền điều chỉnh và cập nhật Chính sách bảo mật này theo thời gian để phù hợp với các thay đổi về công nghệ, quy định pháp luật hoặc quy trình vận hành dịch vụ.
-              </Paragraph>
-              <Paragraph className="!text-base !leading-8 !text-slate-700">
-                Các phiên bản cập nhật sẽ được thông báo rõ ràng trên website, kèm ngày hiệu lực mới. Trong trường hợp thay đổi quan trọng liên quan đến quyền riêng tư, Sakura Restaurant có thể gửi thông báo qua email hoặc hiển thị thông báo nổi bật trên hệ thống.
-              </Paragraph>
+              {(pageContent.updatesParagraphs || []).map((paragraph) => (
+                <Paragraph key={paragraph} className="!text-base !leading-8 !text-slate-700">
+                  {paragraph}
+                </Paragraph>
+              ))}
             </section>
             ) : null}
 
@@ -421,17 +352,15 @@ export default function PrivacyPolicyPage() {
             >
               <SectionHeading section={sections[6]} />
               <Paragraph className="!text-base !leading-8 !text-slate-700">
-                Nếu quý khách có bất kỳ câu hỏi nào về các điều khoản bảo mật, quy trình xử lý dữ liệu hoặc cách công nghệ AR của chúng tôi hoạt động, vui lòng liên hệ với bộ phận phụ trách về kỹ thuật qua:
+                {pageContent.contactIntro}
               </Paragraph>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <div className="flex items-center gap-3 rounded-lg bg-[#fff1f3] px-5 py-4 font-bold text-[#8B0000]">
-                  <MailOutlined />
-                  van.pa@tinasoft.vn - anh.nv5@tinasoft.vn
-                </div>
-                <div className="flex items-center gap-3 rounded-lg bg-[#fff1f3] px-5 py-4 font-bold text-[#8B0000]">
-                  <PhoneOutlined />
-                  Hotline: 0966 490 431
-                </div>
+                {(pageContent.contactMethods || []).map((item) => (
+                  <div key={item.text} className="flex items-center gap-3 rounded-lg bg-[#fff1f3] px-5 py-4 font-bold text-[#8B0000]">
+                    {SECTION_ICON_MAP[item.iconKey] || <MailOutlined />}
+                    {item.text}
+                  </div>
+                ))}
               </div>
             </section>
             ) : null}
@@ -471,7 +400,7 @@ function IconParagraph({ icon, title, text }) {
   return (
     <div className="flex gap-5">
       <span className="mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#fff1f3] text-lg text-[#d8001e]">
-        {icon}
+        {icon || SECTION_ICON_MAP.user}
       </span>
       <div>
         <Text className="!font-extrabold !text-[#1C1C1E]">{title}</Text>
