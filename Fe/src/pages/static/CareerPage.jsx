@@ -35,136 +35,160 @@ const defaultCareerContent = {
   application: {
     email: 'phunganhvan13122004@gmail.com',
     hotline: '0966 490 431',
+    title: 'Cách Thức Ứng Tuyển',
+    description: 'Vui lòng gửi CV và Portfolio nếu có qua email bên dưới với tiêu đề theo cú pháp:',
+    subjectFormat: '[ Vị Trí Ứng Tuyển ] - [ Họ Và Tên ]',
+    privacyNote:
+      'Bằng việc gửi đơn ứng tuyển, bạn đồng ý cho Sakura Restaurant lưu trữ và xử lý thông tin cá nhân của bạn cho mục đích tuyển dụng.',
+  },
+  featuredJobs: [
+    {
+      title: 'Nhân Viên Phục Vụ & Hướng Dẫn Viên AR',
+      type: 'Part-time / Full-time',
+      iconKey: 'customer-service',
+      highlights: [
+        'Chào đón và phục vụ khách hàng theo tiêu chuẩn Omotenashi.',
+        'Hướng dẫn khách sử dụng tính năng AR để trải nghiệm menu tương tác.',
+        'Giải đáp thắc mắc về các món ăn và chức năng công nghệ.',
+      ],
+      goodFit: [
+        'Ngoại hình sáng, giao tiếp tốt bằng Anh/V hoặc Nhật là lợi thế.',
+        'Quan tâm công nghệ và văn hóa Nhật Bản.',
+        'Kỹ năng xử lý tình huống linh hoạt.',
+      ],
+      benefits: [
+        'Mức lương cạnh tranh, service charge và tip.',
+        'Đào tạo chuyên sâu về AR và văn hóa ẩm thực Nhật Bản.',
+        'Môi trường làm việc hiện đại, năng động.',
+      ],
+    },
+    {
+      title: 'Đầu Bếp Chuyên Thớt / Sushi Chef',
+      type: 'Full-time',
+      iconKey: 'shop',
+      highlights: [
+        'Đảm nhiệm khu vực Sushi & Sashimi.',
+        'Phối hợp cùng bộ phận R&D để phát triển các món ăn mới phù hợp với hình ảnh AR.',
+        'Đảm bảo tiêu chuẩn vệ sinh an toàn thực phẩm tuyệt đối.',
+      ],
+      goodFit: [
+        'Kinh nghiệm tối thiểu 2 năm ở vị trí tương đương.',
+        'Kỹ năng dùng dao điêu luyện, am hiểu về hải sản tươi sống.',
+        'Tinh thần sáng tạo, sẵn sàng tiếp thu cái mới.',
+      ],
+      benefits: [
+        'Thu nhập hấp dẫn theo năng lực.',
+        'Cơ hội thăng tiến lên bếp trưởng.',
+        'Phúc lợi bảo hiểm, đồng phục và các chế độ theo hiện hành.',
+      ],
+    },
+    {
+      title: 'Thực Tập Sinh Lập Trình Web - Định Hướng AR/WebXR',
+      type: 'Internship',
+      iconKey: 'code',
+      highlights: [
+        'Tham gia phát triển và tối ưu nền tảng Web App của nhà hàng.',
+        'Nghiên cứu tích hợp các tính năng WebXR/WebAR trên mobile.',
+        'Hỗ trợ xử lý UI và nâng cấp giao diện người dùng.',
+      ],
+      goodFit: [
+        'Sinh viên năm 3, năm 4 chuyên ngành CNTT/Thiết kế tương tác.',
+        'Nắm chắc HTML, CSS, JavaScript cơ bản. Biết React/Three.js là lợi thế.',
+        'Tư duy logic tốt, tinh thần học hỏi cao.',
+      ],
+      benefits: [
+        'Hỗ trợ chi phí thực tập.',
+        'Được mentor bởi các kỹ sư giàu kinh nghiệm.',
+        'Cơ hội trở thành nhân viên chính thức sau khi tốt nghiệp.',
+      ],
+    },
+  ],
+  extraJobs: [
+    {
+      title: 'Quản Lý Nhà Hàng',
+      type: 'Full-time',
+      location: 'Hồ Chí Minh',
+      description: 'Quản lý vận hành, đội ngũ và trải nghiệm khách hàng theo tiêu chuẩn Sakura.',
+      iconKey: 'home',
+    },
+    {
+      title: 'Nhân Viên Marketing',
+      type: 'Full-time',
+      location: 'Hồ Chí Minh',
+      description: 'Lên kế hoạch truyền thông, quảng bá thương hiệu và các chiến dịch AR.',
+      iconKey: 'notification',
+    },
+    {
+      title: 'Nhân Viên R&D Ẩm Thực',
+      type: 'Full-time',
+      location: 'Hồ Chí Minh',
+      description: 'Nghiên cứu và phát triển món ăn mới kết hợp công nghệ AR và ẩm thực Nhật Bản.',
+      iconKey: 'experiment',
+    },
+    {
+      title: 'Nhân Viên IT Support',
+      type: 'Full-time',
+      location: 'Hồ Chí Minh',
+      description: 'Hỗ trợ kỹ thuật hệ thống AR, thiết bị và phần mềm trong nhà hàng.',
+      iconKey: 'laptop',
+    },
+    {
+      title: 'Thu Ngân',
+      type: 'Part-time',
+      location: 'Hồ Chí Minh',
+      description: 'Thanh toán, xuất hóa đơn và hỗ trợ khách hàng khi cần thiết.',
+      iconKey: 'wallet',
+    },
+    {
+      title: 'Tạp Vụ',
+      type: 'Part-time',
+      location: 'Hồ Chí Minh',
+      description: 'Giữ gìn vệ sinh khu vực làm việc, đảm bảo không gian sạch sẽ.',
+      iconKey: 'tool',
+    },
+    {
+      title: 'Runner (Phục Vụ Bếp)',
+      type: 'Part-time',
+      location: 'Hồ Chí Minh',
+      description: 'Hỗ trợ vận chuyển món ăn từ bếp ra khu vực phục vụ.',
+      iconKey: 'shop',
+    },
+    {
+      title: 'Thiết Kế 3D - AR Artist',
+      type: 'Full-time',
+      location: 'Hồ Chí Minh',
+      description: 'Thiết kế mô hình 3D món ăn và hiệu ứng AR ấn tượng cho trải nghiệm khách hàng.',
+      iconKey: 'code',
+    },
+  ],
+  applicationForm: {
+    nationalityOptions: ['Việt Nam', 'Nhật Bản', 'Khác'],
+    experienceOptions: ['Chưa có kinh nghiệm', 'Dưới 1 năm', '1-2 năm', 'Trên 2 năm'],
+    referralOptions: ['Website Sakura', 'Facebook', 'LinkedIn', 'Bạn bè giới thiệu', 'Khác'],
+    uploadFormats: 'PDF, DOC, DOCX (Tối đa 5MB)',
   },
 }
 
-const featuredJobs = [
-  {
-    title: 'Nhân Viên Phục Vụ & Hướng Dẫn Viên AR',
-    type: 'Part-time / Full-time',
-    icon: <CustomerServiceOutlined />,
-    highlights: [
-      'Chào đón và phục vụ khách hàng theo tiêu chuẩn Omotenashi.',
-      'Hướng dẫn khách sử dụng tính năng AR để trải nghiệm menu tương tác.',
-      'Giải đáp thắc mắc về các món ăn và chức năng công nghệ.',
-    ],
-    goodFit: [
-      'Ngoại hình sáng, giao tiếp tốt bằng Anh/V hoặc Nhật là lợi thế.',
-      'Quan tâm công nghệ và văn hóa Nhật Bản.',
-      'Kỹ năng xử lý tình huống linh hoạt.',
-    ],
-    benefits: [
-      'Mức lương cạnh tranh, service charge và tip.',
-      'Đào tạo chuyên sâu về AR và văn hóa ẩm thực Nhật Bản.',
-      'Môi trường làm việc hiện đại, năng động.',
-    ],
-  },
-  {
-    title: 'Đầu Bếp Chuyên Thớt / Sushi Chef',
-    type: 'Full-time',
-    icon: <ShopOutlined />,
-    highlights: [
-      'Đảm nhiệm khu vực Sushi & Sashimi.',
-      'Phối hợp cùng bộ phận R&D để phát triển các món ăn mới phù hợp với hình ảnh AR.',
-      'Đảm bảo tiêu chuẩn vệ sinh an toàn thực phẩm tuyệt đối.',
-    ],
-    goodFit: [
-      'Kinh nghiệm tối thiểu 2 năm ở vị trí tương đương.',
-      'Kỹ năng dùng dao điêu luyện, am hiểu về hải sản tươi sống.',
-      'Tinh thần sáng tạo, sẵn sàng tiếp thu cái mới.',
-    ],
-    benefits: [
-      'Thu nhập hấp dẫn theo năng lực.',
-      'Cơ hội thăng tiến lên bếp trưởng.',
-      'Phúc lợi bảo hiểm, đồng phục và các chế độ theo hiện hành.',
-    ],
-  },
-  {
-    title: 'Thực Tập Sinh Lập Trình Web - Định Hướng AR/WebXR',
-    type: 'Internship',
-    icon: <CodeOutlined />,
-    highlights: [
-      'Tham gia phát triển và tối ưu nền tảng Web App của nhà hàng.',
-      'Nghiên cứu tích hợp các tính năng WebXR/WebAR trên mobile.',
-      'Hỗ trợ xử lý UI và nâng cấp giao diện người dùng.',
-    ],
-    goodFit: [
-      'Sinh viên năm 3, năm 4 chuyên ngành CNTT/Thiết kế tương tác.',
-      'Nắm chắc HTML, CSS, JavaScript cơ bản. Biết React/Three.js là lợi thế.',
-      'Tư duy logic tốt, tinh thần học hỏi cao.',
-    ],
-    benefits: [
-      'Hỗ trợ chi phí thực tập.',
-      'Được mentor bởi các kỹ sư giàu kinh nghiệm.',
-      'Cơ hội trở thành nhân viên chính thức sau khi tốt nghiệp.',
-    ],
-  },
-]
-
-const extraJobs = [
-  {
-    title: 'Quản Lý Nhà Hàng',
-    type: 'Full-time',
-    location: 'Hồ Chí Minh',
-    description: 'Quản lý vận hành, đội ngũ và trải nghiệm khách hàng theo tiêu chuẩn Sakura.',
-    icon: <HomeOutlined />,
-  },
-  {
-    title: 'Nhân Viên Marketing',
-    type: 'Full-time',
-    location: 'Hồ Chí Minh',
-    description: 'Lên kế hoạch truyền thông, quảng bá thương hiệu và các chiến dịch AR.',
-    icon: <NotificationOutlined />,
-  },
-  {
-    title: 'Nhân Viên R&D Ẩm Thực',
-    type: 'Full-time',
-    location: 'Hồ Chí Minh',
-    description: 'Nghiên cứu và phát triển món ăn mới kết hợp công nghệ AR và ẩm thực Nhật Bản.',
-    icon: <ExperimentOutlined />,
-  },
-  {
-    title: 'Nhân Viên IT Support',
-    type: 'Full-time',
-    location: 'Hồ Chí Minh',
-    description: 'Hỗ trợ kỹ thuật hệ thống AR, thiết bị và phần mềm trong nhà hàng.',
-    icon: <LaptopOutlined />,
-  },
-  {
-    title: 'Thu Ngân',
-    type: 'Part-time',
-    location: 'Hồ Chí Minh',
-    description: 'Thanh toán, xuất hóa đơn và hỗ trợ khách hàng khi cần thiết.',
-    icon: <WalletOutlined />,
-  },
-  {
-    title: 'Tạp Vụ',
-    type: 'Part-time',
-    location: 'Hồ Chí Minh',
-    description: 'Giữ gìn vệ sinh khu vực làm việc, đảm bảo không gian sạch sẽ.',
-    icon: <ToolOutlined />,
-  },
-  {
-    title: 'Runner (Phục Vụ Bếp)',
-    type: 'Part-time',
-    location: 'Hồ Chí Minh',
-    description: 'Hỗ trợ vận chuyển món ăn từ bếp ra khu vực phục vụ.',
-    icon: <ShopOutlined />,
-  },
-  {
-    title: 'Thiết Kế 3D - AR Artist',
-    type: 'Full-time',
-    location: 'Hồ Chí Minh',
-    description: 'Thiết kế mô hình 3D món ăn và hiệu ứng AR ấn tượng cho trải nghiệm khách hàng.',
-    icon: <CodeOutlined />,
-  },
-]
+const JOB_ICON_MAP = {
+  code: <CodeOutlined />,
+  'customer-service': <CustomerServiceOutlined />,
+  experiment: <ExperimentOutlined />,
+  home: <HomeOutlined />,
+  laptop: <LaptopOutlined />,
+  notification: <NotificationOutlined />,
+  shop: <ShopOutlined />,
+  tool: <ToolOutlined />,
+  wallet: <WalletOutlined />,
+}
 
 export default function CareerPage() {
   const [form] = Form.useForm()
   const pageContent = useStaticPageContent('career', defaultCareerContent)
   const hero = pageContent.hero || defaultCareerContent.hero
   const application = pageContent.application || defaultCareerContent.application
+  const featuredJobs = pageContent.featuredJobs || defaultCareerContent.featuredJobs
+  const extraJobs = pageContent.extraJobs || defaultCareerContent.extraJobs
+  const applicationForm = pageContent.applicationForm || defaultCareerContent.applicationForm
   const [showAllJobs, setShowAllJobs] = useState(false)
   const [selectedJob, setSelectedJob] = useState(null)
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false)
@@ -299,14 +323,14 @@ export default function CareerPage() {
             <MailOutlined />
           </span>
           <Title level={2} className="!mt-5 !mb-3 !text-2xl !font-black !uppercase !text-[#111827]">
-            Cách Thức Ứng Tuyển
+            {application.title}
           </Title>
           <Paragraph className="!mx-auto !mb-6 !max-w-2xl !text-sm !leading-6 !text-slate-600">
-            Vui lòng gửi CV và Portfolio nếu có qua email bên dưới với tiêu đề theo cú pháp:
+            {application.description}
           </Paragraph>
           <div className="mx-auto max-w-2xl rounded-lg border border-[#f5d5da] bg-white px-5 py-5 text-left shadow-[0_12px_30px_rgba(17,24,39,0.06)]">
             <Text className="!font-black !uppercase !tracking-[0.14em] !text-[#d8001e]">
-              [ Vị Trí Ứng Tuyển ] - [ Họ Và Tên ]
+              {application.subjectFormat}
             </Text>
           </div>
           <div className="mt-7 flex flex-col items-center justify-center gap-4 text-sm font-bold text-slate-700 sm:flex-row sm:gap-8">
@@ -326,6 +350,10 @@ export default function CareerPage() {
         form={form}
         open={isApplyModalOpen}
         selectedJob={selectedJob}
+        featuredJobs={featuredJobs}
+        extraJobs={extraJobs}
+        applicationForm={applicationForm}
+        privacyNote={application.privacyNote}
         submitting={isSubmitting}
         onCancel={closeApplyModal}
         onFinish={handleApplySubmit}
@@ -345,7 +373,7 @@ function FeaturedJobCard({ job, onApply }) {
       </Tag>
       <div className="mb-4 flex items-start gap-4">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#fff1f3] text-2xl text-[#d8001e]">
-          {job.icon}
+          {JOB_ICON_MAP[job.iconKey] || <CustomerServiceOutlined />}
         </span>
         <Title level={3} className="!mb-0 !text-lg !font-black !leading-snug !text-[#111827]">
           {job.title}
@@ -391,7 +419,7 @@ function CompactJobCard({ job, onApply }) {
     >
       <div className="flex gap-4">
         <span className="grid h-12 w-12 shrink-0 place-items-center text-3xl text-[#ef2d3d]">
-          {job.icon}
+          {JOB_ICON_MAP[job.iconKey] || <ShopOutlined />}
         </span>
         <div className="min-w-0">
           <Title level={3} className="!mb-1 !text-lg !font-black !leading-snug !text-[#111827]">
@@ -429,12 +457,23 @@ const uploadProps = {
   accept: '.pdf,.doc,.docx',
 }
 
-const positionOptions = [...featuredJobs, ...extraJobs].map((job) => ({
-  value: job.title,
-  label: job.title,
-}))
+function ApplicationModal({
+  form,
+  open,
+  selectedJob,
+  featuredJobs,
+  extraJobs,
+  applicationForm,
+  privacyNote,
+  submitting,
+  onCancel,
+  onFinish,
+}) {
+  const positionOptions = [...featuredJobs, ...extraJobs].map((job) => ({
+    value: job.title,
+    label: job.title,
+  }))
 
-function ApplicationModal({ form, open, selectedJob, submitting, onCancel, onFinish }) {
   return (
     <Modal
       open={open}
@@ -452,7 +491,7 @@ function ApplicationModal({ form, open, selectedJob, submitting, onCancel, onFin
           </Text>
           <div className="mt-4 flex items-center justify-center gap-4">
             <span className="grid h-12 w-12 place-items-center rounded-full bg-[#fff1f3] text-xl text-[#d8001e]">
-              {selectedJob?.icon || <CustomerServiceOutlined />}
+              {JOB_ICON_MAP[selectedJob?.iconKey] || <CustomerServiceOutlined />}
             </span>
             <Title level={2} className="!mb-0 !text-xl !font-black !text-[#d8001e] md:!text-2xl">
               {selectedJob?.title || 'Vị trí tuyển dụng'}
@@ -487,11 +526,7 @@ function ApplicationModal({ form, open, selectedJob, submitting, onCancel, onFin
             <Form.Item name="nationality" label="Quốc tịch">
               <Select
                 placeholder="Chọn quốc tịch"
-                options={[
-                  { value: 'Việt Nam', label: 'Việt Nam' },
-                  { value: 'Nhật Bản', label: 'Nhật Bản' },
-                  { value: 'Khác', label: 'Khác' },
-                ]}
+                options={applicationForm.nationalityOptions.map((value) => ({ value, label: value }))}
               />
             </Form.Item>
             <Form.Item name="linkedIn" label="LinkedIn (nếu có)">
@@ -513,12 +548,7 @@ function ApplicationModal({ form, open, selectedJob, submitting, onCancel, onFin
             <Form.Item name="experience" label="Kinh nghiệm làm việc *" rules={[{ required: true, message: 'Vui lòng chọn kinh nghiệm' }]}>
               <Select
                 placeholder="Chọn kinh nghiệm"
-                options={[
-                  { value: 'Chưa có kinh nghiệm', label: 'Chưa có kinh nghiệm' },
-                  { value: 'Dưới 1 năm', label: 'Dưới 1 năm' },
-                  { value: '1-2 năm', label: '1-2 năm' },
-                  { value: 'Trên 2 năm', label: 'Trên 2 năm' },
-                ]}
+                options={applicationForm.experienceOptions.map((value) => ({ value, label: value }))}
               />
             </Form.Item>
             <Form.Item name="expectedSalary" label="Mức lương mong muốn">
@@ -530,13 +560,7 @@ function ApplicationModal({ form, open, selectedJob, submitting, onCancel, onFin
             <Form.Item name="referralSource" label="Nguồn thông tin bạn biết đến vị trí này *" rules={[{ required: true, message: 'Vui lòng chọn nguồn thông tin' }]}>
               <Select
                 placeholder="Chọn nguồn"
-                options={[
-                  { value: 'Website Sakura', label: 'Website Sakura' },
-                  { value: 'Facebook', label: 'Facebook' },
-                  { value: 'LinkedIn', label: 'LinkedIn' },
-                  { value: 'Bạn bè giới thiệu', label: 'Bạn bè giới thiệu' },
-                  { value: 'Khác', label: 'Khác' },
-                ]}
+                options={applicationForm.referralOptions.map((value) => ({ value, label: value }))}
               />
             </Form.Item>
           </div>
@@ -557,7 +581,7 @@ function ApplicationModal({ form, open, selectedJob, submitting, onCancel, onFin
                   Chọn file
                 </Button>
                 <Paragraph className="!mt-3 !mb-0 !text-xs !text-slate-500">
-                  Định dạng: PDF, DOC, DOCX (Tối đa 5MB)
+                  Định dạng: {applicationForm.uploadFormats}
                 </Paragraph>
               </Upload.Dragger>
             </Form.Item>
@@ -575,7 +599,7 @@ function ApplicationModal({ form, open, selectedJob, submitting, onCancel, onFin
                   Chọn file
                 </Button>
                 <Paragraph className="!mt-3 !mb-0 !text-xs !text-slate-500">
-                  Định dạng: PDF, DOC, DOCX (Tối đa 5MB)
+                  Định dạng: {applicationForm.uploadFormats}
                 </Paragraph>
               </Upload.Dragger>
             </Form.Item>
@@ -595,7 +619,7 @@ function ApplicationModal({ form, open, selectedJob, submitting, onCancel, onFin
             <div className="min-w-0 flex-1">
               <Text className="!block !font-black !uppercase !text-[#d8001e]">Lưu ý</Text>
               <Paragraph className="!mb-0 !mt-2 !text-sm !leading-6 !text-slate-600">
-                Bằng việc gửi đơn ứng tuyển, bạn đồng ý cho Sakura Restaurant lưu trữ và xử lý thông tin cá nhân của bạn cho mục đích tuyển dụng.
+                {privacyNote}
               </Paragraph>
             </div>
           </div>

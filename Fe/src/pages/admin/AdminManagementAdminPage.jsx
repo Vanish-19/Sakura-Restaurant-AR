@@ -16,14 +16,14 @@ import {
   Select,
 } from 'antd'
 import {
-  FilterOutlined,
   PlusOutlined,
   ReloadOutlined,
-  SafetyOutlined,
+  SearchOutlined,
   UserAddOutlined,
-  UsergroupAddOutlined,
 } from '@ant-design/icons'
 import { useEffect, useMemo, useState } from 'react'
+import AdminSectionHeader from '../../components/molecules/admin/AdminSectionHeader.jsx'
+import AdminStatCard from '../../components/molecules/admin/AdminStatCard.jsx'
 import {
   getAdminDetail,
   getAllAdmins,
@@ -60,6 +60,8 @@ export default function AdminManagementAdminPage() {
   const [viewMode, setViewMode] = useState('all')
   const [admins, setAdmins] = useState([])
   const [stats, setStats] = useState({ total: 0, active: 0, alerts: 0 })
+  const [searchText, setSearchText] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
@@ -185,9 +187,20 @@ export default function AdminManagementAdminPage() {
   }
 
   const filteredAccounts = useMemo(() => {
-    if (viewMode === 'all') return admins
-    return admins.filter((item) => item.role === viewMode)
-  }, [viewMode, admins])
+    const keyword = String(searchText || '').trim().toLowerCase()
+
+    return admins.filter((item) => {
+      const matchesViewMode = viewMode === 'all' ? true : item.role === viewMode
+      const matchesStatus = statusFilter === 'all' ? true : String(item.status || '').toLowerCase() === statusFilter
+      const matchesKeyword =
+        keyword.length === 0 ||
+        String(item?.name || '').toLowerCase().includes(keyword) ||
+        String(item?.email || '').toLowerCase().includes(keyword) ||
+        String(item?.username || '').toLowerCase().includes(keyword)
+
+      return matchesViewMode && matchesStatus && matchesKeyword
+    })
+  }, [admins, searchText, statusFilter, viewMode])
 
   const columns = [
     {
@@ -281,48 +294,64 @@ export default function AdminManagementAdminPage() {
   ]
 
   return (
-    <div className="space-y-5 pb-20">
-      <section className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-[44px] leading-[0.95] font-black tracking-[-0.03em] text-zinc-900">Quản lý tài khoản admin</h1>
-          <p className="mt-2 max-w-xl text-sm text-zinc-500">
-            Theo dõi phân quyền, phiên đăng nhập và mức độ an toàn của đội vận hành theo thời gian thực.
-          </p>
-        </div>
-        <Segmented options={viewModes} value={viewMode} onChange={setViewMode} className="!rounded-lg !bg-zinc-100 !p-1" />
-      </section>
+    <div className="admin-page pb-20">
+      <AdminSectionHeader
+        eyebrow="Security Desk"
+        title="Quản lý tài khoản admin"
+        subtitle="Theo dõi phân quyền, phiên đăng nhập và mức độ an toàn của đội vận hành theo cùng chuẩn trình bày với khu nội dung."
+        action={
+          <Space wrap size={10}>
+            <Segmented options={viewModes} value={viewMode} onChange={setViewMode} className="!rounded-lg !bg-zinc-100 !p-1" />
+            <Button
+              icon={<PlusOutlined />}
+              type="primary"
+              className="admin-primary-btn"
+              onClick={() => setIsModalOpen(true)}
+              disabled={!isSuperAdmin}
+            >
+              Tạo admin
+            </Button>
+          </Space>
+        }
+      />
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {statsItems.map((stat, idx) => (
-          <Card
-            key={stat.key}
-            bordered={false}
-            className="!rounded-xl !border !border-zinc-200 !shadow-none"
-            bodyStyle={{ padding: 18 }}
-          >
-            <div className={`mb-3 h-1.5 w-8 rounded-full ${idx === 1 ? 'bg-black' : 'bg-rose-600'}`} />
-            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">{stat.label}</div>
-            <div className="mt-2 text-[34px] leading-none font-black tracking-tight text-zinc-900">{stat.value}</div>
-            <p className="mt-1 text-xs font-medium text-rose-600">{stat.note}</p>
-          </Card>
+          <AdminStatCard key={stat.key} title={stat.label} value={stat.value} note={stat.note} accent={idx === 1} />
         ))}
       </section>
 
       <section className="grid grid-cols-1 gap-4 2xl:grid-cols-12">
         <Card className="!rounded-2xl !border !border-zinc-200 !shadow-none 2xl:col-span-9" bodyStyle={{ padding: 0 }}>
-          <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
-            <Space size={10}>
-              <h3 className="m-0 text-[22px] leading-none font-extrabold tracking-tight text-zinc-900">Admin Accounts</h3>
-              <Tag className="!rounded-full !border-rose-200 !bg-rose-50 !px-2 !py-0.5 !text-[10px] !font-bold !tracking-wide !text-rose-600">
-                TRỰC TIẾP
-              </Tag>
-            </Space>
+          <div className="admin-toolbar">
+            <div className="admin-toolbar__meta">
+              <h3 className="admin-toolbar__title">Tài khoản quản trị</h3>
+              <p className="admin-toolbar__description">Tra cứu nhanh theo tên, email, username và lọc trạng thái trực tiếp trước khi thao tác.</p>
+            </div>
 
-            <Space size={10}>
+            <div className="admin-toolbar__controls">
+              <Input
+                allowClear
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+                placeholder="Tìm tên, email hoặc username..."
+                prefix={<SearchOutlined className="text-zinc-400" />}
+                className="admin-toolbar__search"
+              />
+              <Segmented
+                options={[
+                  { label: 'Tất cả', value: 'all' },
+                  { label: 'Active', value: 'active' },
+                  { label: 'Inactive', value: 'inactive' },
+                ]}
+                value={statusFilter}
+                onChange={setStatusFilter}
+                className="!rounded-lg !bg-zinc-100 !p-1"
+              />
               <Tooltip title="Làm mới">
                 <Button onClick={fetchData} shape="circle" icon={<ReloadOutlined />} className="!border-zinc-200 !text-zinc-600" />
               </Tooltip>
-            </Space>
+            </div>
           </div>
 
           <div className="px-3 pb-3 pt-1">

@@ -29,93 +29,104 @@ const defaultPressKitContent = {
     backgroundImage: `${pressKitPath}/bgheadpress.png`,
   },
   mediaContact: {
-    representative: 'Ms. Linh Nguyen',
-    email: 'press@sakura-restaurant.com',
-    hotline: '+84 (0) 90 123 4567',
+    representative: 'Mr Phung Van',
+    email: 'van.pa@tinasoft.vn',
+    hotline: '+84 (0) 966 490 431',
+  },
+  overviewCards: [
+    {
+      iconKey: 'safety-certificate',
+      title: 'Về Sakura Restaurant',
+      text: 'Sakura là biểu tượng của sự giao thoa tinh tế giữa nghệ thuật ẩm thực Nhật Bản truyền thống và công nghệ tương tác hiện đại.',
+    },
+    {
+      iconKey: 'calendar',
+      title: 'Thành lập',
+      value: '2024',
+    },
+    {
+      iconKey: 'share-alt',
+      title: 'Mô hình',
+      value: 'Fine Dining & AR Experience',
+    },
+    {
+      title: 'Công nghệ cốt lõi',
+      value: 'AR Menu & Projection Mapping',
+      featured: true,
+    },
+  ],
+  logoAssets: [
+    { label: 'Primary Red', brandClass: 'text-[#e0001d]', bgClass: 'bg-white', format: 'SVG' },
+    { label: 'Monochrome Dark', brandClass: 'text-[#111111]', bgClass: 'bg-white', format: 'SVG' },
+    { label: 'Monochrome Light', brandClass: 'text-white', bgClass: 'bg-[#101010]', format: 'SVG' },
+  ],
+  mediaAssets: [
+    {
+      title: 'Nghệ Thuật Ẩm Thực',
+      text: 'Độ phân giải cao. Chụp chuẩn cho sử dụng in ấn và digital.',
+      image: `${pressKitPath}/sushi.png`,
+      format: 'JPG',
+    },
+    {
+      title: 'Kiến Trúc Không Gian',
+      text: 'Nội thất mang phong cách The Modern Ikikaitone.',
+      image: `${pressKitPath}/canhSushi.png`,
+      format: 'JPG',
+    },
+  ],
+  usageGuides: [
+    {
+      iconKey: 'check-circle',
+      title: 'Quyền sử dụng',
+      text: 'Tất cả tài nguyên trong Press Kit này được cấp phép sử dụng cho mục đích biên tập, báo chí và truyền thông liên quan đến Sakura Restaurant.',
+    },
+    {
+      iconKey: 'apartment',
+      title: 'Tỷ lệ & Khoảng trống',
+      text: 'Vui lòng không thay đổi tỷ lệ, bóp méo logo hoặc thêm các hiệu ứng không có trong bộ nhận diện chuẩn.',
+    },
+    {
+      iconKey: 'camera',
+      title: 'Ghi nhận bản quyền',
+      text: 'Khi xuất bản hình ảnh, video và tài liệu, vui lòng ghi rõ nguồn: “Hình ảnh & Video: Sakura Restaurant”.',
+    },
+  ],
+  brandAssetsSection: {
+    title: 'Tài Sản Thương Hiệu',
+    logoHeading: 'Logo & Định Dạng',
+    logoDescription: 'Tải xuống các phiên bản logo chính thức của Sakura Restaurant.',
+    mediaHeading: 'Hình Ảnh Báo Chí',
+    mediaDescription: 'Tải liệu hình ảnh chất lượng cao phục vụ truyền thông và báo chí.',
+    mediaActionLabel: 'Tải toàn bộ bộ ảnh',
+    usageHeading: 'Hướng Dẫn Sử Dụng',
+  },
+  contactCta: {
+    title: 'Liên Hệ Truyền Thông',
+    description: 'Cần thêm thông tin, phỏng vấn hoặc yêu cầu trải nghiệm đặc biệt? Đội ngũ truyền thông của chúng tôi luôn sẵn sàng hỗ trợ.',
+    actionLabel: 'Liên hệ ngay',
+    backgroundImage: `${pressKitPath}/bg%20foot.png`,
   },
 }
 
-const overviewCards = [
-  {
-    icon: <SafetyCertificateOutlined />,
-    title: 'Về Sakura Restaurant',
-    text: 'Sakura là biểu tượng của sự giao thoa tinh tế giữa nghệ thuật ẩm thực Nhật Bản truyền thống và công nghệ tương tác hiện đại.',
-  },
-  {
-    icon: <CalendarOutlined />,
-    title: 'Thành lập',
-    value: '2024',
-  },
-  {
-    icon: <ShareAltOutlined />,
-    title: 'Mô hình',
-    value: 'Fine Dining & AR Experience',
-  },
-  {
-    title: 'Công nghệ cốt lõi',
-    value: 'AR Menu & Projection Mapping',
-    featured: true,
-  },
-]
-
-const logoAssets = [
-  {
-    label: 'Primary Red',
-    brandClass: 'text-[#e0001d]',
-    bgClass: 'bg-white',
-    format: 'SVG',
-  },
-  {
-    label: 'Monochrome Dark',
-    brandClass: 'text-[#111111]',
-    bgClass: 'bg-white',
-    format: 'SVG',
-  },
-  {
-    label: 'Monochrome Light',
-    brandClass: 'text-white',
-    bgClass: 'bg-[#101010]',
-    format: 'SVG',
-  },
-]
-
-const mediaAssets = [
-  {
-    title: 'Nghệ Thuật Ẩm Thực',
-    text: 'Độ phân giải cao. Chụp chuẩn cho sử dụng in ấn và digital.',
-    image: `${pressKitPath}/sushi.png`,
-    format: 'JPG',
-  },
-  {
-    title: 'Kiến Trúc Không Gian',
-    text: 'Nội thất mang phong cách The Modern Ikikaitone.',
-    image: `${pressKitPath}/canhSushi.png`,
-    format: 'JPG',
-  },
-]
-
-const usageGuides = [
-  {
-    icon: <CheckCircleOutlined />,
-    title: 'Quyền sử dụng',
-    text: 'Tất cả tài nguyên trong Press Kit này được cấp phép sử dụng cho mục đích biên tập, báo chí và truyền thông liên quan đến Sakura Restaurant.',
-  },
-  {
-    icon: <ApartmentOutlined />,
-    title: 'Tỷ lệ & Khoảng trống',
-    text: 'Vui lòng không thay đổi tỷ lệ, bóp méo logo hoặc thêm các hiệu ứng không có trong bộ nhận diện chuẩn.',
-  },
-  {
-    icon: <CameraOutlined />,
-    title: 'Ghi nhận bản quyền',
-    text: 'Khi xuất bản hình ảnh, video và tài liệu, vui lòng ghi rõ nguồn: “Hình ảnh & Video: Sakura Restaurant”.',
-  },
-]
+const PRESS_ICON_MAP = {
+  apartment: <ApartmentOutlined />,
+  calendar: <CalendarOutlined />,
+  camera: <CameraOutlined />,
+  'check-circle': <CheckCircleOutlined />,
+  'safety-certificate': <SafetyCertificateOutlined />,
+  'share-alt': <ShareAltOutlined />,
+}
 
 export default function PressKitPage() {
   const pageContent = useStaticPageContent('press-kit', defaultPressKitContent)
   const hero = pageContent.hero || defaultPressKitContent.hero
   const mediaContact = pageContent.mediaContact || defaultPressKitContent.mediaContact
+  const overviewCards = pageContent.overviewCards || defaultPressKitContent.overviewCards
+  const logoAssets = pageContent.logoAssets || defaultPressKitContent.logoAssets
+  const mediaAssets = pageContent.mediaAssets || defaultPressKitContent.mediaAssets
+  const usageGuides = pageContent.usageGuides || defaultPressKitContent.usageGuides
+  const brandAssetsSection = pageContent.brandAssetsSection || defaultPressKitContent.brandAssetsSection
+  const contactCta = pageContent.contactCta || defaultPressKitContent.contactCta
 
   return (
     <div className="bg-[#fffafa] text-[#111827]">
@@ -151,10 +162,10 @@ export default function PressKitPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 py-14 md:px-8 md:py-16 xl:px-10">
-        <SectionHeading title="Tài Sản Thương Hiệu" />
+        <SectionHeading title={brandAssetsSection.title} />
 
         <div className="mt-10">
-          <Subheading marker="A." title="Logo & Định Dạng" text="Tải xuống các phiên bản logo chính thức của Sakura Restaurant." />
+          <Subheading marker="A." title={brandAssetsSection.logoHeading} text={brandAssetsSection.logoDescription} />
           <div className="mt-6 grid gap-6 md:grid-cols-3">
             {logoAssets.map((item) => (
               <LogoCard key={item.label} item={item} />
@@ -165,14 +176,14 @@ export default function PressKitPage() {
 
       <section className="mx-auto max-w-7xl px-5 pb-14 md:px-8 md:pb-16 xl:px-10">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <Subheading marker="B." title="Hình Ảnh Báo Chí" text="Tải liệu hình ảnh chất lượng cao phục vụ truyền thông và báo chí." />
+          <Subheading marker="B." title={brandAssetsSection.mediaHeading} text={brandAssetsSection.mediaDescription} />
           <Button
             type="text"
             className="!h-auto !self-start !p-0 !font-black !text-[#d8001e] hover:!bg-transparent hover:!text-[#a80018] md:!self-auto"
             icon={<ArrowRightOutlined />}
             iconPosition="end"
           >
-            Tải toàn bộ bộ ảnh
+            {brandAssetsSection.mediaActionLabel}
           </Button>
         </div>
 
@@ -184,7 +195,7 @@ export default function PressKitPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 pb-8 md:px-8 xl:px-10">
-        <SectionHeading title="Hướng Dẫn Sử Dụng" />
+        <SectionHeading title={brandAssetsSection.usageHeading} />
         <div className="mt-8 grid gap-6 md:grid-cols-3">
           {usageGuides.map((item) => (
             <GuideCard key={item.title} item={item} />
@@ -196,7 +207,7 @@ export default function PressKitPage() {
         <Card className="!overflow-hidden !rounded-xl !border-0 !bg-[#140907] !shadow-[0_22px_48px_rgba(17,24,39,0.18)]" bodyStyle={{ padding: 0 }}>
           <div className="relative">
             <img
-              src={`${pressKitPath}/bg%20foot.png`}
+              src={contactCta.backgroundImage}
               alt="Liên hệ truyền thông Sakura Restaurant"
               className="absolute inset-0 h-full w-full object-cover object-center opacity-85"
             />
@@ -207,17 +218,17 @@ export default function PressKitPage() {
               </span>
               <div>
                 <Title level={2} className="!mb-3 !text-3xl !font-black !uppercase !text-white">
-                  Liên Hệ Truyền Thông
+                  {contactCta.title}
                 </Title>
                 <Paragraph className="!mb-6 !max-w-xl !text-base !font-semibold !leading-7 !text-white/86">
-                  Cần thêm thông tin, phỏng vấn hoặc yêu cầu trải nghiệm đặc biệt? Đội ngũ truyền thông của chúng tôi luôn sẵn sàng hỗ trợ.
+                  {contactCta.description}
                 </Paragraph>
                 <Button
                   className="!h-12 !rounded-lg !border-0 !bg-[#d8001e] !px-7 !font-black !text-white hover:!bg-[#b00018]"
                   icon={<ArrowRightOutlined />}
                   iconPosition="end"
                 >
-                  Liên hệ ngay
+                  {contactCta.actionLabel}
                 </Button>
               </div>
             </div>
@@ -240,9 +251,9 @@ function OverviewCard({ item }) {
       <div className={item.featured ? 'flex gap-6' : ''}>
         {item.featured ? <span className="h-24 w-2 shrink-0 rounded-full bg-[#d8001e]" /> : null}
         <div>
-          {item.icon ? (
+          {item.iconKey ? (
             <span className="mb-5 grid h-12 w-12 place-items-center rounded-full bg-[#fff1f3] text-2xl text-[#d8001e]">
-              {item.icon}
+              {PRESS_ICON_MAP[item.iconKey] || <SafetyCertificateOutlined />}
             </span>
           ) : null}
           <Text className="!block !text-sm !font-black !uppercase !text-[#111827]">{item.title}</Text>
@@ -321,7 +332,7 @@ function GuideCard({ item }) {
     <Card className="h-full !rounded-xl !border-[#eee3e3] !bg-white !shadow-[0_12px_30px_rgba(17,24,39,0.06)]" bodyStyle={{ padding: 28 }}>
       <div className="flex gap-5">
         <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[#fff1f3] text-3xl text-[#d8001e]">
-          {item.icon}
+          {PRESS_ICON_MAP[item.iconKey] || <CheckCircleOutlined />}
         </span>
         <div>
           <Text className="!block !text-base !font-black !text-[#111827]">{item.title}</Text>

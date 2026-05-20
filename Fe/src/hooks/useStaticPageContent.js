@@ -12,14 +12,7 @@ export default function useStaticPageContent(slug, fallbackContent = {}) {
         if (!active) return;
         const nextContent = response?.data?.content;
         if (nextContent && typeof nextContent === 'object') {
-          setContent({
-            ...fallbackContent,
-            ...nextContent,
-            hero: {
-              ...(fallbackContent.hero || {}),
-              ...(nextContent.hero || {}),
-            },
-          });
+          setContent(nextContent);
         }
       })
       .catch(() => {

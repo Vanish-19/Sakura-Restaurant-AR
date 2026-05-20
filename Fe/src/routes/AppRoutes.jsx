@@ -11,6 +11,7 @@ import BlogPage from '../pages/BlogPage.jsx'
 import BlogDetailPage from '../pages/BlogDetailPage.jsx'
 import ContactPage from '../pages/static/ContactPage.jsx'
 import HomePage from '../pages/HomePage.jsx'
+import MenuItemDetailPage from '../pages/MenuItemDetailPage.jsx'
 import OrderHistoryPage from '../pages/OrderHistoryPage.jsx'
 import PaymentPage from '../pages/PaymentPage.jsx'
 import PrivacyPolicyPage from '../pages/static/PrivacyPolicyPage.jsx'
@@ -18,6 +19,7 @@ import PressKitPage from '../pages/static/PressKitPage.jsx'
 import TermsOfServicePage from '../pages/static/TermsOfServicePage.jsx'
 import ArScenePage from '../pages/ArScenePage.jsx'
 import AdminManagementAdminPage from '../pages/admin/AdminManagementAdminPage.jsx'
+import AiMonitoringAdminPage from '../pages/admin/AiMonitoringAdminPage.jsx'
 import ContentManagementAdminPage from '../pages/admin/ContentManagementAdminPage.jsx'
 import DashboardAdminPage from '../pages/admin/DashboardAdminPage.jsx'
 import FoodManagementAdminPage from '../pages/admin/FoodManagementAdminPage.jsx'
@@ -37,6 +39,7 @@ export default function AppRoutes() {
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/menu/:id" element={<MenuItemDetailPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/career" element={<CareerPage />} />
@@ -73,6 +76,7 @@ export default function AppRoutes() {
             <Route path="resources" element={<StaticResourcesAdminPage />} />
             <Route path="users" element={<UserManagementAdminPage />} />
             <Route path="admins" element={<AdminManagementAdminPage />} />
+            <Route path="monitoring" element={<AiMonitoringAdminPage />} />
           </Route>
         </Route>
 

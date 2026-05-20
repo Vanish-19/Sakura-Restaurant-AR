@@ -11,7 +11,7 @@ export const STATIC_PAGE_DEFAULTS = [
         subtitle: 'Nơi Giao Thoa Giữa Di Sản Ẩm Thực Truyền Thống Và Công Nghệ Tương Lai',
         backgroundImage: '/about1.png',
       },
-      story: {
+      brandStory: {
         eyebrow: 'Câu chuyện thương hiệu',
         title: 'Khởi Nguồn Của Một Trải Nghiệm Khác Biệt',
         quote:
@@ -19,25 +19,23 @@ export const STATIC_PAGE_DEFAULTS = [
         paragraphs: [
           'Đó là trăn trở nuôi dưỡng sự ra đời của Sakura Restaurant. Chúng tôi trân trọng một bữa ăn hoàn hảo không chỉ dừng lại ở hương vị đánh thức vị giác, mà phải là một cuộc hành trình trọn vẹn của mọi giác quan.',
           'Ra đời với khát vọng mang tinh hoa ẩm thực xứ Phù Tang đến gần hơn với thực khách Việt, Sakura Restaurant tự hào là một trong những nhà hàng tiên phong ứng dụng Công nghệ Thực tế Tăng cường (AR - Augmented Reality) vào không gian ẩm thực cao cấp.',
-          'Đến với Sakura, bạn không chỉ đang gọi một món ăn, bạn đang mở ra một câu chuyện sống động trên chính chiếc bàn của mình.',
         ],
+        highlight:
+          'Đến với Sakura, bạn không chỉ đang gọi một món ăn, bạn đang mở ra một câu chuyện sống động trên chính chiếc bàn của mình.',
         image: '/about2.png',
-        imageAlt: 'Phòng ăn phong cách Nhật với trải nghiệm AR',
-        cardTitle: 'AR Preview Menu',
-        cardText: 'Scan to view dishes in 3D',
+        previewCard: {
+          title: 'AR Preview Menu',
+          subtitle: 'Scan to view dishes in 3D',
+        },
       },
       visionMission: {
         title: 'Tầm Nhìn & Sứ Mệnh',
         subtitle: 'Định hướng tương lai của ẩm thực trải nghiệm.',
-        visionTitle: 'Tầm nhìn',
-        visionText:
+        vision:
           'Trở thành biểu tượng của sự đổi mới trong ngành F&B, nơi định nghĩa lại cách thực khách tương tác và thưởng thức ẩm thực Nhật Bản cao cấp.',
-        missionTitle: 'Sứ mệnh',
-        missionText:
+        mission:
           'Giao thoa hoàn hảo giữa kỹ thuật chế biến thủ công truyền thống và công nghệ hiện đại, mang đến những bữa ăn không chỉ chuẩn vị, an toàn mà còn mang lại sự ngạc nhiên và niềm vui.',
       },
-      coreValuesEyebrow: 'Giá trị cốt lõi',
-      coreValuesTitle: 'Bốn Giá Trị Định Hình Sakura',
       coreValues: [
         {
           iconKey: 'safety-certificate',
@@ -64,9 +62,7 @@ export const STATIC_PAGE_DEFAULTS = [
         title: 'Trải Nghiệm AR Độc Quyền',
         subtitle: 'Thưởng Thức Bằng Tri Giác Trước Khi Nếm Bằng Vị Giác',
         description:
-          'Tại Sakura Restaurant, công thực đơn giấy truyền thống được nâng tầm thành một không gian ẩm thực hiển thị ngay trước mắt.',
-        image: '/about4.png',
-        imageAlt: 'AR Experience Preview',
+          'Tại Sakura Restaurant, thực đơn giấy truyền thống được nâng tầm thành một không gian ẩm thực hiển thị ngay trước mắt.',
         features: [
           {
             title: 'Chiêm ngưỡng chân thực',
@@ -81,18 +77,18 @@ export const STATIC_PAGE_DEFAULTS = [
             text: 'Công nghệ AR kết nối nguyên liệu, kỹ thuật chế biến và câu chuyện văn hóa đằng sau mỗi lựa chọn.',
           },
         ],
+        image: '/about4.png',
       },
-      artisans: {
+      chefStory: {
         eyebrow: 'Đội ngũ bếp chuyên gia',
         title: 'Những Nghệ Nhân Của Hương Vị',
-        image: '/about3.png',
-        imageAlt: 'Nghệ nhân cắt sashimi',
         paragraphs: [
           'Ẩm thực Nhật Bản đòi hỏi tính kỷ luật và sự kiên nhẫn tuyệt đối. Đội ngũ đầu bếp tại Sakura Restaurant được dẫn dắt bởi những bếp trưởng dày dạn kinh nghiệm trong tinh hoa ẩm thực Nhật.',
           'Đối với họ, mỗi lưỡi dao lướt qua đều chứa đựng sự tôn kính với nguyên liệu, mỗi cách bài trí đều tuân theo những quy tắc thẩm mỹ khắt khe.',
         ],
-        quote:
+        highlight:
           'Dựa trên triết lý "Ichi-go Ichi-e" (Nhất kỳ nhất hội), trân trọng mỗi cuộc gặp gỡ vì có thể chỉ diễn ra một lần trong đời, đội ngũ của chúng tôi cam kết đặt trọn tâm huyết vào từng món ăn.',
+        image: '/about3.png',
       },
     },
   },
@@ -145,39 +141,6 @@ export const STATIC_PAGE_DEFAULTS = [
       },
       contactForm: {
         title: 'Gửi Thông Điệp Cho Chúng Tôi',
-        submitLabel: 'Gửi Yêu Cầu Của Bạn',
-        successMessage: 'Cảm ơn bạn. Sakura Restaurant sẽ liên hệ lại trong thời gian sớm nhất.',
-        fields: {
-          name: {
-            label: 'Họ Và Tên *',
-            placeholder: 'Nhập họ và tên của bạn',
-            requiredMessage: 'Vui lòng nhập họ tên',
-          },
-          phone: {
-            label: 'Số Điện Thoại *',
-            placeholder: 'Nhập số điện thoại của bạn',
-            requiredMessage: 'Vui lòng nhập số điện thoại',
-          },
-          email: {
-            label: 'Email *',
-            placeholder: 'Nhập email của bạn',
-            requiredMessage: 'Vui lòng nhập email',
-            invalidMessage: 'Email không hợp lệ',
-          },
-          purpose: {
-            label: 'Mục Đích Liên Hệ *',
-            placeholder: 'Chọn mục đích liên hệ',
-            requiredMessage: 'Vui lòng chọn mục đích liên hệ',
-          },
-          guests: {
-            label: 'Số Lượng Khách (Nếu đặt bàn)',
-            placeholder: 'Nhập số lượng khách',
-          },
-          message: {
-            label: 'Yêu Cầu Đặc Biệt / Tin Nhắn',
-            placeholder: 'Hãy cho chúng tôi biết thêm yêu cầu đặc biệt về vị trí ngồi, chế độ ăn, hoặc hỗ trợ kỹ thuật AR...',
-          },
-        },
         purposeOptions: [
           { value: 'booking', label: 'Đặt bàn' },
           { value: 'support', label: 'Hỗ trợ trải nghiệm AR' },
@@ -215,11 +178,6 @@ export const STATIC_PAGE_DEFAULTS = [
         subtitle: '(PRIVACY POLICY) - Sakura Restaurant',
         backgroundImage: '/headbgPrivacy.png',
       },
-      tocTitle: 'MỤC LỤC',
-      supportTitle: 'Bạn có thắc mắc về chính sách bảo mật?',
-      supportText: 'Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ bạn.',
-      supportButtonLabel: 'Liên hệ ngay',
-      contentMoreLabel: 'Xem tất cả chính sách chi tiết bên dưới',
       sections: [
         { id: 'intro', number: '01.', title: 'Giới thiệu chung', iconKey: 'file-protect' },
         { id: 'collected-data', number: '02.', title: 'Dữ liệu chúng tôi thu thập', iconKey: 'database' },
@@ -317,6 +275,106 @@ export const STATIC_PAGE_DEFAULTS = [
         subtitle: '(TERMS OF SERVICE) - Sakura Restaurant',
         backgroundImage: '/headbgPrivacy.png',
       },
+      sections: [
+        { id: 'acceptance', number: '01.', title: 'Chấp Thuận Điều Khoản', iconKey: 'file-done' },
+        { id: 'service-rules', number: '02.', title: 'Quy Định Sử Dụng Dịch Vụ', iconKey: 'database' },
+        { id: 'account', number: '03.', title: 'Tài Khoản Người Dùng', iconKey: 'user' },
+        { id: 'booking', number: '04.', title: 'Đặt Bàn & Hủy Đặt Bàn', iconKey: 'bank' },
+        { id: 'payment', number: '05.', title: 'Thanh Toán & Hoàn Tiền', iconKey: 'credit-card' },
+        { id: 'responsibilities', number: '06.', title: 'Quyền & Trách Nhiệm', iconKey: 'audit' },
+        { id: 'content', number: '07.', title: 'Nội Dung Người Dùng', iconKey: 'file-text' },
+        { id: 'limitation', number: '08.', title: 'Giới Hạn Trách Nhiệm', iconKey: 'warning' },
+        { id: 'changes', number: '09.', title: 'Thay Đổi Điều Khoản', iconKey: 'sync' },
+        { id: 'termination', number: '10.', title: 'Chấm Dứt Dịch Vụ', iconKey: 'stop' },
+        { id: 'contact', number: '11.', title: 'Liên Hệ', iconKey: 'mail' },
+      ],
+      acceptanceParagraphs: [
+        'Bằng việc truy cập và sử dụng website, ứng dụng Sakura Restaurant, đặt bàn, gọi món, thanh toán hoặc trải nghiệm các tính năng AR, bạn đồng ý tuân thủ các Điều khoản Dịch vụ này.',
+      ],
+      acceptanceNoticeTitle: 'Lưu ý quan trọng',
+      acceptanceNotice:
+        'Chúng tôi có quyền cập nhật, chỉnh sửa các điều khoản này bất cứ lúc nào. Những thay đổi sẽ có hiệu lực ngay khi được đăng tải. Việc tiếp tục sử dụng dịch vụ đồng nghĩa với sự chấp thuận của bạn đối với các thay đổi đó.',
+      serviceRulesIntro:
+        'Sakura Restaurant cung cấp nền tảng đặt bàn, trải nghiệm thực tế tăng cường (AR) và các dịch vụ liên quan cho mục đích cá nhân, phi thương mại. Bạn đồng ý:',
+      serviceRules: [
+        'Sử dụng dịch vụ đúng mục đích và theo đúng quy định của pháp luật.',
+        'Không sử dụng dịch vụ cho mục đích kỹ thuật phá hoại hoặc gây hại nào.',
+        'Không can thiệp, làm gián đoạn hoặc gây ảnh hưởng đến hoạt động của hệ thống.',
+        'Không sao chép, khai thác hoặc phân phối trái phép nội dung, hình ảnh, dữ liệu món ăn và mô hình 3D.',
+      ],
+      accountItems: [
+        'Bạn có thể cần tạo tài khoản để sử dụng một số tính năng như lưu lịch sử đặt bàn, đơn hàng hoặc tuỳ chọn trải nghiệm AR.',
+        'Bạn chịu trách nhiệm bảo mật thông tin đăng nhập và mọi hoạt động xảy ra trong tài khoản của mình.',
+        'Vui lòng thông báo ngay cho chúng tôi nếu phát hiện bất kỳ hoạt động trái phép nào.',
+      ],
+      bookingCards: [
+        {
+          iconKey: 'bank',
+          title: 'Đặt Bàn',
+          text: 'Bạn có thể đặt bàn thông qua website/ứng dụng. Thông tin đặt bàn cần chính xác và đầy đủ để nhà hàng chuẩn bị phục vụ.',
+        },
+        {
+          iconKey: 'close-circle',
+          title: 'Hủy Đặt Bàn',
+          text: 'Bạn có thể hủy đặt bàn theo chính sách của nhà hàng. Một số khung giờ cao điểm hoặc đặt cọc có thể áp dụng phí hủy.',
+        },
+      ],
+      paymentCards: [
+        {
+          iconKey: 'credit-card',
+          title: 'Thanh Toán',
+          text: 'Thanh toán có thể được thực hiện bằng tiền mặt, chuyển khoản hoặc cổng thanh toán được hỗ trợ.',
+        },
+        {
+          iconKey: 'sync',
+          title: 'Hoàn Tiền',
+          text: 'Chính sách hoàn tiền áp dụng theo từng trường hợp cụ thể và sẽ được thông báo khi đặt dịch vụ.',
+        },
+        {
+          iconKey: 'warning',
+          title: 'Sự Cố Thanh Toán',
+          text: 'Nếu giao dịch phát sinh lỗi, vui lòng liên hệ bộ phận hỗ trợ để được xử lý.',
+        },
+      ],
+      responsibilities: {
+        restaurant: {
+          title: 'Sakura Restaurant',
+          items: [
+            'Cung cấp dịch vụ đúng mô tả.',
+            'Đảm bảo an toàn thông tin trong quá trình sử dụng dịch vụ.',
+            'Hỗ trợ khách hàng khi phát sinh sự cố hợp lý.',
+          ],
+        },
+        user: {
+          title: 'Người Dùng',
+          items: [
+            'Cung cấp thông tin chính xác, trung thực.',
+            'Tuân thủ các điều khoản và quy định của dịch vụ.',
+            'Không sử dụng dịch vụ để thực hiện hành vi vi phạm pháp luật.',
+          ],
+        },
+      },
+      contentParagraphs: [
+        'Bất kỳ nội dung nào bạn gửi lên hệ thống, bao gồm đánh giá, bình luận, hình ảnh, yêu cầu hỗ trợ hoặc thông tin đặt bàn, phải hợp pháp, không vi phạm quyền của bên thứ ba và không chứa nội dung xúc phạm, phân biệt đối xử hoặc gây hại.',
+        'Sakura Restaurant có quyền xóa hoặc hạn chế hiển thị nội dung không phù hợp mà không cần thông báo trước.',
+      ],
+      limitationItems: [
+        'Dịch vụ được cung cấp trong trạng thái tốt nhất có thể, nhưng không bảo đảm không bao giờ gián đoạn.',
+        'Chúng tôi không chịu trách nhiệm cho sự cố phát sinh từ thiết bị, kết nối mạng hoặc thao tác sai của người dùng.',
+        'Sakura Restaurant không chịu trách nhiệm đối với thiệt hại ngoài tầm kiểm soát hợp lý của nhà hàng.',
+      ],
+      changesParagraphs: [
+        'Chúng tôi có quyền sửa đổi, bổ sung hoặc thay thế bất kỳ phần nào của Điều khoản dịch vụ này. Các thay đổi sẽ được công bố lại trên trang này và ngày cập nhật mới sẽ được hiển thị rõ ràng.',
+      ],
+      terminationParagraphs: [
+        'Chúng tôi có thể tạm ngừng hoặc chấm dứt quyền truy cập của bạn vào dịch vụ bất kỳ lúc nào nếu phát hiện bạn vi phạm các điều khoản hoặc có hành vi gây ảnh hưởng đến hệ thống và người dùng khác.',
+      ],
+      contactIntro:
+        'Nếu bạn có bất kỳ câu hỏi nào về Điều khoản dịch vụ này, vui lòng liên hệ với chúng tôi qua:',
+      contactMethods: [
+        { iconKey: 'mail', text: 'contact@sakurarestaurant.vn' },
+        { iconKey: 'phone', text: '1900 xxxx' },
+      ],
     },
   },
   {
@@ -332,8 +390,140 @@ export const STATIC_PAGE_DEFAULTS = [
         backgroundImage: '/headbgPrivacy.png',
       },
       application: {
-        email: 'career@sakurarestaurant.vn',
-        hotline: '1900 xxxx',
+        email: 'phunganhvan13122004@gmail.com',
+        hotline: '0966 490 431',
+        title: 'Cách Thức Ứng Tuyển',
+        description:
+          'Vui lòng gửi CV và Portfolio nếu có qua email bên dưới với tiêu đề theo cú pháp:',
+        subjectFormat: '[ Vị Trí Ứng Tuyển ] - [ Họ Và Tên ]',
+        privacyNote:
+          'Bằng việc gửi đơn ứng tuyển, bạn đồng ý cho Sakura Restaurant lưu trữ và xử lý thông tin cá nhân của bạn cho mục đích tuyển dụng.',
+      },
+      featuredJobs: [
+        {
+          iconKey: 'customer-service',
+          title: 'Nhân Viên Phục Vụ & Hướng Dẫn Viên AR',
+          type: 'Part-time / Full-time',
+          highlights: [
+            'Chào đón và phục vụ khách hàng theo tiêu chuẩn Omotenashi.',
+            'Hướng dẫn khách sử dụng tính năng AR để trải nghiệm menu tương tác.',
+            'Giải đáp thắc mắc về các món ăn và chức năng công nghệ.',
+          ],
+          goodFit: [
+            'Ngoại hình sáng, giao tiếp tốt bằng Anh/V hoặc Nhật là lợi thế.',
+            'Quan tâm công nghệ và văn hóa Nhật Bản.',
+            'Kỹ năng xử lý tình huống linh hoạt.',
+          ],
+          benefits: [
+            'Mức lương cạnh tranh, service charge và tip.',
+            'Đào tạo chuyên sâu về AR và văn hóa ẩm thực Nhật Bản.',
+            'Môi trường làm việc hiện đại, năng động.',
+          ],
+        },
+        {
+          iconKey: 'shop',
+          title: 'Đầu Bếp Chuyên Thớt / Sushi Chef',
+          type: 'Full-time',
+          highlights: [
+            'Đảm nhiệm khu vực Sushi & Sashimi.',
+            'Phối hợp cùng bộ phận R&D để phát triển các món ăn mới phù hợp với hình ảnh AR.',
+            'Đảm bảo tiêu chuẩn vệ sinh an toàn thực phẩm tuyệt đối.',
+          ],
+          goodFit: [
+            'Kinh nghiệm tối thiểu 2 năm ở vị trí tương đương.',
+            'Kỹ năng dùng dao điêu luyện, am hiểu về hải sản tươi sống.',
+            'Tinh thần sáng tạo, sẵn sàng tiếp thu cái mới.',
+          ],
+          benefits: [
+            'Thu nhập hấp dẫn theo năng lực.',
+            'Cơ hội thăng tiến lên bếp trưởng.',
+            'Phúc lợi bảo hiểm, đồng phục và các chế độ theo hiện hành.',
+          ],
+        },
+        {
+          iconKey: 'code',
+          title: 'Thực Tập Sinh Lập Trình Web - Định Hướng AR/WebXR',
+          type: 'Internship',
+          highlights: [
+            'Tham gia phát triển và tối ưu nền tảng Web App của nhà hàng.',
+            'Nghiên cứu tích hợp các tính năng WebXR/WebAR trên mobile.',
+            'Hỗ trợ xử lý UI và nâng cấp giao diện người dùng.',
+          ],
+          goodFit: [
+            'Sinh viên năm 3, năm 4 chuyên ngành CNTT/Thiết kế tương tác.',
+            'Nắm chắc HTML, CSS, JavaScript cơ bản. Biết React/Three.js là lợi thế.',
+            'Tư duy logic tốt, tinh thần học hỏi cao.',
+          ],
+          benefits: [
+            'Hỗ trợ chi phí thực tập.',
+            'Được mentor bởi các kỹ sư giàu kinh nghiệm.',
+            'Cơ hội trở thành nhân viên chính thức sau khi tốt nghiệp.',
+          ],
+        },
+      ],
+      extraJobs: [
+        {
+          iconKey: 'home',
+          title: 'Quản Lý Nhà Hàng',
+          type: 'Full-time',
+          location: 'Hồ Chí Minh',
+          description: 'Quản lý vận hành, đội ngũ và trải nghiệm khách hàng theo tiêu chuẩn Sakura.',
+        },
+        {
+          iconKey: 'notification',
+          title: 'Nhân Viên Marketing',
+          type: 'Full-time',
+          location: 'Hồ Chí Minh',
+          description: 'Lên kế hoạch truyền thông, quảng bá thương hiệu và các chiến dịch AR.',
+        },
+        {
+          iconKey: 'experiment',
+          title: 'Nhân Viên R&D Ẩm Thực',
+          type: 'Full-time',
+          location: 'Hồ Chí Minh',
+          description: 'Nghiên cứu và phát triển món ăn mới kết hợp công nghệ AR và ẩm thực Nhật Bản.',
+        },
+        {
+          iconKey: 'laptop',
+          title: 'Nhân Viên IT Support',
+          type: 'Full-time',
+          location: 'Hồ Chí Minh',
+          description: 'Hỗ trợ kỹ thuật hệ thống AR, thiết bị và phần mềm trong nhà hàng.',
+        },
+        {
+          iconKey: 'wallet',
+          title: 'Thu Ngân',
+          type: 'Part-time',
+          location: 'Hồ Chí Minh',
+          description: 'Thanh toán, xuất hóa đơn và hỗ trợ khách hàng khi cần thiết.',
+        },
+        {
+          iconKey: 'tool',
+          title: 'Tạp Vụ',
+          type: 'Part-time',
+          location: 'Hồ Chí Minh',
+          description: 'Giữ gìn vệ sinh khu vực làm việc, đảm bảo không gian sạch sẽ.',
+        },
+        {
+          iconKey: 'shop',
+          title: 'Runner (Phục Vụ Bếp)',
+          type: 'Part-time',
+          location: 'Hồ Chí Minh',
+          description: 'Hỗ trợ vận chuyển món ăn từ bếp ra khu vực phục vụ.',
+        },
+        {
+          iconKey: 'code',
+          title: 'Thiết Kế 3D - AR Artist',
+          type: 'Full-time',
+          location: 'Hồ Chí Minh',
+          description: 'Thiết kế mô hình 3D món ăn và hiệu ứng AR ấn tượng cho trải nghiệm khách hàng.',
+        },
+      ],
+      applicationForm: {
+        nationalityOptions: ['Việt Nam', 'Nhật Bản', 'Khác'],
+        experienceOptions: ['Chưa có kinh nghiệm', 'Dưới 1 năm', '1-2 năm', 'Trên 2 năm'],
+        referralOptions: ['Website Sakura', 'Facebook', 'LinkedIn', 'Bạn bè giới thiệu', 'Khác'],
+        uploadFormats: 'PDF, DOC, DOCX (Tối đa 5MB)',
       },
     },
   },
@@ -350,9 +540,83 @@ export const STATIC_PAGE_DEFAULTS = [
         backgroundImage: '/presskit/bgheadpress.png',
       },
       mediaContact: {
-        representative: 'Ms. Linh Nguyen',
-        email: 'press@sakura-restaurant.com',
-        hotline: '+84 (0) 90 123 4567',
+        representative: 'Mr Phung Van',
+        email: 'van.pa@tinasoft.vn',
+        hotline: '+84 (0) 966 490 431',
+      },
+      overviewCards: [
+        {
+          iconKey: 'safety-certificate',
+          title: 'Về Sakura Restaurant',
+          text: 'Sakura là biểu tượng của sự giao thoa tinh tế giữa nghệ thuật ẩm thực Nhật Bản truyền thống và công nghệ tương tác hiện đại.',
+        },
+        {
+          iconKey: 'calendar',
+          title: 'Thành lập',
+          value: '2024',
+        },
+        {
+          iconKey: 'share-alt',
+          title: 'Mô hình',
+          value: 'Fine Dining & AR Experience',
+        },
+        {
+          title: 'Công nghệ cốt lõi',
+          value: 'AR Menu & Projection Mapping',
+          featured: true,
+        },
+      ],
+      logoAssets: [
+        { label: 'Primary Red', brandClass: 'text-[#e0001d]', bgClass: 'bg-white', format: 'SVG' },
+        { label: 'Monochrome Dark', brandClass: 'text-[#111111]', bgClass: 'bg-white', format: 'SVG' },
+        { label: 'Monochrome Light', brandClass: 'text-white', bgClass: 'bg-[#101010]', format: 'SVG' },
+      ],
+      mediaAssets: [
+        {
+          title: 'Nghệ Thuật Ẩm Thực',
+          text: 'Độ phân giải cao. Chụp chuẩn cho sử dụng in ấn và digital.',
+          image: '/presskit/sushi.png',
+          format: 'JPG',
+        },
+        {
+          title: 'Kiến Trúc Không Gian',
+          text: 'Nội thất mang phong cách The Modern Ikikaitone.',
+          image: '/presskit/canhSushi.png',
+          format: 'JPG',
+        },
+      ],
+      usageGuides: [
+        {
+          iconKey: 'check-circle',
+          title: 'Quyền sử dụng',
+          text: 'Tất cả tài nguyên trong Press Kit này được cấp phép sử dụng cho mục đích biên tập, báo chí và truyền thông liên quan đến Sakura Restaurant.',
+        },
+        {
+          iconKey: 'apartment',
+          title: 'Tỷ lệ & Khoảng trống',
+          text: 'Vui lòng không thay đổi tỷ lệ, bóp méo logo hoặc thêm các hiệu ứng không có trong bộ nhận diện chuẩn.',
+        },
+        {
+          iconKey: 'camera',
+          title: 'Ghi nhận bản quyền',
+          text: 'Khi xuất bản hình ảnh, video và tài liệu, vui lòng ghi rõ nguồn: “Hình ảnh & Video: Sakura Restaurant”.',
+        },
+      ],
+      brandAssetsSection: {
+        title: 'Tài Sản Thương Hiệu',
+        logoHeading: 'Logo & Định Dạng',
+        logoDescription: 'Tải xuống các phiên bản logo chính thức của Sakura Restaurant.',
+        mediaHeading: 'Hình Ảnh Báo Chí',
+        mediaDescription: 'Tải liệu hình ảnh chất lượng cao phục vụ truyền thông và báo chí.',
+        mediaActionLabel: 'Tải toàn bộ bộ ảnh',
+        usageHeading: 'Hướng Dẫn Sử Dụng',
+      },
+      contactCta: {
+        title: 'Liên Hệ Truyền Thông',
+        description:
+          'Cần thêm thông tin, phỏng vấn hoặc yêu cầu trải nghiệm đặc biệt? Đội ngũ truyền thông của chúng tôi luôn sẵn sàng hỗ trợ.',
+        actionLabel: 'Liên hệ ngay',
+        backgroundImage: '/presskit/bg%20foot.png',
       },
     },
   },
@@ -364,52 +628,64 @@ function createNotFoundError() {
   return error;
 }
 
-function mergeContent(defaultContent = {}, storedContent = {}) {
-  return {
-    ...defaultContent,
-    ...(storedContent || {}),
-    hero: {
-      ...(defaultContent.hero || {}),
-      ...(storedContent?.hero || {}),
-    },
-  };
+function isPlainObject(value) {
+  return value && typeof value === 'object' && !Array.isArray(value);
 }
 
-function withDefaultContent(page) {
-  if (!page) return page;
-  const defaults = STATIC_PAGE_DEFAULTS.find((item) => item.slug === page.slug);
-  if (!defaults) return page;
+function mergeMissing(targetValue, sourceValue) {
+  if (targetValue == null) return sourceValue;
+  if (sourceValue == null) return targetValue;
 
-  return {
-    ...page,
-    label: page.label || defaults.label,
-    content: mergeContent(defaults.content, page.content),
-  };
+  if (Array.isArray(sourceValue)) {
+    return Array.isArray(targetValue) ? targetValue : sourceValue;
+  }
+
+  if (isPlainObject(sourceValue)) {
+    const next = { ...(isPlainObject(targetValue) ? targetValue : {}) };
+    for (const [key, value] of Object.entries(sourceValue)) {
+      next[key] = mergeMissing(next[key], value);
+    }
+    return next;
+  }
+
+  return targetValue === undefined ? sourceValue : targetValue;
 }
 
 export async function ensureStaticPages() {
   await Promise.all(
-    STATIC_PAGE_DEFAULTS.map((page) =>
-      StaticPageContent.updateOne(
-        { slug: page.slug },
-        { $setOnInsert: page },
-        { upsert: true }
-      )
-    )
+    STATIC_PAGE_DEFAULTS.map(async (page) => {
+      const existing = await StaticPageContent.findOne({ slug: page.slug });
+
+      if (!existing) {
+        await StaticPageContent.create(page);
+        return;
+      }
+
+      const mergedContent = mergeMissing(existing.content || {}, page.content || {});
+      const nextLabel = existing.label || page.label;
+
+      if (
+        JSON.stringify(mergedContent) !== JSON.stringify(existing.content || {}) ||
+        nextLabel !== existing.label
+      ) {
+        existing.label = nextLabel;
+        existing.content = mergedContent;
+        await existing.save();
+      }
+    })
   );
 }
 
 export async function getStaticPages() {
   await ensureStaticPages();
-  const pages = await StaticPageContent.find({}).sort({ createdAt: 1 }).lean();
-  return pages.map(withDefaultContent);
+  return StaticPageContent.find({}).sort({ createdAt: 1 }).lean();
 }
 
 export async function getStaticPageBySlug(slug) {
   await ensureStaticPages();
   const page = await StaticPageContent.findOne({ slug }).lean();
   if (!page) throw createNotFoundError();
-  return withDefaultContent(page);
+  return page;
 }
 
 export async function updateStaticPage(slug, { label, content, adminId }) {

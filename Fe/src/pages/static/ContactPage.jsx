@@ -59,39 +59,6 @@ const defaultContactContent = {
   },
   contactForm: {
     title: 'Gửi Thông Điệp Cho Chúng Tôi',
-    submitLabel: 'Gửi Yêu Cầu Của Bạn',
-    successMessage: 'Cảm ơn bạn. Sakura Restaurant sẽ liên hệ lại trong thời gian sớm nhất.',
-    fields: {
-      name: {
-        label: 'Họ Và Tên *',
-        placeholder: 'Nhập họ và tên của bạn',
-        requiredMessage: 'Vui lòng nhập họ tên',
-      },
-      phone: {
-        label: 'Số Điện Thoại *',
-        placeholder: 'Nhập số điện thoại của bạn',
-        requiredMessage: 'Vui lòng nhập số điện thoại',
-      },
-      email: {
-        label: 'Email *',
-        placeholder: 'Nhập email của bạn',
-        requiredMessage: 'Vui lòng nhập email',
-        invalidMessage: 'Email không hợp lệ',
-      },
-      purpose: {
-        label: 'Mục Đích Liên Hệ *',
-        placeholder: 'Chọn mục đích liên hệ',
-        requiredMessage: 'Vui lòng chọn mục đích liên hệ',
-      },
-      guests: {
-        label: 'Số Lượng Khách (Nếu đặt bàn)',
-        placeholder: 'Nhập số lượng khách',
-      },
-      message: {
-        label: 'Yêu Cầu Đặc Biệt / Tin Nhắn',
-        placeholder: 'Hãy cho chúng tôi biết thêm yêu cầu đặc biệt về vị trí ngồi, chế độ ăn, hoặc hỗ trợ kỹ thuật AR...',
-      },
-    },
     purposeOptions: [
       { value: 'booking', label: 'Đặt bàn' },
       { value: 'support', label: 'Hỗ trợ trải nghiệm AR' },
@@ -139,11 +106,6 @@ export default function ContactPage() {
   const supportCard = pageContent.supportCard || defaultContactContent.supportCard
   const contactForm = pageContent.contactForm || defaultContactContent.contactForm
   const serviceCards = pageContent.serviceCards || defaultContactContent.serviceCards
-  const contactFields = contactForm.fields || defaultContactContent.contactForm.fields
-  const getContactField = (key) => ({
-    ...(defaultContactContent.contactForm.fields[key] || {}),
-    ...(contactFields[key] || {}),
-  })
 
   const handleSubmit = () => {
     message.success(contactForm.successMessage || defaultContactContent.contactForm.successMessage)
@@ -191,13 +153,13 @@ export default function ContactPage() {
           <div>
             <div className="mb-7">
               <Text className="!text-sm !font-extrabold !text-[#1C1C1E]">
-                Thông Tin Liên Hệ
+                {contactSection.title}
               </Text>
               <div className="mt-2 h-0.5 w-11 rounded-full bg-[#8B0000]" />
             </div>
 
             <div className="space-y-4">
-              {contactItems.map((item) => (
+              {contactSection.items.map((item) => (
                 <Card
                   key={item.title}
                   className="!rounded-xl !border !border-[#f1e5e5] !bg-white/88 !shadow-[0_12px_28px_rgba(17,24,39,0.05)] backdrop-blur-sm"
@@ -205,7 +167,7 @@ export default function ContactPage() {
                 >
                   <div className="flex gap-4">
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#fff1f3] text-lg text-[#d8001e]">
-                      {item.icon}
+                      {CONTACT_ICON_MAP[item.iconKey] || <EnvironmentOutlined />}
                     </span>
                     <div className="min-w-0">
                       <Text className="!block !font-extrabold !text-slate-950">
@@ -237,7 +199,7 @@ export default function ContactPage() {
               >
                 <div className="relative min-h-[150px] p-6">
                   <img
-                    src="/bgBody.png"
+                    src={supportCard.backgroundImage}
                     alt=""
                     aria-hidden="true"
                     className="absolute inset-0 h-full w-full object-cover object-right opacity-70"
@@ -245,13 +207,13 @@ export default function ContactPage() {
                   <div className="absolute inset-0 bg-white/50" />
                   <div className="relative z-10 max-w-[260px]">
                     <Text className="!block !text-base !font-extrabold !text-slate-950">
-                      Trải nghiệm AR của bạn gặp trục trặc?
+                      {supportCard.title}
                     </Text>
                     <Paragraph className="!mt-2 !mb-4 !text-xs !leading-5 !text-slate-700">
-                      Đội ngũ kỹ thuật của chúng tôi luôn sẵn sàng hỗ trợ bạn nhanh chóng.
+                      {supportCard.description}
                     </Paragraph>
                     <Button className="!h-9 !rounded-full !border-0 !bg-[#8B0000] !px-4 !text-xs !font-bold !text-white hover:!bg-[#700000]">
-                      Hỗ trợ kỹ thuật AR
+                      {supportCard.actionLabel}
                     </Button>
                   </div>
                 </div>
@@ -262,7 +224,7 @@ export default function ContactPage() {
           <Card className="!rounded-xl !border !border-[#f1e5e5] !bg-white/90 !shadow-[0_18px_42px_rgba(17,24,39,0.07)] backdrop-blur-sm" bodyStyle={{ padding: 28 }}>
             <div className="mb-7">
               <Text className="!text-sm !font-extrabold !text-[#1C1C1E]">
-                Gửi Thông Điệp Cho Chúng Tôi
+                {contactForm.title}
               </Text>
               <div className="mt-2 h-0.5 w-11 rounded-full bg-[#8B0000]" />
             </div>
@@ -282,7 +244,7 @@ export default function ContactPage() {
 
               <Form.Item label={getContactField('purpose').label} name="purpose" rules={[{ required: true, message: getContactField('purpose').requiredMessage }]}>
                 <Select
-                  placeholder={getContactField('purpose').placeholder}
+                  placeholder="Chọn mục đích liên hệ"
                   options={contactForm.purposeOptions}
                 />
               </Form.Item>
@@ -315,7 +277,7 @@ export default function ContactPage() {
             <Card key={item.title} className="!rounded-xl !border !border-[#f1e5e5] !bg-white/90 !shadow-[0_12px_28px_rgba(17,24,39,0.05)]" bodyStyle={{ padding: 24 }}>
               <div className="flex gap-4">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#fff1f3] text-lg text-[#d8001e]">
-                  {item.icon}
+                  {CONTACT_ICON_MAP[item.iconKey] || <WifiOutlined />}
                 </span>
                 <div>
                   <Text className="!block !font-extrabold !text-slate-950">{item.title}</Text>

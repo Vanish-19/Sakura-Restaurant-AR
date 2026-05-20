@@ -1,4 +1,4 @@
-import { ScanOutlined, ShoppingCartOutlined } from '@ant-design/icons'
+import { ArrowRightOutlined, ScanOutlined, ShoppingCartOutlined } from '@ant-design/icons'
 import { Button, Card, Tooltip } from 'antd'
 import ArExperienceBadge from '../atoms/ArExperienceBadge.jsx'
 import TagBadge from '../atoms/TagBadge.jsx'
@@ -14,12 +14,19 @@ export default function MenuItemCard({
   categoryLabel,
   onAdd,
   onViewAr,
+  onViewDetail,
 }) {
   const handleAdd = onAdd ?? (() => { })
   const handleViewAr = onViewAr ?? (() => { })
+  const handleViewDetail = onViewDetail ?? (() => { })
   const canViewAr = Boolean(item?.arModels?.glb_url || item?.arModels?.usdz_url)
   const shouldShowArAction = canViewAr
   const descriptionTooltip = (item?.description || '').trim()
+  const openDetail = () => handleViewDetail(item)
+  const stopAndRun = (handler) => (event) => {
+    event?.stopPropagation?.()
+    handler(item)
+  }
 
   return (
     <div className="relative">
@@ -30,8 +37,9 @@ export default function MenuItemCard({
       ) : null}
 
       <Card
-        className="menu-item-card h-full overflow-hidden !rounded-2xl !border-0 !bg-transparent !shadow-[0_4px_20px_rgba(0,0,0,0.05)]"
+        className="menu-item-card h-full cursor-pointer overflow-hidden !rounded-2xl !border-0 !bg-transparent !shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-transform duration-300 hover:-translate-y-1 hover:!shadow-[0_18px_42px_rgba(41,18,10,0.12)]"
         style={{ display: 'flex', flexDirection: 'column' }}
+        onClick={openDetail}
         styles={{
           body: {
             flex: 1,
@@ -84,6 +92,7 @@ export default function MenuItemCard({
           </div>
         ) : null}
 
+
         <div className={`menu-item-card__actions mt-auto flex items-center gap-3 pt-4 ${shouldShowArAction ? 'justify-between' : 'justify-end'}`}>
           {shouldShowArAction ? (
             <Tooltip
@@ -96,7 +105,7 @@ export default function MenuItemCard({
                 icon={<ScanOutlined />}
                 shape="round"
                 disabled={!canViewAr}
-                onClick={() => handleViewAr(item)}
+                onClick={stopAndRun(handleViewAr)}
               >
                 View AR/VR
               </Button>
@@ -107,7 +116,7 @@ export default function MenuItemCard({
             type="primary"
             icon={<ShoppingCartOutlined />}
             shape="round"
-            onClick={() => handleAdd(item)}
+            onClick={stopAndRun(handleAdd)}
           />
         </div>
       </Card>

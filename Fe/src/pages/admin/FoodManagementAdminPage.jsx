@@ -1,8 +1,10 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons'
-import { Button, Card, Space, Table, Tag, message, Avatar, Popconfirm, Modal, Form, Input, InputNumber, Switch, Select, Upload } from 'antd'
+import { DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons'
+import { Button, Card, Col, Input, Space, Table, Tag, message, Avatar, Popconfirm, Modal, Form, InputNumber, Switch, Select, Upload, Row } from 'antd'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getAllFoods, createFood, updateFood, deleteFood, uploadFoodModel } from '../../services/adminFoodApi.js'
 import { createFoodCategory, deleteFoodCategory, getAllFoodCategories, updateFoodCategory } from '../../services/adminFoodCategoryApi.js'
+import AdminSectionHeader from '../../components/molecules/admin/AdminSectionHeader.jsx'
+import AdminStatCard from '../../components/molecules/admin/AdminStatCard.jsx'
 
 const formatVnd = (value) => new Intl.NumberFormat('vi-VN').format(Number(value || 0))
 
@@ -15,6 +17,15 @@ const formatCategoryLabel = (value) => {
     .split(/\s+/)
     .map((part) => (part ? part.charAt(0).toUpperCase() + part.slice(1) : part))
     .join(' ')
+}
+
+const normalizeTagValues = (values) =>
+  [...new Set((Array.isArray(values) ? values : []).map((value) => String(value || '').trim()).filter(Boolean))]
+
+function buildFoodProfileBadges(food) {
+  return [
+    food.is_best_seller ? { label: 'Bán chạy', color: 'gold' } : null,
+  ].filter(Boolean)
 }
 
 async function convertGlbToUsdzInBrowser(glbFile) {
@@ -56,6 +67,10 @@ export default function FoodManagementAdminPage() {
   const [isDeleteCategoryModalOpen, setIsDeleteCategoryModalOpen] = useState(false)
   const [pendingDeleteCategory, setPendingDeleteCategory] = useState(null)
   const [uploadingModelType, setUploadingModelType] = useState(null)
+  const [foodSearchText, setFoodSearchText] = useState('')
+  const [categorySearchText, setCategorySearchText] = useState('')
+  const [filterCategory, setFilterCategory] = useState(null)
+  const [filterAvailability, setFilterAvailability] = useState('all')
   const [form] = Form.useForm()
   const [categoryForm] = Form.useForm()
   const [deleteCategoryForm] = Form.useForm()
@@ -82,6 +97,35 @@ export default function FoodManagementAdminPage() {
     if (!pendingDeleteCategory) return categoryOptions
     return categoryOptions.filter((category) => category.value !== pendingDeleteCategory.name)
   }, [categoryOptions, pendingDeleteCategory])
+
+  const filteredFoods = useMemo(() => {
+    const keyword = String(foodSearchText || '').trim().toLowerCase()
+
+    return foods.filter((food) => {
+      const matchesKeyword =
+        keyword.length === 0 ||
+        String(food?.name || '').toLowerCase().includes(keyword) ||
+        String(food?.description || '').toLowerCase().includes(keyword)
+      const matchesCategory = filterCategory ? food.category === filterCategory : true
+      const matchesAvailability =
+        filterAvailability === 'all'
+          ? true
+          : filterAvailability === 'available'
+            ? Boolean(food.is_available)
+            : !food.is_available
+
+      return matchesKeyword && matchesCategory && matchesAvailability
+    })
+  }, [filterAvailability, filterCategory, foodSearchText, foods])
+
+  const filteredCategories = useMemo(() => {
+    const keyword = String(categorySearchText || '').trim().toLowerCase()
+    if (!keyword) return categories
+
+    return categories.filter((category) =>
+      formatCategoryLabel(category.name).toLowerCase().includes(keyword),
+    )
+  }, [categories, categorySearchText])
 
   const beforeModelUpload = (expectedType) => (file) => {
     const extension = String(file?.name || '').split('.').pop()?.toLowerCase()
@@ -295,11 +339,20 @@ export default function FoodManagementAdminPage() {
         glb_url: record.ar_models?.glb_url,
         usdz_url: record.ar_models?.usdz_url,
         description: record.description,
+        ingredients: record.ingredients || [],
+        allergens: record.allergens || [],
+        recommended_for: record.recommended_for || [],
       })
     } else {
       setEditingId(null)
       form.resetFields()
-      form.setFieldsValue({ is_available: true, is_best_seller: false })
+      form.setFieldsValue({
+        is_available: true,
+        is_best_seller: false,
+        ingredients: [],
+        allergens: [],
+        recommended_for: [],
+      })
     }
     setIsModalOpen(true)
   }
@@ -315,6 +368,9 @@ export default function FoodManagementAdminPage() {
         is_best_seller: values.is_best_seller,
         image_url: values.image_url,
         description: values.description,
+        ingredients: normalizeTagValues(values.ingredients),
+        allergens: normalizeTagValues(values.allergens),
+        recommended_for: normalizeTagValues(values.recommended_for),
         ar_models: {
           glb_url: values.glb_url,
           usdz_url: values.usdz_url,
@@ -346,6 +402,13 @@ export default function FoodManagementAdminPage() {
           <div>
             <p className="m-0 text-[13px] font-bold text-zinc-900">{row.name}</p>
             <p className="m-0 text-[11px] text-zinc-500 w-48 truncate">{row.description}</p>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {buildFoodProfileBadges(row).map((badge) => (
+                <Tag key={badge.label} color={badge.color} className="!m-0">
+                  {badge.label}
+                </Tag>
+              ))}
+            </div>
           </div>
         </div>
       ),
@@ -429,51 +492,59 @@ export default function FoodManagementAdminPage() {
   ]
 
   const stats = [
-    { key: 'total', title: 'TỔNG MÓN ĂN', value: foods.length, note: 'Trong thực đơn', tone: 'text-zinc-600', bar: 'bg-zinc-900' },
-    { key: 'best', title: 'MÓN BÁN CHẠY', value: foods.filter((f) => f.is_best_seller).length, note: 'Danh sách ưu tiên', tone: 'text-amber-600', bar: 'bg-amber-500' },
-    { key: 'ar', title: 'CÓ AR', value: foods.filter((f) => f.ar_models?.glb_url || f.ar_models?.usdz_url).length, note: 'Có mô hình 3D', tone: 'text-blue-600', bar: 'bg-blue-600' },
-    { key: 'active', title: 'ĐANG BÁN', value: foods.filter((f) => f.is_available).length, note: 'Sẵn sàng phục vụ', tone: 'text-emerald-600', bar: 'bg-emerald-600' },
-    { key: 'categories', title: 'DANH MỤC', value: categories.length, note: 'Đang quản lý', tone: 'text-rose-600', bar: 'bg-rose-600' },
+    { key: 'total', title: 'TỔNG MÓN ĂN', value: foods.length, note: 'Trong thực đơn' },
+    { key: 'best', title: 'MÓN BÁN CHẠY', value: foods.filter((f) => f.is_best_seller).length, note: 'Danh sách ưu tiên' },
+    { key: 'ar', title: 'CÓ AR', value: foods.filter((f) => f.ar_models?.glb_url || f.ar_models?.usdz_url).length, note: 'Có mô hình 3D' },
+    { key: 'active', title: 'ĐANG BÁN', value: foods.filter((f) => f.is_available).length, note: 'Sẵn sàng phục vụ' },
+    { key: 'categories', title: 'DANH MỤC', value: categories.length, note: 'Đang quản lý' },
   ]
 
   return (
-    <div className="space-y-5 pb-20">
-      <section className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-[44px] leading-[0.96] font-black tracking-[-0.03em] text-zinc-900">Quản lý món ăn</h1>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-            Quản lý thực đơn số, cập nhật giá bán, mô hình AR và danh mục món.
-          </p>
-        </div>
+    <div className="admin-page pb-20">
+      <AdminSectionHeader
+        eyebrow="Kitchen Catalog"
+        title="Quản lý món ăn"
+        subtitle="Quản lý thực đơn số, cập nhật giá bán, mô hình AR và danh mục món theo cùng nhịp hiển thị với trang blog."
+        action={
+          <Button onClick={() => handleOpenModal()} icon={<PlusOutlined />} className="admin-primary-btn" type="primary">
+            Thêm món mới
+          </Button>
+        }
+      />
 
-      </section>
-
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-        {stats.map((stat) => (
-          <Card key={stat.key} className="!rounded-xl !border !border-zinc-200 !shadow-none" bodyStyle={{ padding: 20 }}>
-            <div className={`mb-4 h-1 w-8 rounded-full ${stat.bar}`} />
-            <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-400">{stat.title}</div>
-            <div className="mt-2 text-[42px] leading-none font-black tracking-tight text-zinc-900">{stat.value}</div>
-            <p className={`mt-2 text-xs font-semibold ${stat.tone}`}>{stat.note}</p>
-          </Card>
+      <Row gutter={[16, 16]}>
+        {stats.map((stat, index) => (
+          <Col key={stat.key} xs={24} sm={12} lg={8} xl={4}>
+            <AdminStatCard title={stat.title} value={stat.value} note={stat.note} accent={index === 1} />
+          </Col>
         ))}
-      </section>
+      </Row>
 
       <Card className="!rounded-2xl !border !border-zinc-200 !shadow-none" bodyStyle={{ padding: 0 }}>
-        <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
-          <Space size={10}>
-            <h3 className="m-0 text-2xl font-extrabold tracking-tight text-zinc-900">Quản lý danh mục</h3>
-          </Space>
-
-          <Button onClick={() => handleOpenCategoryModal()} icon={<PlusOutlined />} className="!h-9 !rounded-lg !border-0 !bg-zinc-900 !px-4 !text-xs !font-bold !uppercase !text-white">
-            Thêm danh mục
-          </Button>
+        <div className="admin-toolbar">
+          <div className="admin-toolbar__meta">
+            <h3 className="admin-toolbar__title">Quản lý danh mục</h3>
+            <p className="admin-toolbar__description">Tra cứu nhanh từng nhóm món trước khi đổi tên, gộp hoặc xóa danh mục.</p>
+          </div>
+          <div className="admin-toolbar__controls">
+            <Input
+              allowClear
+              value={categorySearchText}
+              onChange={(event) => setCategorySearchText(event.target.value)}
+              placeholder="Tìm danh mục..."
+              prefix={<SearchOutlined className="text-zinc-400" />}
+              className="admin-toolbar__search"
+            />
+            <Button onClick={() => handleOpenCategoryModal()} icon={<PlusOutlined />} className="admin-primary-btn" type="primary">
+              Thêm danh mục
+            </Button>
+          </div>
         </div>
 
         <div className="px-3 pb-3 pt-1">
           <Table
             columns={categoryColumns}
-            dataSource={categories}
+            dataSource={filteredCategories}
             rowKey="_id"
             loading={categoryLoading}
             pagination={{ pageSize: 7 }}
@@ -483,20 +554,45 @@ export default function FoodManagementAdminPage() {
       </Card>
 
       <Card className="!rounded-2xl !border !border-zinc-200 !shadow-none" bodyStyle={{ padding: 0 }}>
-        <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
-          <Space size={10}>
-            <h3 className="m-0 text-2xl font-extrabold tracking-tight text-zinc-900">Danh sách món ăn</h3>
-          </Space>
-
-          <Button onClick={() => handleOpenModal()} icon={<PlusOutlined />} className="!h-9 !rounded-lg !border-0 !bg-rose-600 !px-4 !text-xs !font-bold !uppercase !text-white">
-            Thêm món mới
-          </Button>
+        <div className="admin-toolbar">
+          <div className="admin-toolbar__meta">
+            <h3 className="admin-toolbar__title">Danh sách món ăn</h3>
+            <p className="admin-toolbar__description">Tìm món theo tên, mô tả và lọc theo danh mục hoặc trạng thái đang bán.</p>
+          </div>
+          <div className="admin-toolbar__controls">
+            <Input
+              allowClear
+              value={foodSearchText}
+              onChange={(event) => setFoodSearchText(event.target.value)}
+              placeholder="Tìm tên món hoặc mô tả..."
+              prefix={<SearchOutlined className="text-zinc-400" />}
+              className="admin-toolbar__search"
+            />
+            <Select
+              allowClear
+              placeholder="Lọc theo danh mục"
+              value={filterCategory}
+              onChange={setFilterCategory}
+              options={categoryOptions}
+              style={{ width: 200 }}
+            />
+            <Select
+              value={filterAvailability}
+              onChange={setFilterAvailability}
+              options={[
+                { label: 'Tất cả trạng thái', value: 'all' },
+                { label: 'Đang bán', value: 'available' },
+                { label: 'Đã ẩn', value: 'hidden' },
+              ]}
+              style={{ width: 170 }}
+            />
+          </div>
         </div>
 
         <div className="px-3 pb-3 pt-1">
           <Table
             columns={columns}
-            dataSource={foods}
+            dataSource={filteredFoods}
             rowKey="_id"
             loading={loading}
             pagination={{ pageSize: 7 }}
@@ -552,6 +648,33 @@ export default function FoodManagementAdminPage() {
 
           <Form.Item name="description" label="Mô tả">
             <Input.TextArea rows={2} />
+          </Form.Item>
+
+          <Form.Item name="ingredients" label="Nguyên liệu chính">
+            <Select
+              mode="tags"
+              tokenSeparators={[',']}
+              placeholder="Ví dụ: salmon, avocado, rice"
+              open={false}
+            />
+          </Form.Item>
+
+          <Form.Item name="allergens" label="Lưu ý dị ứng">
+            <Select
+              mode="tags"
+              tokenSeparators={[',']}
+              placeholder="Ví dụ: fish, shellfish, wheat"
+              open={false}
+            />
+          </Form.Item>
+
+          <Form.Item name="recommended_for" label="Phù hợp với">
+            <Select
+              mode="tags"
+              tokenSeparators={[',']}
+              placeholder="Ví dụ: first-time guests, sharing, ăn nhẹ"
+              open={false}
+            />
           </Form.Item>
 
           <Form.Item name="image_url" label="Đường dẫn ảnh">
