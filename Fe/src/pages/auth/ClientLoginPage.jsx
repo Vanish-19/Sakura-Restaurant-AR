@@ -91,8 +91,6 @@ export default function ClientLoginPage() {
         <Form layout="vertical" onFinish={onFinish} className="login-form-tw">
           {/* Identity */}
           <Form.Item
-            name="identity"
-            rules={identityRules}
             className="!mb-5"
           >
             <div className="flex flex-col gap-1">
@@ -110,8 +108,6 @@ export default function ClientLoginPage() {
 
           {/* Password */}
           <Form.Item
-            name="password"
-            rules={passwordRules}
             className="!mb-4"
           >
             <div className="flex flex-col gap-1">

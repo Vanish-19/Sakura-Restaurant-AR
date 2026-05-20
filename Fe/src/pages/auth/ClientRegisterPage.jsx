@@ -78,19 +78,7 @@ export default function ClientRegisterPage() {
         >
           {/* Họ và tên */}
           <Form.Item
-            name="fullName"
             className="!mb-4"
-            rules={[
-              { required: true, message: 'Vui lòng nhập họ và tên' },
-              {
-                validator: (_, value) => {
-                  const text = String(value || '').trim()
-                  if (!text) return Promise.resolve()
-                  if (NAME_REGEX.test(text)) return Promise.resolve()
-                  return Promise.reject(new Error('Tên chỉ gồm chữ cái và khoảng trắng (2-60 ký tự)'))
-                },
-              },
-            ]}
           >
             <div className="flex flex-col gap-1">
               <label className="text-[10px] tracking-[0.16em] font-bold text-[#4b1f1f] uppercase">
@@ -122,19 +110,7 @@ export default function ClientRegisterPage() {
 
           {/* Email */}
           <Form.Item
-            name="email"
             className="!mb-4"
-            rules={[
-              { required: true, message: 'Vui lòng nhập email' },
-              {
-                validator: (_, value) => {
-                  const text = String(value || '').trim()
-                  if (!text) return Promise.resolve()
-                  if (EMAIL_REGEX.test(text)) return Promise.resolve()
-                  return Promise.reject(new Error('Email không hợp lệ'))
-                },
-              },
-            ]}
           >
             <div className="flex flex-col gap-1">
               <label className="text-[10px] tracking-[0.16em] font-bold text-[#4b1f1f] uppercase">
@@ -166,19 +142,7 @@ export default function ClientRegisterPage() {
 
           {/* Số điện thoại */}
           <Form.Item
-            name="phone"
             className="!mb-4"
-            rules={[
-              { required: true, message: 'Vui lòng nhập số điện thoại' },
-              {
-                validator: (_, value) => {
-                  const text = String(value || '').trim()
-                  if (!text) return Promise.resolve()
-                  if (PHONE_REGEX.test(text)) return Promise.resolve()
-                  return Promise.reject(new Error('Số điện thoại Việt Nam không hợp lệ'))
-                },
-              },
-            ]}
           >
             <div className="flex flex-col gap-1">
               <label className="text-[10px] tracking-[0.16em] font-bold text-[#4b1f1f] uppercase">
@@ -210,19 +174,7 @@ export default function ClientRegisterPage() {
 
           {/* Mật khẩu */}
           <Form.Item
-            name="password"
             className="!mb-4"
-            rules={[
-              { required: true, message: 'Vui lòng nhập mật khẩu' },
-              {
-                validator: (_, value) => {
-                  const text = String(value || '')
-                  if (!text) return Promise.resolve()
-                  if (PASSWORD_COMPLEXITY_REGEX.test(text)) return Promise.resolve()
-                  return Promise.reject(new Error('Mật khẩu phải từ 8-64 ký tự, gồm chữ và số'))
-                },
-              },
-            ]}
           >
             <div className="flex flex-col gap-1">
               <label className="text-[10px] tracking-[0.16em] font-bold text-[#4b1f1f] uppercase">
@@ -254,18 +206,7 @@ export default function ClientRegisterPage() {
 
           {/* Xác nhận mật khẩu */}
           <Form.Item
-            name="confirmPassword"
-            dependencies={['password']}
             className="!mb-5"
-            rules={[
-              { required: true, message: 'Vui lòng xác nhận mật khẩu' },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue('password') === value) return Promise.resolve()
-                  return Promise.reject(new Error('Mật khẩu xác nhận không khớp'))
-                },
-              }),
-            ]}
           >
             <div className="flex flex-col gap-1">
               <label className="text-[10px] tracking-[0.16em] font-bold text-[#4b1f1f] uppercase">

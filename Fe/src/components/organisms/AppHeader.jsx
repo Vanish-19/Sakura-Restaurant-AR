@@ -85,10 +85,10 @@ export default function AppHeader({ variant = 'desktop' }) {
 
   return (
     <Header className={headerClassName + ' !border-b !border-[#ece7dc] !shadow-sm'}>
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-4">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-4 lg:gap-6">
         <Link
           to={{ pathname: homePath, search: location.search }}
-          className="no-underline"
+          className="min-w-0 shrink no-underline"
         >
           <Brand className="text-[#b10b22]" />
         </Link>
@@ -105,7 +105,7 @@ export default function AppHeader({ variant = 'desktop' }) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
           {isUserLoggedIn ? (
             <>
               <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 md:inline-flex">
@@ -123,19 +123,19 @@ export default function AppHeader({ variant = 'desktop' }) {
             </>
           ) : (
             <>
-              <Link to="/auth/login" className="hidden sm:inline-flex">
+              <Link to="/auth/login" className="inline-flex">
                 <Button
                   type="text"
-                  className="!h-9 !rounded-full !border !border-slate-200 !bg-white !px-4 !font-semibold !text-slate-700 !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!border-[#c6001e] hover:!bg-[#fff1f3] hover:!text-[#b10b22] hover:!shadow-[0_10px_22px_rgba(177,11,34,0.12)] active:!translate-y-0"
+                  className="!h-8 !rounded-full !border !border-slate-200 !bg-white !px-2.5 !text-[11px] !font-semibold !text-slate-700 !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!border-[#c6001e] hover:!bg-[#fff1f3] hover:!text-[#b10b22] hover:!shadow-[0_10px_22px_rgba(177,11,34,0.12)] active:!translate-y-0 sm:!h-9 sm:!px-4 sm:!text-sm"
                 >
                   {t('common.login')}
                 </Button>
               </Link>
 
-              <Link to="/auth/register" className="hidden sm:inline-flex">
+              <Link to="/auth/register" className="inline-flex">
                 <Button
                   type="text"
-                  className="!h-9 !rounded-full !border-0 !bg-[#8B0000] !px-4 !font-semibold !text-white !shadow-[0_8px_18px_rgba(139,0,0,0.18)] !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!bg-[#700000] hover:!shadow-[0_14px_28px_rgba(139,0,0,0.28)] active:!translate-y-0"
+                  className="!h-8 !rounded-full !border-0 !bg-[#8B0000] !px-2.5 !text-[11px] !font-semibold !text-white !shadow-[0_8px_18px_rgba(139,0,0,0.18)] !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!bg-[#700000] hover:!shadow-[0_14px_28px_rgba(139,0,0,0.28)] active:!translate-y-0 sm:!h-9 sm:!px-4 sm:!text-sm"
                 >
                   {t('common.register')}
                 </Button>
