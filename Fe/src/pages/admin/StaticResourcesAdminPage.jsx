@@ -6,7 +6,7 @@ import { getAdminStaticPages, updateAdminStaticPage } from '../../services/stati
 
 const { Paragraph, Text } = Typography
 
-const pageOrder = ['about', 'contact', 'privacy-policy', 'terms-of-service', 'career', 'press-kit']
+const pageOrder = ['about', 'contact', 'privacy-policy', 'terms-of-service', 'career', 'press-kit', 'site-layout']
 
 const pageLabels = {
   about: 'About',
@@ -15,6 +15,7 @@ const pageLabels = {
   'terms-of-service': 'Terms Of Service',
   career: 'Careers',
   'press-kit': 'Press Kit',
+  'site-layout': 'Header & Footer',
 }
 
 function stringifyContent(content) {
@@ -52,6 +53,7 @@ export default function StaticResourcesAdminPage() {
       terms: content,
       career: content,
       pressKit: content,
+      siteLayout: content,
       heroEyebrow: content.hero?.eyebrow,
       heroTitle: content.hero?.title,
       heroAccent: content.hero?.accent,
@@ -126,7 +128,9 @@ export default function StaticResourcesAdminPage() {
                   ? values.career
                   : activeSlug === 'press-kit'
                     ? values.pressKit
-                    : buildGenericContent(values)
+                    : activeSlug === 'site-layout'
+                      ? values.siteLayout
+                      : buildGenericContent(values)
       if (!baseContent) return
 
       const enTranslation = parseOptionalJson(values.translationsEnJson)
@@ -203,7 +207,8 @@ export default function StaticResourcesAdminPage() {
               {activeSlug === 'terms-of-service' ? <TermsResourceForm /> : null}
               {activeSlug === 'career' ? <CareerResourceForm /> : null}
               {activeSlug === 'press-kit' ? <PressKitResourceForm /> : null}
-              {!['about', 'contact', 'privacy-policy', 'terms-of-service', 'career', 'press-kit'].includes(activeSlug) ? <GenericResourceForm /> : null}
+              {activeSlug === 'site-layout' ? <SiteLayoutResourceForm /> : null}
+              {!['about', 'contact', 'privacy-policy', 'terms-of-service', 'career', 'press-kit', 'site-layout'].includes(activeSlug) ? <GenericResourceForm /> : null}
             </>
           ) : (
             <TranslationsJsonForm language={activeLanguage} />
@@ -903,6 +908,172 @@ function PressKitResourceForm() {
           <Form.Item name={['pressKit', 'mediaContactLabels', 'hotline']} label="Label hotline"><Input /></Form.Item>
           <Form.Item name={['pressKit', 'mediaContact', 'hotline']} label="Hotline"><Input /></Form.Item>
         </div>
+      </Card>
+    </div>
+  )
+}
+
+function SiteLayoutResourceForm() {
+  return (
+    <div className="flex flex-col gap-8">
+      <Card title="Header" className="!rounded-lg !border-zinc-200">
+        <Form.Item name="label" label="Tên trang trong admin" rules={[{ required: true }]}>
+          <Input />
+        </Form.Item>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Form.Item name={['siteLayout', 'header', 'brandName']} label="Tên thương hiệu">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'header', 'tagline']} label="Tagline">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'header', 'actions', 'login']} label="Nút đăng nhập">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'header', 'actions', 'register']} label="Nút đăng ký">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'header', 'actions', 'logout']} label="Nút đăng xuất">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'header', 'actions', 'greeting']} label="Lời chào user">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'header', 'actions', 'dineInNoticePrefix']} label="Thông báo dine-in">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'header', 'actions', 'deliveryNotice']} label="Thông báo delivery">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'header', 'actions', 'pendingTableNotice']} label="Thông báo chưa chọn bàn">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'header', 'actions', 'serviceModeNotice']} label="Thông báo chọn hình thức phục vụ">
+            <Input />
+          </Form.Item>
+        </div>
+        <Form.List name={['siteLayout', 'header', 'navItems']}>
+          {(fields, { add, remove }) => (
+            <div className="space-y-3">
+              <Text strong>Menu điều hướng</Text>
+              {fields.map((field) => (
+                <Card key={field.key} size="small" className="!rounded-lg">
+                  <div className="grid gap-3 md:grid-cols-[120px_1fr_1fr_auto]">
+                    <Form.Item {...field} name={[field.name, 'key']} label="Key">
+                      <Input />
+                    </Form.Item>
+                    <Form.Item {...field} name={[field.name, 'label']} label="Label">
+                      <Input />
+                    </Form.Item>
+                    <Form.Item {...field} name={[field.name, 'to']} label="Đường dẫn">
+                      <Input />
+                    </Form.Item>
+                    <Button danger type="text" icon={<MinusCircleOutlined />} onClick={() => remove(field.name)} />
+                  </div>
+                  <Form.List name={[field.name, 'match']}>
+                    {(matchFields, matchOps) => <EditableList fields={matchFields} add={matchOps.add} remove={matchOps.remove} label="Active routes" />}
+                  </Form.List>
+                </Card>
+              ))}
+              <Button icon={<PlusOutlined />} onClick={() => add({ key: '', label: '', to: '/', match: [] })}>
+                Thêm menu
+              </Button>
+            </div>
+          )}
+        </Form.List>
+      </Card>
+
+      <Card title="Footer - thương hiệu & newsletter" className="!rounded-lg !border-zinc-200">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Form.Item name={['siteLayout', 'footer', 'brandName']} label="Tên thương hiệu">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'footer', 'tagline']} label="Tagline">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'footer', 'newsletterTitle']} label="Tiêu đề newsletter">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'footer', 'newsletterDescription']} label="Mô tả newsletter">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'footer', 'emailPlaceholder']} label="Placeholder email">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'footer', 'newsletterButtonLabel']} label="Nút newsletter">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'footer', 'socialTitle']} label="Tiêu đề social">
+            <Input />
+          </Form.Item>
+          <Form.Item name={['siteLayout', 'footer', 'backgroundImage']} label="Ảnh nền footer">
+            <Input />
+          </Form.Item>
+        </div>
+        <Form.Item name={['siteLayout', 'footer', 'description']} label="Mô tả footer">
+          <Input.TextArea rows={3} />
+        </Form.Item>
+        <Form.Item name={['siteLayout', 'footer', 'copyright']} label="Copyright dòng 1">
+          <Input />
+        </Form.Item>
+        <Form.Item name={['siteLayout', 'footer', 'secondaryCopyright']} label="Copyright dòng 2">
+          <Input />
+        </Form.Item>
+      </Card>
+
+      <Card title="Footer - mạng xã hội" className="!rounded-lg !border-zinc-200">
+        <Form.List name={['siteLayout', 'footer', 'socialLinks']}>
+          {(fields, { add, remove }) => (
+            <div className="space-y-3">
+              {fields.map((field) => (
+                <div key={field.key} className="grid gap-3 md:grid-cols-[1fr_160px_1fr_auto]">
+                  <Form.Item {...field} name={[field.name, 'label']} className="!mb-0">
+                    <Input placeholder="Label" />
+                  </Form.Item>
+                  <Form.Item {...field} name={[field.name, 'iconKey']} className="!mb-0">
+                    <Input placeholder="facebook" />
+                  </Form.Item>
+                  <Form.Item {...field} name={[field.name, 'href']} className="!mb-0">
+                    <Input placeholder="https://..." />
+                  </Form.Item>
+                  <Button danger type="text" icon={<MinusCircleOutlined />} onClick={() => remove(field.name)} />
+                </div>
+              ))}
+              <Button icon={<PlusOutlined />} onClick={() => add({ label: '', iconKey: 'facebook', href: '#' })}>
+                Thêm mạng xã hội
+              </Button>
+            </div>
+          )}
+        </Form.List>
+      </Card>
+
+      <Card title="Footer - điểm nổi bật" className="!rounded-lg !border-zinc-200">
+        <Form.List name={['siteLayout', 'footer', 'highlights']}>
+          {(fields, { add, remove }) => <EditableCardList fields={fields} add={add} remove={remove} addLabel="Thêm điểm nổi bật" />}
+        </Form.List>
+      </Card>
+
+      <Card title="Footer - liên kết cuối trang" className="!rounded-lg !border-zinc-200">
+        <Form.List name={['siteLayout', 'footer', 'links']}>
+          {(fields, { add, remove }) => (
+            <div className="space-y-3">
+              {fields.map((field) => (
+                <div key={field.key} className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+                  <Form.Item {...field} name={[field.name, 'label']} className="!mb-0">
+                    <Input placeholder="Label" />
+                  </Form.Item>
+                  <Form.Item {...field} name={[field.name, 'to']} className="!mb-0">
+                    <Input placeholder="/privacy&policy" />
+                  </Form.Item>
+                  <Button danger type="text" icon={<MinusCircleOutlined />} onClick={() => remove(field.name)} />
+                </div>
+              ))}
+              <Button icon={<PlusOutlined />} onClick={() => add({ label: '', to: '/' })}>
+                Thêm liên kết
+              </Button>
+            </div>
+          )}
+        </Form.List>
       </Card>
     </div>
   )

@@ -1,10 +1,10 @@
 import { RestOutlined } from '@ant-design/icons'
 import { useSiteSettings } from '../../utils/siteSettings.js'
 
-export default function Brand({ className = '' }) {
+export default function Brand({ className = '', name, tagline }) {
   const settings = useSiteSettings()
-  const clientWebsiteName = settings?.clientWebsiteName || 'Sakura Restaurant'
-  const clientTagline = settings?.clientTagline || 'Premium Japanese AR Dining'
+  const clientWebsiteName = name || settings?.clientWebsiteName || 'Sakura Restaurant'
+  const clientTagline = tagline || settings?.clientTagline || 'Premium Japanese AR Dining'
 
   return (
     <div className={['flex min-w-0 items-center gap-2 sm:gap-3', className].join(' ')}>

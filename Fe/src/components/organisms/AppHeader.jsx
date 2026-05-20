@@ -8,11 +8,16 @@ import { userLogout } from '../../services/authApi.js'
 import { useCart } from '../../contexts/CartContext.jsx'
 import { clearUserSession, getUserProfile } from '../../utils/authSession.js'
 import { getOrderSource } from '../../utils/orderSource.js'
+import useStaticPageContent from '../../hooks/useStaticPageContent.js'
 
 const { Header } = Layout
+const emptyLayoutContent = {}
 
 export default function AppHeader({ variant = 'desktop' }) {
   const { t } = useTranslation()
+  const layoutContent = useStaticPageContent('site-layout', emptyLayoutContent)
+  const headerContent = layoutContent.header || {}
+  const headerActions = headerContent.actions || {}
   const { totalItems, clearAllCarts } = useCart()
   const location = useLocation()
   const navigate = useNavigate()
@@ -27,12 +32,17 @@ export default function AppHeader({ variant = 'desktop' }) {
   const isUserLoggedIn = Boolean(userDisplayName)
   const homePath = orderSource.mode === 'dine-in' ? '/order' : '/'
   const scopeKeyRef = useRef(null)
-  const navItems = [
+  const navItems = headerContent.navItems || [
     { key: 'home', label: t('navigation.home'), to: homePath, match: ['/', '/order'] },
     { key: 'about', label: t('navigation.about'), to: '/about', match: ['/about'] },
     { key: 'blog', label: t('navigation.blog'), to: '/blog', match: ['/blog'] },
     { key: 'contact', label: t('navigation.contact'), to: '/contact', match: ['/contact'] },
   ]
+  const resolvedNavItems = navItems.map((item) => ({
+    ...item,
+    to: item.key === 'home' && orderSource.mode === 'dine-in' ? homePath : item.to,
+    match: Array.isArray(item.match) ? item.match : [item.to],
+  }))
 
   const handleLogout = async () => {
     try {
@@ -66,14 +76,14 @@ export default function AppHeader({ variant = 'desktop' }) {
     message.destroy()
     const notice =
       orderSource.mode === 'dine-in'
-        ? `Đang ở ${orderSource.label}`
+        ? `${headerActions.dineInNoticePrefix || 'Đang ở'} ${orderSource.label}`
         : orderSource.mode === 'delivery'
-          ? 'Đang ở chế độ giao tận nơi'
+          ? headerActions.deliveryNotice || 'Đang ở chế độ giao tận nơi'
           : orderSource.mode === 'pending-table'
-            ? 'Vui lòng chọn bàn để tiếp tục'
-            : 'Vui lòng chọn hình thức phục vụ'
+            ? headerActions.pendingTableNotice || 'Vui lòng chọn bàn để tiếp tục'
+            : headerActions.serviceModeNotice || 'Vui lòng chọn hình thức phục vụ'
     message.info(notice, 1.8)
-  }, [orderSource.mode, orderSource.tableCode, orderSource.label])
+  }, [headerActions.deliveryNotice, headerActions.dineInNoticePrefix, headerActions.pendingTableNotice, headerActions.serviceModeNotice, orderSource.mode, orderSource.tableCode, orderSource.label])
 
   const headerClassName =
     variant === 'android'
@@ -90,11 +100,11 @@ export default function AppHeader({ variant = 'desktop' }) {
           to={{ pathname: homePath, search: location.search }}
           className="min-w-0 shrink no-underline"
         >
-          <Brand className="text-[#b10b22]" />
+          <Brand className="text-[#b10b22]" name={headerContent.brandName} tagline={headerContent.tagline} />
         </Link>
 
         <nav className="hidden items-center gap-8 text-sm font-semibold text-slate-700 lg:flex">
-          {navItems.map((item) => (
+          {resolvedNavItems.map((item) => (
             <Link
               key={item.key}
               to={{ pathname: item.to, search: location.search }}
@@ -109,7 +119,7 @@ export default function AppHeader({ variant = 'desktop' }) {
           {isUserLoggedIn ? (
             <>
               <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 md:inline-flex">
-                <span className="text-slate-400">{t('common.greeting', { defaultValue: 'Xin chào,' })}</span>
+                <span className="text-slate-400">{headerActions.greeting || t('common.greeting', { defaultValue: 'Xin chào,' })}</span>
                 <span className="max-w-[140px] truncate font-semibold text-slate-800">{userDisplayName}</span>
               </div>
 
@@ -118,7 +128,7 @@ export default function AppHeader({ variant = 'desktop' }) {
                 onClick={handleLogout}
                 className="!h-9 !rounded-full !border !border-red-200 !bg-white !px-4 !font-semibold !text-[#b10b22] !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!border-[#c6001e] hover:!bg-[#fff1f3] hover:!text-[#b10b22] hover:!shadow-[0_10px_22px_rgba(177,11,34,0.12)] active:!translate-y-0"
               >
-                {t('common.logout')}
+                {headerActions.logout || t('common.logout')}
               </Button>
             </>
           ) : (
@@ -128,7 +138,7 @@ export default function AppHeader({ variant = 'desktop' }) {
                   type="text"
                   className="!h-8 !rounded-full !border !border-slate-200 !bg-white !px-2.5 !text-[11px] !font-semibold !text-slate-700 !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!border-[#c6001e] hover:!bg-[#fff1f3] hover:!text-[#b10b22] hover:!shadow-[0_10px_22px_rgba(177,11,34,0.12)] active:!translate-y-0 sm:!h-9 sm:!px-4 sm:!text-sm"
                 >
-                  {t('common.login')}
+                  {headerActions.login || t('common.login')}
                 </Button>
               </Link>
 
@@ -137,7 +147,7 @@ export default function AppHeader({ variant = 'desktop' }) {
                   type="text"
                   className="!h-8 !rounded-full !border-0 !bg-[#8B0000] !px-2.5 !text-[11px] !font-semibold !text-white !shadow-[0_8px_18px_rgba(139,0,0,0.18)] !transition-all !duration-300 !ease-out hover:!-translate-y-0.5 hover:!bg-[#700000] hover:!shadow-[0_14px_28px_rgba(139,0,0,0.28)] active:!translate-y-0 sm:!h-9 sm:!px-4 sm:!text-sm"
                 >
-                  {t('common.register')}
+                  {headerActions.register || t('common.register')}
                 </Button>
               </Link>
             </>

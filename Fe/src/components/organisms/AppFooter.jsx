@@ -13,9 +13,11 @@ import { Button, Input, Layout, Typography } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useSiteSettings } from '../../utils/siteSettings.js'
+import useStaticPageContent from '../../hooks/useStaticPageContent.js'
 
 const { Footer } = Layout
 const { Paragraph, Text } = Typography
+const emptyLayoutContent = {}
 
 const socialLinks = [
   { label: 'Facebook', icon: <FacebookFilled />, href: '#' },
@@ -25,18 +27,34 @@ const socialLinks = [
   { label: 'Reviews', icon: <RestOutlined />, href: '#' },
 ]
 
+const footerIconMap = {
+  'safety-certificate': <SafetyCertificateOutlined />,
+  api: <ApiOutlined />,
+  gift: <GiftOutlined />,
+  heart: <HeartOutlined />,
+  facebook: <FacebookFilled />,
+  instagram: <InstagramOutlined />,
+  youtube: <YoutubeFilled />,
+  tiktok: <TikTokOutlined />,
+  reviews: <RestOutlined />,
+}
+
 export default function AppFooter() {
   const { t } = useTranslation()
+  const layoutContent = useStaticPageContent('site-layout', emptyLayoutContent)
+  const footerContent = layoutContent.footer || {}
   const settings = useSiteSettings()
-  const clientWebsiteName = settings?.clientWebsiteName || 'Sakura Restaurant'
-  const clientTagline = t('common.brandTagline')
+  const clientWebsiteName = footerContent.brandName || settings?.clientWebsiteName || 'Sakura Restaurant'
+  const clientTagline = footerContent.tagline || t('common.brandTagline')
   const footerPrimary =
+    footerContent.copyright ||
     settings?.footerPrimary ||
     t('footer.copyright')
   const footerSecondary =
+    footerContent.secondaryCopyright ||
     settings?.footerSecondary ||
     t('footer.secondaryCopyright')
-  const highlights = [
+  const fallbackHighlights = [
     {
       icon: <SafetyCertificateOutlined />,
       title: t('footer.highlights.japaneseCuisine.title'),
@@ -58,18 +76,27 @@ export default function AppFooter() {
       text: t('footer.highlights.dedicatedService.text'),
     },
   ]
-  const footerLinks = [
+  const highlights = footerContent.highlights?.length
+    ? footerContent.highlights.map((item) => ({
+      ...item,
+      icon: footerIconMap[item.iconKey] || <HeartOutlined />,
+    }))
+    : fallbackHighlights
+  const footerLinks = footerContent.links?.length ? footerContent.links : [
     { label: t('navigation.privacyPolicy'), to: '/privacy&policy' },
     { label: t('navigation.termsOfService'), to: '/term&service' },
     { label: t('navigation.careers'), to: '/career' },
     { label: t('navigation.pressKit'), to: '/press-kit' },
   ]
+  const resolvedSocialLinks = footerContent.socialLinks?.length
+    ? footerContent.socialLinks.map((item) => ({ ...item, icon: footerIconMap[item.iconKey] || <RestOutlined /> }))
+    : socialLinks
 
   return (
     <Footer className="!mt-auto !w-full !bg-white !px-0 !py-0">
       <div className="relative w-full overflow-hidden border-t border-[#f0e7e7] bg-white shadow-[0_-6px_28px_rgba(17,24,39,0.04)]">
         <img
-          src="/bgfooter.png"
+          src={footerContent.backgroundImage || '/bgfooter.png'}
           alt=""
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
@@ -95,23 +122,23 @@ export default function AppFooter() {
           </div>
 
           <Paragraph className="!mb-0 !max-w-md !text-sm !font-medium !leading-7 !text-[#4A4A4A]">
-            {t('footer.description')}
+            {footerContent.description || t('footer.description')}
           </Paragraph>
 
           <div>
             <Text className="!block !text-sm !font-extrabold !uppercase !tracking-[0.08em] !text-[#1C1C1E]">
-              {t('footer.newsletterTitle')}
+              {footerContent.newsletterTitle || t('footer.newsletterTitle')}
             </Text>
             <Paragraph className="!mb-4 !mt-2 !text-sm !leading-6 !text-[#6f6666]">
-              {t('footer.newsletterDescription')}
+              {footerContent.newsletterDescription || t('footer.newsletterDescription')}
             </Paragraph>
             <div className="footer-newsletter flex max-w-[500px] flex-col gap-3 rounded-[28px] border border-[#eadede] bg-white/88 p-2 shadow-[0_12px_28px_rgba(144,0,32,0.08)] backdrop-blur-sm sm:flex-row sm:items-center sm:rounded-full">
               <Input
-                placeholder={t('footer.emailPlaceholder')}
+                placeholder={footerContent.emailPlaceholder || t('footer.emailPlaceholder')}
                 className="footer-newsletter__input !h-12 !min-w-0 !flex-1 !rounded-full !border-0 !bg-transparent !px-5 !text-sm !shadow-none placeholder:!text-[#b8adad]"
               />
               <Button className="!h-12 !shrink-0 !rounded-full !border-0 !bg-[#8B0000] !px-8 !font-bold !text-white !shadow-[0_10px_22px_rgba(139,0,0,0.20)] !transition-all !duration-300 hover:!-translate-y-0.5 hover:!bg-[#700000] hover:!shadow-[0_14px_28px_rgba(139,0,0,0.30)]">
-                {t('common.register')}
+                {footerContent.newsletterButtonLabel || t('common.register')}
               </Button>
             </div>
           </div>
@@ -122,10 +149,10 @@ export default function AppFooter() {
         <div className="relative z-10 mx-auto grid w-full max-w-[1680px] gap-8 px-6 py-10 md:grid-cols-[1fr_2.8fr] md:px-14 xl:px-20 2xl:px-28">
           <div>
             <Text className="!block !text-sm !font-extrabold !uppercase !tracking-[0.08em] !text-[#d8001e]">
-              {t('footer.socialTitle')}
+              {footerContent.socialTitle || t('footer.socialTitle')}
             </Text>
             <div className="mt-5 flex flex-wrap gap-3">
-              {socialLinks.map((item) => (
+              {resolvedSocialLinks.map((item) => (
                 <a
                   key={item.label}
                   href={item.href}

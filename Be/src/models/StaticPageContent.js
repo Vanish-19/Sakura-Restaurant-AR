@@ -7,7 +7,7 @@ const staticPageContentSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
-      enum: ['about', 'contact', 'privacy-policy', 'terms-of-service', 'career', 'press-kit'],
+      enum: ['about', 'contact', 'privacy-policy', 'terms-of-service', 'career', 'press-kit', 'site-layout'],
     },
     label: { type: String, required: true, trim: true },
     content: { type: mongoose.Schema.Types.Mixed, default: {} },

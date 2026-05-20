@@ -673,6 +673,65 @@ export const STATIC_PAGE_DEFAULTS = [
       },
     },
   },
+  {
+    slug: 'site-layout',
+    label: 'Header & Footer',
+    content: {
+      header: {
+        brandName: 'Sakura Restaurant',
+        tagline: 'Premium Japanese AR Dining',
+        navItems: [
+          { key: 'home', label: 'Home', to: '/', match: ['/', '/order'] },
+          { key: 'about', label: 'About', to: '/about', match: ['/about'] },
+          { key: 'blog', label: 'Blog', to: '/blog', match: ['/blog'] },
+          { key: 'contact', label: 'Contact', to: '/contact', match: ['/contact'] },
+        ],
+        actions: {
+          login: 'Đăng nhập',
+          register: 'Đăng ký',
+          logout: 'Đăng xuất',
+          greeting: 'Xin chào,',
+          dineInNoticePrefix: 'Đang ở',
+          deliveryNotice: 'Đang ở chế độ giao tận nơi',
+          pendingTableNotice: 'Vui lòng chọn bàn để tiếp tục',
+          serviceModeNotice: 'Vui lòng chọn hình thức phục vụ',
+        },
+      },
+      footer: {
+        brandName: 'Sakura Restaurant',
+        tagline: 'Premium Japanese AR Dining',
+        description:
+          'Sakura Restaurant kết hợp tinh hoa ẩm thực Nhật Bản với công nghệ AR hiện đại, mang đến trải nghiệm ẩm thực sống động và đáng nhớ.',
+        newsletterTitle: 'Đăng ký nhận tin',
+        newsletterDescription: 'Nhận thông tin mới nhất về ưu đãi và sự kiện',
+        emailPlaceholder: 'Nhập email của bạn',
+        newsletterButtonLabel: 'Đăng ký',
+        socialTitle: 'Kết nối với chúng tôi',
+        backgroundImage: '/bgfooter.png',
+        socialLinks: [
+          { label: 'Facebook', iconKey: 'facebook', href: '#' },
+          { label: 'Instagram', iconKey: 'instagram', href: '#' },
+          { label: 'YouTube', iconKey: 'youtube', href: '#' },
+          { label: 'TikTok', iconKey: 'tiktok', href: '#' },
+          { label: 'Reviews', iconKey: 'reviews', href: '#' },
+        ],
+        highlights: [
+          { iconKey: 'safety-certificate', title: 'Tinh hoa ẩm thực Nhật', text: 'Nguyên liệu tươi ngon chuẩn Nhật' },
+          { iconKey: 'api', title: 'Công nghệ AR độc đáo', text: 'Trải nghiệm ẩm thực sống động' },
+          { iconKey: 'gift', title: 'Không gian tinh tế', text: 'Thiết kế mang đậm bản sắc Nhật Bản' },
+          { iconKey: 'heart', title: 'Dịch vụ tận tâm', text: 'Đội ngũ chuyên nghiệp, phục vụ bằng cả trái tim' },
+        ],
+        links: [
+          { label: 'Privacy Policy', to: '/privacy&policy' },
+          { label: 'Terms Of Service', to: '/term&service' },
+          { label: 'Careers', to: '/career' },
+          { label: 'Press Kit', to: '/press-kit' },
+        ],
+        copyright: '© 2026 Sakura Restaurant. Experience Japanese cuisine in AR/VR.',
+        secondaryCopyright: 'さくらレストラン - AR/VRで日本料理を体験',
+      },
+    },
+  },
 ];
 
 function createNotFoundError() {
