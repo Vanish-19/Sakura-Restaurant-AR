@@ -49,6 +49,11 @@ const SECTION_ICON_MAP = {
 export default function PrivacyPolicyPage() {
   const pageContent = useStaticPageContent('privacy-policy', defaultPrivacyContent)
   const hero = pageContent.hero || defaultPrivacyContent.hero
+  const tocTitle = pageContent.tocTitle || 'MỤC LỤC'
+  const supportTitle = pageContent.supportTitle || 'Bạn có thắc mắc về chính sách bảo mật?'
+  const supportText = pageContent.supportText || 'Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ bạn.'
+  const supportButtonLabel = pageContent.supportButtonLabel || 'Liên hệ ngay'
+  const contentMoreLabel = pageContent.contentMoreLabel || 'Xem tất cả chính sách chi tiết bên dưới'
   const sections = useMemo(
     () =>
       Array.isArray(pageContent.sections)
@@ -123,12 +128,6 @@ export default function PrivacyPolicyPage() {
 
     setIsContentExpanded(true)
   }
-
-  useEffect(() => {
-    if (sections[0]?.id) {
-      setActiveSection((current) => current || sections[0].id)
-    }
-  }, [sections])
 
   return (
     <div className="bg-[#fffafa] text-[#1C1C1E]">

@@ -59,6 +59,39 @@ const defaultContactContent = {
   },
   contactForm: {
     title: 'Gửi Thông Điệp Cho Chúng Tôi',
+    submitLabel: 'Gửi Yêu Cầu Của Bạn',
+    successMessage: 'Cảm ơn bạn. Sakura Restaurant sẽ liên hệ lại trong thời gian sớm nhất.',
+    fields: {
+      name: {
+        label: 'Họ Và Tên *',
+        placeholder: 'Nhập họ và tên của bạn',
+        requiredMessage: 'Vui lòng nhập họ tên',
+      },
+      phone: {
+        label: 'Số Điện Thoại *',
+        placeholder: 'Nhập số điện thoại của bạn',
+        requiredMessage: 'Vui lòng nhập số điện thoại',
+      },
+      email: {
+        label: 'Email *',
+        placeholder: 'Nhập email của bạn',
+        requiredMessage: 'Vui lòng nhập email',
+        invalidMessage: 'Email không hợp lệ',
+      },
+      purpose: {
+        label: 'Mục Đích Liên Hệ *',
+        placeholder: 'Chọn mục đích liên hệ',
+        requiredMessage: 'Vui lòng chọn mục đích liên hệ',
+      },
+      guests: {
+        label: 'Số Lượng Khách (Nếu đặt bàn)',
+        placeholder: 'Nhập số lượng khách',
+      },
+      message: {
+        label: 'Yêu Cầu Đặc Biệt / Tin Nhắn',
+        placeholder: 'Hãy cho chúng tôi biết thêm yêu cầu đặc biệt về vị trí ngồi, chế độ ăn, hoặc hỗ trợ kỹ thuật AR...',
+      },
+    },
     purposeOptions: [
       { value: 'booking', label: 'Đặt bàn' },
       { value: 'support', label: 'Hỗ trợ trải nghiệm AR' },
@@ -106,6 +139,11 @@ export default function ContactPage() {
   const supportCard = pageContent.supportCard || defaultContactContent.supportCard
   const contactForm = pageContent.contactForm || defaultContactContent.contactForm
   const serviceCards = pageContent.serviceCards || defaultContactContent.serviceCards
+  const contactFields = contactForm.fields || defaultContactContent.contactForm.fields
+  const getContactField = (key) => ({
+    ...(defaultContactContent.contactForm.fields[key] || {}),
+    ...(contactFields[key] || {}),
+  })
 
   const handleSubmit = () => {
     message.success(contactForm.successMessage || defaultContactContent.contactForm.successMessage)
@@ -244,7 +282,7 @@ export default function ContactPage() {
 
               <Form.Item label={getContactField('purpose').label} name="purpose" rules={[{ required: true, message: getContactField('purpose').requiredMessage }]}>
                 <Select
-                  placeholder="Chọn mục đích liên hệ"
+                  placeholder={getContactField('purpose').placeholder}
                   options={contactForm.purposeOptions}
                 />
               </Form.Item>
