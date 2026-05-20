@@ -8,7 +8,7 @@ const router = express.Router();
 router.post('/login', login);
 
 // POST /api/v1/admin/auth/register — Chỉ super admin mới tạo được account mới
-// Lần đầu tiên có thể tạm bỏ middleware để seed admin đầu tiên
+// Lần đầu tiên có thể tạo admin đầu tiên trực tiếp trong database hoặc qua script riêng có kiểm soát.
 router.post('/register', verifyAdmin, superAdminOnly, register);
 router.post('/refresh', refresh);
 router.post('/logout', verifyAdmin, logout);

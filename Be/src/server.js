@@ -31,9 +31,11 @@ import articleRoutes from './routes/articleRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import { handleSepayWebhookEvent, buildSepayReturnRedirectUrl } from './services/sepayPaymentService.js';
 import { ensureJwtConfig } from './services/tokenService.js';
+import { ensureStaticPages } from './services/staticPageContentService.js';
 
 // Khởi tạo Database MongoDB
-connectDB();
+await connectDB();
+await ensureStaticPages();
 ensureJwtConfig();
 
 const app = express();

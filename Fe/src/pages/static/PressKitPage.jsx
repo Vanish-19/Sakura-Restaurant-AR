@@ -33,6 +33,11 @@ const defaultPressKitContent = {
     email: 'van.pa@tinasoft.vn',
     hotline: '+84 (0) 966 490 431',
   },
+  mediaContactLabels: {
+    representative: 'Đại diện truyền thông',
+    email: 'Email',
+    hotline: 'Hotline (Press only)',
+  },
   overviewCards: [
     {
       iconKey: 'safety-certificate',
@@ -121,6 +126,10 @@ export default function PressKitPage() {
   const pageContent = useStaticPageContent('press-kit', defaultPressKitContent)
   const hero = pageContent.hero || defaultPressKitContent.hero
   const mediaContact = pageContent.mediaContact || defaultPressKitContent.mediaContact
+  const mediaContactLabels = {
+    ...defaultPressKitContent.mediaContactLabels,
+    ...(pageContent.mediaContactLabels || {}),
+  }
   const overviewCards = pageContent.overviewCards || defaultPressKitContent.overviewCards
   const logoAssets = pageContent.logoAssets || defaultPressKitContent.logoAssets
   const mediaAssets = pageContent.mediaAssets || defaultPressKitContent.mediaAssets
@@ -234,9 +243,9 @@ export default function PressKitPage() {
             </div>
 
             <div className="relative z-10 grid border-t border-white/14 bg-black/32 text-white backdrop-blur-sm md:grid-cols-3">
-              <ContactItem icon={<UserOutlined />} title="Đại diện truyền thông" text={mediaContact.representative} />
-              <ContactItem icon={<MailOutlined />} title="Email" text={mediaContact.email} />
-              <ContactItem icon={<PhoneOutlined />} title="Hotline (Press only)" text={mediaContact.hotline} />
+              <ContactItem icon={<UserOutlined />} title={mediaContactLabels.representative} text={mediaContact.representative} />
+              <ContactItem icon={<MailOutlined />} title={mediaContactLabels.email} text={mediaContact.email} />
+              <ContactItem icon={<PhoneOutlined />} title={mediaContactLabels.hotline} text={mediaContact.hotline} />
             </div>
           </div>
         </Card>

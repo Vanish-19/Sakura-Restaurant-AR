@@ -30,6 +30,11 @@ const defaultTermsContent = {
     subtitle: '(TERMS OF SERVICE) - Sakura Restaurant',
     backgroundImage: '/headbgPrivacy.png',
   },
+  tocTitle: 'MỤC LỤC',
+  supportTitle: 'Cần hỗ trợ?',
+  supportText: 'Nếu bạn có bất kỳ câu hỏi nào về Điều khoản dịch vụ, vui lòng liên hệ với chúng tôi.',
+  supportButtonLabel: 'Liên hệ ngay',
+  contentMoreLabel: 'Xem tất cả điều khoản chi tiết bên dưới',
 }
 
 const SECTION_ICON_MAP = {
@@ -69,14 +74,16 @@ export default function TermsOfServicePage() {
       subtitle={hero.subtitle}
       updatedLabel={hero.eyebrow}
       backgroundImage={hero.backgroundImage}
-      supportTitle="Cần hỗ trợ?"
-      supportText="Nếu bạn có bất kỳ câu hỏi nào về Điều khoản dịch vụ, vui lòng liên hệ với chúng tôi."
-      contentMoreLabel="Xem tất cả điều khoản chi tiết bên dưới"
+      tocTitle={pageContent.tocTitle || defaultTermsContent.tocTitle}
+      supportTitle={pageContent.supportTitle || defaultTermsContent.supportTitle}
+      supportText={pageContent.supportText || defaultTermsContent.supportText}
+      supportButtonLabel={pageContent.supportButtonLabel || defaultTermsContent.supportButtonLabel}
+      contentMoreLabel={pageContent.contentMoreLabel || defaultTermsContent.contentMoreLabel}
     >
-      {({ sectionRefs, visibleContentIds }) => (
+      {({ registerSection, visibleContentIds }) => (
         <>
           {visibleContentIds.has('acceptance') ? (
-          <LegalSection id="acceptance" section={sections[0]} sectionRefs={sectionRefs} className="pb-12">
+          <LegalSection id="acceptance" section={sections[0]} registerSection={registerSection} className="pb-12">
             {(pageContent.acceptanceParagraphs || []).map((paragraph) => (
               <Paragraph key={paragraph} className="!text-base !leading-8 !text-slate-700">
                 {paragraph}
@@ -92,7 +99,7 @@ export default function TermsOfServicePage() {
           ) : null}
 
           {visibleContentIds.has('service-rules') ? (
-          <LegalSection id="service-rules" section={sections[1]} sectionRefs={sectionRefs}>
+          <LegalSection id="service-rules" section={sections[1]} registerSection={registerSection}>
             <Paragraph className="!text-base !leading-8 !text-slate-700">
               {pageContent.serviceRulesIntro}
             </Paragraph>
@@ -101,13 +108,13 @@ export default function TermsOfServicePage() {
           ) : null}
 
           {visibleContentIds.has('account') ? (
-          <LegalSection id="account" section={sections[2]} sectionRefs={sectionRefs}>
+          <LegalSection id="account" section={sections[2]} registerSection={registerSection}>
             <BulletList items={pageContent.accountItems || []} />
           </LegalSection>
           ) : null}
 
           {visibleContentIds.has('booking') ? (
-          <LegalSection id="booking" section={sections[3]} sectionRefs={sectionRefs}>
+          <LegalSection id="booking" section={sections[3]} registerSection={registerSection}>
             <div className="grid gap-5 md:grid-cols-2">
               {(pageContent.bookingCards || []).map((item) => (
                 <InfoCard key={item.title} {...item} icon={SECTION_ICON_MAP[item.iconKey] || <BankOutlined />} />
@@ -117,7 +124,7 @@ export default function TermsOfServicePage() {
           ) : null}
 
           {visibleContentIds.has('payment') ? (
-          <LegalSection id="payment" section={sections[4]} sectionRefs={sectionRefs}>
+          <LegalSection id="payment" section={sections[4]} registerSection={registerSection}>
             <div className="grid gap-5 md:grid-cols-3">
               {(pageContent.paymentCards || []).map((item) => (
                 <InfoCard key={item.title} {...item} icon={SECTION_ICON_MAP[item.iconKey] || <CreditCardOutlined />} />
@@ -127,7 +134,7 @@ export default function TermsOfServicePage() {
           ) : null}
 
           {visibleContentIds.has('responsibilities') ? (
-          <LegalSection id="responsibilities" section={sections[5]} sectionRefs={sectionRefs}>
+          <LegalSection id="responsibilities" section={sections[5]} registerSection={registerSection}>
             <div className="grid overflow-hidden rounded-lg border border-[#ffd5dc] md:grid-cols-2">
               <div className="bg-[#fff7f8] p-5">
                 <Text className="!font-extrabold !text-[#d8001e]">{pageContent.responsibilities?.restaurant?.title}</Text>
@@ -142,7 +149,7 @@ export default function TermsOfServicePage() {
           ) : null}
 
           {visibleContentIds.has('content') ? (
-          <LegalSection id="content" section={sections[6]} sectionRefs={sectionRefs}>
+          <LegalSection id="content" section={sections[6]} registerSection={registerSection}>
             {(pageContent.contentParagraphs || []).map((paragraph) => (
               <Paragraph key={paragraph} className="!text-base !leading-8 !text-slate-700">
                 {paragraph}
@@ -152,13 +159,13 @@ export default function TermsOfServicePage() {
           ) : null}
 
           {visibleContentIds.has('limitation') ? (
-          <LegalSection id="limitation" section={sections[7]} sectionRefs={sectionRefs}>
+          <LegalSection id="limitation" section={sections[7]} registerSection={registerSection}>
             <BulletList items={pageContent.limitationItems || []} />
           </LegalSection>
           ) : null}
 
           {visibleContentIds.has('changes') ? (
-          <LegalSection id="changes" section={sections[8]} sectionRefs={sectionRefs}>
+          <LegalSection id="changes" section={sections[8]} registerSection={registerSection}>
             {(pageContent.changesParagraphs || []).map((paragraph) => (
               <Paragraph key={paragraph} className="!text-base !leading-8 !text-slate-700">
                 {paragraph}
@@ -168,7 +175,7 @@ export default function TermsOfServicePage() {
           ) : null}
 
           {visibleContentIds.has('termination') ? (
-          <LegalSection id="termination" section={sections[9]} sectionRefs={sectionRefs}>
+          <LegalSection id="termination" section={sections[9]} registerSection={registerSection}>
             {(pageContent.terminationParagraphs || []).map((paragraph) => (
               <Paragraph key={paragraph} className="!text-base !leading-8 !text-slate-700">
                 {paragraph}
@@ -178,7 +185,7 @@ export default function TermsOfServicePage() {
           ) : null}
 
           {visibleContentIds.has('contact') ? (
-          <LegalSection id="contact" section={sections[10]} sectionRefs={sectionRefs} isLast>
+          <LegalSection id="contact" section={sections[10]} registerSection={registerSection} isLast>
             <Paragraph className="!text-base !leading-8 !text-slate-700">
               {pageContent.contactIntro}
             </Paragraph>
@@ -198,12 +205,12 @@ export default function TermsOfServicePage() {
   )
 }
 
-function LegalSection({ id, section, sectionRefs, children, className = 'py-12', isLast = false }) {
+function LegalSection({ id, section, registerSection, children, className = 'py-12', isLast = false }) {
   return (
     <section
       id={id}
       ref={(node) => {
-        sectionRefs.current[id] = node
+        registerSection(id, node)
       }}
       className={`scroll-mt-28 ${isLast ? 'pt-12 pb-12' : `border-b border-[#eee3e3] ${className}`}`}
     >

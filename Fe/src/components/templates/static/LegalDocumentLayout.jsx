@@ -40,6 +40,8 @@ export default function LegalDocumentLayout({
   backgroundImage = '/headbgPrivacy.png',
   supportTitle = 'Bạn có thắc mắc?',
   supportText = 'Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ bạn.',
+  tocTitle = 'MỤC LỤC',
+  supportButtonLabel = 'Liên hệ ngay',
   contentMoreLabel = 'Xem tất cả nội dung chi tiết bên dưới',
   children,
 }) {
@@ -52,6 +54,9 @@ export default function LegalDocumentLayout({
     [isContentExpanded, sections],
   )
   const canExpandContent = sections.length > 6
+  const registerSection = (id, node) => {
+    sectionRefs.current[id] = node
+  }
 
   useEffect(() => {
     const updateActiveSection = () => {
@@ -136,7 +141,7 @@ export default function LegalDocumentLayout({
         <aside className="md:col-span-3">
           <div className="sticky top-24 z-20 rounded-t-3xl border border-[#eee3e3] bg-white/95 p-5 shadow-[0_18px_46px_rgba(17,24,39,0.08)] backdrop-blur md:min-h-[calc(100vh-7rem)] md:rounded-l-3xl md:rounded-r-none">
             <Title level={2} className="!mb-7 !text-lg !font-extrabold !text-[#1C1C1E]">
-              MỤC LỤC
+              {tocTitle}
             </Title>
 
             <nav className="relative flex gap-3 overflow-x-auto pb-2 md:block md:overflow-visible md:pb-0">
@@ -180,7 +185,7 @@ export default function LegalDocumentLayout({
                 <Text className="!mt-5 !block !font-extrabold !text-[#1C1C1E]">{supportTitle}</Text>
                 <Paragraph className="!mt-4 !text-sm !leading-6 !text-slate-600">{supportText}</Paragraph>
                 <Button className="!mt-3 !h-11 !w-full !rounded-lg !border-[#eee3e3] !bg-white !font-bold !text-[#d8001e] hover:!border-[#d8001e] hover:!bg-[#fff1f3]">
-                  Liên hệ ngay
+                  {supportButtonLabel}
                 </Button>
               </div>
             </Card>
@@ -189,7 +194,7 @@ export default function LegalDocumentLayout({
 
         <main className="md:col-span-9">
           <div className="rounded-b-3xl border border-[#eee3e3] bg-white px-5 py-8 shadow-[0_18px_46px_rgba(17,24,39,0.08)] md:rounded-l-none md:rounded-r-3xl md:border-l-0 md:px-10 md:py-10 xl:px-14">
-            {children({ sectionRefs, visibleContentIds, isContentExpanded })}
+            {children({ sectionRefs, registerSection, visibleContentIds, isContentExpanded })}
             {canExpandContent ? (
               <button
                 type="button"
