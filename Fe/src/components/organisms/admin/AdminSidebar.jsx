@@ -1,6 +1,7 @@
 import {
   DashboardOutlined,
   ForkOutlined,
+  RadarChartOutlined,
   OrderedListOutlined,
   QuestionCircleOutlined,
   ReadOutlined,
@@ -23,6 +24,7 @@ const navItems = [
   { key: '/admin/admins', label: 'Admin Management', icon: <UserSwitchOutlined /> },
   { key: '/admin/content', label: 'Content Management', icon: <ReadOutlined /> },
   { key: '/admin/resources', label: 'Resource Management', icon: <ToolOutlined /> },
+  { key: '/admin/monitoring', label: 'AI Monitoring', icon: <RadarChartOutlined /> },
 ]
 
 export default function AdminSidebar({ adminSettings, onUpdateSettings }) {
