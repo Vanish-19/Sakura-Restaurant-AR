@@ -38,6 +38,7 @@ export default function StaticResourcesAdminPage() {
   const [form] = Form.useForm()
   const [pages, setPages] = useState([])
   const [activeSlug, setActiveSlug] = useState(pageOrder[0])
+  const [activeLanguage, setActiveLanguage] = useState('vi')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -83,6 +84,7 @@ export default function StaticResourcesAdminPage() {
 
   const handleTabChange = (slug) => {
     setActiveSlug(slug)
+    setActiveLanguage('vi')
     hydrateForm(pages.find((item) => item.slug === slug))
   }
 
@@ -182,14 +184,30 @@ export default function StaticResourcesAdminPage() {
         />
 
         <Form form={form} layout="vertical" className="mt-4">
-          {activeSlug === 'about' ? <AboutResourceForm /> : null}
-          {activeSlug === 'contact' ? <ContactResourceForm /> : null}
-          {activeSlug === 'privacy-policy' ? <PrivacyResourceForm /> : null}
-          {activeSlug === 'terms-of-service' ? <TermsResourceForm /> : null}
-          {activeSlug === 'career' ? <CareerResourceForm /> : null}
-          {activeSlug === 'press-kit' ? <PressKitResourceForm /> : null}
-          <TranslationsJsonForm />
-          {!['about', 'contact', 'privacy-policy', 'terms-of-service', 'career', 'press-kit'].includes(activeSlug) ? <GenericResourceForm /> : null}
+          <Tabs
+            activeKey={activeLanguage}
+            onChange={setActiveLanguage}
+            className="!mb-6"
+            items={[
+              { key: 'vi', label: 'VI - Tiếng Việt' },
+              { key: 'en', label: 'EN - English' },
+              { key: 'jpn', label: 'JPN - 日本語' },
+            ]}
+          />
+
+          {activeLanguage === 'vi' ? (
+            <>
+              {activeSlug === 'about' ? <AboutResourceForm /> : null}
+              {activeSlug === 'contact' ? <ContactResourceForm /> : null}
+              {activeSlug === 'privacy-policy' ? <PrivacyResourceForm /> : null}
+              {activeSlug === 'terms-of-service' ? <TermsResourceForm /> : null}
+              {activeSlug === 'career' ? <CareerResourceForm /> : null}
+              {activeSlug === 'press-kit' ? <PressKitResourceForm /> : null}
+              {!['about', 'contact', 'privacy-policy', 'terms-of-service', 'career', 'press-kit'].includes(activeSlug) ? <GenericResourceForm /> : null}
+            </>
+          ) : (
+            <TranslationsJsonForm language={activeLanguage} />
+          )}
         </Form>
       </Card>
     </div>
@@ -238,28 +256,26 @@ function GenericResourceForm() {
   )
 }
 
-function TranslationsJsonForm() {
+function TranslationsJsonForm({ language }) {
+  const isEnglish = language === 'en'
+  const fieldName = isEnglish ? 'translationsEnJson' : 'translationsJpnJson'
+  const languageLabel = isEnglish ? 'English' : 'Japanese'
+  const translationKey = isEnglish ? 'translations.en' : 'translations.jpn'
+  const errorMessage = isEnglish ? 'JSON EN không hợp lệ' : 'JSON JPN không hợp lệ'
+
   return (
-    <Card title="Bản dịch theo ngôn ngữ" className="!mt-8 !rounded-lg !border-zinc-200">
+    <Card title={`Bản dịch ${languageLabel}`} className="!rounded-lg !border-zinc-200">
       <Paragraph className="!mb-4 !text-sm !leading-6 !text-zinc-500">
-        Nhập phần nội dung cần ghi đè theo ngôn ngữ. Cấu trúc JSON phải giống với content gốc của trang. Client sẽ tự dùng <Text strong>translations.en</Text> khi chọn EN và <Text strong>translations.jpn</Text> khi chọn JP.
+        Nhập phần nội dung cần ghi đè cho ngôn ngữ đang chọn. Cấu trúc JSON phải giống với content gốc của trang.
+        Client sẽ dùng <Text strong>{translationKey}</Text> khi người dùng chuyển sang ngôn ngữ này.
       </Paragraph>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Form.Item
-          name="translationsEnJson"
-          label="English JSON - translations.en"
-          rules={[{ validator: (_, value) => (parseOptionalJson(value) ? Promise.resolve() : Promise.reject(new Error('JSON EN không hợp lệ'))) }]}
-        >
-          <Input.TextArea rows={18} className="!font-mono !text-xs" spellCheck={false} />
-        </Form.Item>
-        <Form.Item
-          name="translationsJpnJson"
-          label="Japanese JSON - translations.jpn"
-          rules={[{ validator: (_, value) => (parseOptionalJson(value) ? Promise.resolve() : Promise.reject(new Error('JSON JPN không hợp lệ'))) }]}
-        >
-          <Input.TextArea rows={18} className="!font-mono !text-xs" spellCheck={false} />
-        </Form.Item>
-      </div>
+      <Form.Item
+        name={fieldName}
+        label={`${languageLabel} JSON - ${translationKey}`}
+        rules={[{ validator: (_, value) => (parseOptionalJson(value) ? Promise.resolve() : Promise.reject(new Error(errorMessage))) }]}
+      >
+        <Input.TextArea rows={28} className="!font-mono !text-xs" spellCheck={false} />
+      </Form.Item>
     </Card>
   )
 }
