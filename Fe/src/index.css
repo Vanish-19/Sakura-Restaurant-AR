@@ -204,6 +204,17 @@ body[data-client-theme='dark'] {
     @apply bg-[#8B0000];
   }
 
+  .menu-detail-quantity-input .ant-input-number-input {
+    text-align: center;
+    font-weight: 700;
+    color: #24130b;
+  }
+
+  .menu-detail-quantity-input.ant-input-number-focused,
+  .menu-detail-quantity-input.ant-input-number:hover {
+    box-shadow: none !important;
+  }
+
   .footer-newsletter .footer-newsletter__input,
   .footer-newsletter .footer-newsletter__input.ant-input {
     background: transparent !important;

@@ -1,4 +1,4 @@
-import { Card, Col, Row, Tag, message, Button, Space, Tabs, Popconfirm } from 'antd'
+import { Card, Col, Row, Tag, message, Button, Space, Tabs, Popconfirm, Select } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import AdminDataTable from '../../components/molecules/admin/AdminDataTable.jsx'
@@ -33,6 +33,7 @@ export default function OrderManagementAdminPage() {
   const [dineInOrders, setDineInOrders] = useState([])
   const [takeawayOrders, setTakeawayOrders] = useState([])
   const [stats, setStats] = useState(null)
+  const [statusFilter, setStatusFilter] = useState('all')
   const [loading, setLoading] = useState(true)
 
   const fetchOrders = async () => {
@@ -240,19 +241,26 @@ export default function OrderManagementAdminPage() {
 
   const filteredDineInOrders = useMemo(() => {
     const keyword = String(adminSearchQuery || '').trim().toLowerCase()
-    if (!keyword) return dineInOrders
-    return dineInOrders.filter((order) => String(order?._id || '').toLowerCase().includes(keyword))
-  }, [adminSearchQuery, dineInOrders])
+    return dineInOrders.filter((order) => {
+      const matchesKeyword = !keyword || String(order?._id || '').toLowerCase().includes(keyword)
+      const matchesStatus = statusFilter === 'all' ? true : order.status === statusFilter
+      return matchesKeyword && matchesStatus
+    })
+  }, [adminSearchQuery, dineInOrders, statusFilter])
 
   const filteredTakeawayOrders = useMemo(() => {
     const keyword = String(adminSearchQuery || '').trim().toLowerCase()
-    if (!keyword) return takeawayOrders
-    return takeawayOrders.filter((order) => String(order?._id || '').toLowerCase().includes(keyword))
-  }, [adminSearchQuery, takeawayOrders])
+    return takeawayOrders.filter((order) => {
+      const matchesKeyword = !keyword || String(order?._id || '').toLowerCase().includes(keyword)
+      const matchesStatus = statusFilter === 'all' ? true : order.status === statusFilter
+      return matchesKeyword && matchesStatus
+    })
+  }, [adminSearchQuery, statusFilter, takeawayOrders])
 
   return (
     <div className="admin-page pb-20">
       <AdminSectionHeader
+        eyebrow="Kitchen Desk"
         title="Quản lý đơn hàng"
         subtitle="Theo dõi trạng thái bếp và vận hành ăn tại chỗ/giao hàng theo thời gian thực"
       />
@@ -266,6 +274,31 @@ export default function OrderManagementAdminPage() {
       </Row>
 
       <Card className="admin-panel-card mt-6" bodyStyle={{ padding: 0 }}>
+        <div className="admin-toolbar">
+          <div className="admin-toolbar__meta">
+            <h3 className="admin-toolbar__title">Trung tâm điều phối đơn hàng</h3>
+            <p className="admin-toolbar__description">
+              Thanh tìm kiếm trên topbar vẫn tra theo mã đơn. Ở đây bạn có thể siết tiếp theo trạng thái để xử lý nhanh hơn.
+            </p>
+          </div>
+          <div className="admin-toolbar__controls">
+            <Select
+              value={statusFilter}
+              onChange={setStatusFilter}
+              style={{ width: 180 }}
+              options={[
+                { label: 'Tất cả trạng thái', value: 'all' },
+                { label: 'Pending', value: 'pending' },
+                { label: 'Cooking', value: 'cooking' },
+                { label: 'Served', value: 'served' },
+                { label: 'Ready', value: 'ready' },
+                { label: 'Picked Up', value: 'picked_up' },
+                { label: 'Paid', value: 'paid' },
+                { label: 'Cancelled', value: 'cancelled' },
+              ]}
+            />
+          </div>
+        </div>
          <Tabs 
            defaultActiveKey="1"
            className="brand-tabs px-5 pt-3"
