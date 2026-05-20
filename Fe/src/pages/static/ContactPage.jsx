@@ -108,7 +108,7 @@ export default function ContactPage() {
   const serviceCards = pageContent.serviceCards || defaultContactContent.serviceCards
 
   const handleSubmit = () => {
-    message.success('Cảm ơn bạn. Sakura Restaurant sẽ liên hệ lại trong thời gian sớm nhất.')
+    message.success(contactForm.successMessage || defaultContactContent.contactForm.successMessage)
     form.resetFields()
   }
 
@@ -230,31 +230,31 @@ export default function ContactPage() {
             </div>
 
             <Form form={form} layout="vertical" onFinish={handleSubmit} className="contact-form">
-              <Form.Item label="Họ Và Tên *" name="name" rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}>
-                <Input placeholder="Nhập họ và tên của bạn" />
+              <Form.Item label={getContactField('name').label} name="name" rules={[{ required: true, message: getContactField('name').requiredMessage }]}>
+                <Input placeholder={getContactField('name').placeholder} />
               </Form.Item>
 
-              <Form.Item label="Số Điện Thoại *" name="phone" rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}>
-                <Input placeholder="Nhập số điện thoại của bạn" />
+              <Form.Item label={getContactField('phone').label} name="phone" rules={[{ required: true, message: getContactField('phone').requiredMessage }]}>
+                <Input placeholder={getContactField('phone').placeholder} />
               </Form.Item>
 
-              <Form.Item label="Email *" name="email" rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}>
-                <Input placeholder="Nhập email của bạn" />
+              <Form.Item label={getContactField('email').label} name="email" rules={[{ required: true, message: getContactField('email').requiredMessage }, { type: 'email', message: getContactField('email').invalidMessage }]}>
+                <Input placeholder={getContactField('email').placeholder} />
               </Form.Item>
 
-              <Form.Item label="Mục Đích Liên Hệ *" name="purpose" rules={[{ required: true, message: 'Vui lòng chọn mục đích liên hệ' }]}>
+              <Form.Item label={getContactField('purpose').label} name="purpose" rules={[{ required: true, message: getContactField('purpose').requiredMessage }]}>
                 <Select
                   placeholder="Chọn mục đích liên hệ"
                   options={contactForm.purposeOptions}
                 />
               </Form.Item>
 
-              <Form.Item label="Số Lượng Khách (Nếu đặt bàn)" name="guests">
-                <Input placeholder="Nhập số lượng khách" />
+              <Form.Item label={getContactField('guests').label} name="guests">
+                <Input placeholder={getContactField('guests').placeholder} />
               </Form.Item>
 
-              <Form.Item label="Yêu Cầu Đặc Biệt / Tin Nhắn" name="message">
-                <Input.TextArea rows={5} placeholder="Hãy cho chúng tôi biết thêm yêu cầu đặc biệt về vị trí ngồi, chế độ ăn, hoặc hỗ trợ kỹ thuật AR..." />
+              <Form.Item label={getContactField('message').label} name="message">
+                <Input.TextArea rows={5} placeholder={getContactField('message').placeholder} />
               </Form.Item>
 
               <Button
@@ -264,7 +264,7 @@ export default function ContactPage() {
                 iconPosition="end"
                 className="!h-11 !rounded-lg !border-0 !bg-[#8B0000] !px-6 !font-bold !text-white !shadow-[0_10px_22px_rgba(139,0,0,0.20)] !transition-all !duration-300 hover:!-translate-y-0.5 hover:!bg-[#700000] hover:!shadow-[0_14px_28px_rgba(139,0,0,0.30)]"
               >
-                Gửi Yêu Cầu Của Bạn
+                {contactForm.submitLabel || defaultContactContent.contactForm.submitLabel}
               </Button>
             </Form>
           </Card>

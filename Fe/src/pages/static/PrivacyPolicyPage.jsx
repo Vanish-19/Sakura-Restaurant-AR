@@ -160,7 +160,7 @@ export default function PrivacyPolicyPage() {
         <aside className="md:col-span-3">
           <div className="sticky top-24 z-20 rounded-t-3xl border border-[#eee3e3] bg-white/95 p-5 shadow-[0_18px_46px_rgba(17,24,39,0.08)] backdrop-blur md:min-h-[calc(100vh-7rem)] md:rounded-l-3xl md:rounded-r-none">
             <Title level={2} className="!mb-7 !text-lg !font-extrabold !text-[#1C1C1E]">
-              MỤC LỤC
+              {tocTitle}
             </Title>
 
             <nav className="privacy-toc relative flex gap-3 overflow-x-auto pb-2 md:block md:overflow-visible md:pb-0">
@@ -202,13 +202,13 @@ export default function PrivacyPolicyPage() {
                   <CustomerServiceOutlined />
                 </span>
                 <Text className="!mt-5 !block !font-extrabold !text-[#1C1C1E]">
-                  Bạn có thắc mắc về chính sách bảo mật?
+                  {supportTitle}
                 </Text>
                 <Paragraph className="!mt-4 !text-sm !leading-6 !text-slate-600">
-                  Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ bạn.
+                  {supportText}
                 </Paragraph>
                 <Button className="!mt-3 !h-11 !w-full !rounded-lg !border-[#eee3e3] !bg-white !font-bold !text-[#d8001e] hover:!border-[#d8001e] hover:!bg-[#fff1f3]">
-                  Liên hệ ngay
+                  {supportButtonLabel}
                 </Button>
               </div>
             </Card>
@@ -371,7 +371,7 @@ export default function PrivacyPolicyPage() {
                 onClick={toggleContent}
                 className="mt-14 flex w-full items-center justify-between rounded-xl border border-[#f4d9de] bg-[#fff7f8] px-6 py-4 text-left text-base font-extrabold text-[#d8001e] shadow-[0_8px_18px_rgba(216,0,30,0.06)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#d8001e] hover:bg-[#fff1f3]"
               >
-                <span>{isContentExpanded ? 'Thu gọn nội dung' : 'Xem tất cả chính sách chi tiết bên dưới'}</span>
+                <span>{isContentExpanded ? 'Thu gọn nội dung' : contentMoreLabel}</span>
                 {isContentExpanded ? <UpOutlined /> : <DownOutlined />}
               </button>
             ) : null}
