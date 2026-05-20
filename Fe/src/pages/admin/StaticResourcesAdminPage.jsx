@@ -41,6 +41,8 @@ export default function StaticResourcesAdminPage() {
     form.setFieldsValue({
       label: page?.label || pageLabels[activeSlug],
       about: content,
+      contact: content,
+      privacy: content,
       heroEyebrow: content.hero?.eyebrow,
       heroTitle: content.hero?.title,
       heroAccent: content.hero?.accent,
@@ -99,7 +101,14 @@ export default function StaticResourcesAdminPage() {
   const handleSave = async () => {
     try {
       const values = await form.validateFields()
-      const content = activeSlug === 'about' ? values.about : buildGenericContent(values)
+      const content =
+        activeSlug === 'about'
+          ? values.about
+          : activeSlug === 'contact'
+            ? values.contact
+            : activeSlug === 'privacy-policy'
+              ? values.privacy
+              : buildGenericContent(values)
       if (!content) return
 
       setSaving(true)
@@ -140,7 +149,10 @@ export default function StaticResourcesAdminPage() {
         />
 
         <Form form={form} layout="vertical" className="mt-4">
-          {activeSlug === 'about' ? <AboutResourceForm /> : <GenericResourceForm />}
+          {activeSlug === 'about' ? <AboutResourceForm /> : null}
+          {activeSlug === 'contact' ? <ContactResourceForm /> : null}
+          {activeSlug === 'privacy-policy' ? <PrivacyResourceForm /> : null}
+          {!['about', 'contact', 'privacy-policy'].includes(activeSlug) ? <GenericResourceForm /> : null}
         </Form>
       </Card>
     </div>
@@ -191,7 +203,7 @@ function GenericResourceForm() {
 
 function AboutResourceForm() {
   return (
-    <div className="space-y-30">
+    <div className="flex flex-col gap-8">
       <Card title="Hero" className="!rounded-lg !border-zinc-200">
         <Form.Item name="label" label="Tên trang trong admin" rules={[{ required: true, message: 'Vui lòng nhập tên trang' }]}>
           <Input />
@@ -214,30 +226,30 @@ function AboutResourceForm() {
 
       <Card title="Câu chuyện thương hiệu" className="!rounded-lg !border-zinc-200">
         <div className="grid gap-4 md:grid-cols-2">
-          <Form.Item name={['about', 'story', 'eyebrow']} label="Nhãn nhỏ">
+          <Form.Item name={['about', 'brandStory', 'eyebrow']} label="Nhãn nhỏ">
             <Input />
           </Form.Item>
-          <Form.Item name={['about', 'story', 'title']} label="Tiêu đề section">
+          <Form.Item name={['about', 'brandStory', 'title']} label="Tiêu đề section">
             <Input />
           </Form.Item>
         </div>
-        <Form.Item name={['about', 'story', 'quote']} label="Quote">
+        <Form.Item name={['about', 'brandStory', 'quote']} label="Quote">
           <Input.TextArea rows={3} />
         </Form.Item>
-        <Form.List name={['about', 'story', 'paragraphs']}>
+        <Form.List name={['about', 'brandStory', 'paragraphs']}>
           {(fields, { add, remove }) => <EditableList fields={fields} add={add} remove={remove} label="Các đoạn mô tả" />}
         </Form.List>
+        <Form.Item name={['about', 'brandStory', 'highlight']} label="Đoạn nhấn cuối">
+          <Input.TextArea rows={3} />
+        </Form.Item>
         <div className="grid gap-4 md:grid-cols-2">
-          <Form.Item name={['about', 'story', 'image']} label="Ảnh section">
+          <Form.Item name={['about', 'brandStory', 'image']} label="Ảnh section">
             <Input placeholder="/about2.png" />
           </Form.Item>
-          <Form.Item name={['about', 'story', 'imageAlt']} label="Alt ảnh">
+          <Form.Item name={['about', 'brandStory', 'previewCard', 'title']} label="Tiêu đề card AR">
             <Input />
           </Form.Item>
-          <Form.Item name={['about', 'story', 'cardTitle']} label="Tiêu đề card AR">
-            <Input />
-          </Form.Item>
-          <Form.Item name={['about', 'story', 'cardText']} label="Mô tả card AR">
+          <Form.Item name={['about', 'brandStory', 'previewCard', 'subtitle']} label="Mô tả card AR">
             <Input />
           </Form.Item>
         </div>
@@ -251,42 +263,36 @@ function AboutResourceForm() {
           <Form.Item name={['about', 'visionMission', 'subtitle']} label="Phụ đề section">
             <Input />
           </Form.Item>
-          <Form.Item name={['about', 'visionMission', 'visionTitle']} label="Tiêu đề tầm nhìn">
-            <Input />
-          </Form.Item>
-          <Form.Item name={['about', 'visionMission', 'missionTitle']} label="Tiêu đề sứ mệnh">
-            <Input />
-          </Form.Item>
         </div>
-        <Form.Item name={['about', 'visionMission', 'visionText']} label="Nội dung tầm nhìn">
+        <Form.Item name={['about', 'visionMission', 'vision']} label="Nội dung tầm nhìn">
           <Input.TextArea rows={3} />
         </Form.Item>
-        <Form.Item name={['about', 'visionMission', 'missionText']} label="Nội dung sứ mệnh">
+        <Form.Item name={['about', 'visionMission', 'mission']} label="Nội dung sứ mệnh">
           <Input.TextArea rows={3} />
         </Form.Item>
       </Card>
 
       <Card title="Giá trị cốt lõi" className="!rounded-lg !border-zinc-200">
         <div className="grid gap-4 md:grid-cols-2">
-          <Form.Item name={['about', 'valuesSection', 'eyebrow']} label="Nhãn nhỏ">
+          <Form.Item name={['about', 'coreValuesEyebrow']} label="Nhãn nhỏ">
             <Input />
           </Form.Item>
-          <Form.Item name={['about', 'valuesSection', 'title']} label="Tiêu đề section">
+          <Form.Item name={['about', 'coreValuesTitle']} label="Tiêu đề section">
             <Input />
           </Form.Item>
         </div>
-        <Form.List name={['about', 'valuesSection', 'items']}>
+        <Form.List name={['about', 'coreValues']}>
           {(fields, { add, remove }) => (
             <div className="space-y-3">
               {fields.map((field) => (
                 <Card key={field.key} size="small" className="!rounded-lg">
                   <div className="grid gap-3 md:grid-cols-[160px_1fr_auto]">
-                    <Form.Item {...field} name={[field.name, 'icon']} label="Icon">
+                    <Form.Item {...field} name={[field.name, 'iconKey']} label="Icon">
                       <Select options={[
-                        { value: 'safety', label: 'Safety' },
+                        { value: 'safety-certificate', label: 'Safety' },
                         { value: 'rocket', label: 'Rocket' },
                         { value: 'heart', label: 'Heart' },
-                        { value: 'service', label: 'Service' },
+                        { value: 'customer-service', label: 'Service' },
                       ]} />
                     </Form.Item>
                     <Form.Item {...field} name={[field.name, 'title']} label="Tiêu đề">
@@ -299,7 +305,7 @@ function AboutResourceForm() {
                   </Form.Item>
                 </Card>
               ))}
-              <Button icon={<PlusOutlined />} onClick={() => add({ icon: 'safety', title: '', text: '' })}>
+              <Button icon={<PlusOutlined />} onClick={() => add({ iconKey: 'safety-certificate', title: '', text: '' })}>
                 Thêm giá trị
               </Button>
             </div>
@@ -332,25 +338,254 @@ function AboutResourceForm() {
 
       <Card title="Đội ngũ bếp chuyên gia" className="!rounded-lg !border-zinc-200">
         <div className="grid gap-4 md:grid-cols-2">
-          <Form.Item name={['about', 'artisans', 'eyebrow']} label="Nhãn nhỏ">
+          <Form.Item name={['about', 'chefStory', 'eyebrow']} label="Nhãn nhỏ">
             <Input />
           </Form.Item>
-          <Form.Item name={['about', 'artisans', 'title']} label="Tiêu đề">
+          <Form.Item name={['about', 'chefStory', 'title']} label="Tiêu đề">
             <Input />
           </Form.Item>
-          <Form.Item name={['about', 'artisans', 'image']} label="Ảnh">
+          <Form.Item name={['about', 'chefStory', 'image']} label="Ảnh">
             <Input placeholder="/about3.png" />
           </Form.Item>
-          <Form.Item name={['about', 'artisans', 'imageAlt']} label="Alt ảnh">
-            <Input />
-          </Form.Item>
         </div>
-        <Form.List name={['about', 'artisans', 'paragraphs']}>
+        <Form.List name={['about', 'chefStory', 'paragraphs']}>
           {(fields, { add, remove }) => <EditableList fields={fields} add={add} remove={remove} label="Các đoạn mô tả" />}
         </Form.List>
-        <Form.Item name={['about', 'artisans', 'quote']} label="Quote cuối section">
+        <Form.Item name={['about', 'chefStory', 'highlight']} label="Quote cuối section">
           <Input.TextArea rows={3} />
         </Form.Item>
+      </Card>
+    </div>
+  )
+}
+
+function ContactResourceForm() {
+  return (
+    <div className="flex flex-col gap-8">
+      <Card title="Hero" className="!rounded-lg !border-zinc-200">
+        <Form.Item name="label" label="Tên trang trong admin" rules={[{ required: true }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item name={['contact', 'hero', 'title']} label="Tiêu đề">
+          <Input />
+        </Form.Item>
+        <Form.Item name={['contact', 'hero', 'subtitle']} label="Phụ đề">
+          <Input />
+        </Form.Item>
+        <Form.Item name={['contact', 'hero', 'description']} label="Mô tả">
+          <Input.TextArea rows={3} />
+        </Form.Item>
+        <Form.Item name={['contact', 'hero', 'backgroundImage']} label="Ảnh nền">
+          <Input placeholder="/bgheadContact.png" />
+        </Form.Item>
+      </Card>
+
+      <Card title="Thông tin liên hệ" className="!rounded-lg !border-zinc-200">
+        <Form.Item name={['contact', 'contactSection', 'title']} label="Tiêu đề khối">
+          <Input />
+        </Form.Item>
+        <Form.List name={['contact', 'contactSection', 'items']}>
+          {(fields, { add, remove }) => (
+            <div className="space-y-4">
+              {fields.map((field) => (
+                <Card key={field.key} size="small" className="!rounded-lg">
+                  <div className="grid gap-3 md:grid-cols-[180px_1fr_1fr_auto]">
+                    <Form.Item {...field} name={[field.name, 'iconKey']} label="Icon">
+                      <Select options={[
+                        { value: 'environment', label: 'Địa chỉ' },
+                        { value: 'phone', label: 'Phone' },
+                        { value: 'mail', label: 'Mail' },
+                        { value: 'clock-circle', label: 'Clock' },
+                      ]} />
+                    </Form.Item>
+                    <Form.Item {...field} name={[field.name, 'title']} label="Tiêu đề">
+                      <Input />
+                    </Form.Item>
+                    <Form.Item {...field} name={[field.name, 'action']} label="Nút phụ">
+                      <Input />
+                    </Form.Item>
+                    <Button danger type="text" icon={<MinusCircleOutlined />} onClick={() => remove(field.name)} />
+                  </div>
+                  <Form.List name={[field.name, 'lines']}>
+                    {(lineFields, lineOps) => <EditableList fields={lineFields} add={lineOps.add} remove={lineOps.remove} label="Các dòng nội dung" />}
+                  </Form.List>
+                </Card>
+              ))}
+              <Button icon={<PlusOutlined />} onClick={() => add({ iconKey: 'environment', title: '', lines: [''] })}>Thêm thông tin</Button>
+            </div>
+          )}
+        </Form.List>
+      </Card>
+
+      <Card title="Card hỗ trợ AR" className="!rounded-lg !border-zinc-200">
+        <Form.Item name={['contact', 'supportCard', 'title']} label="Tiêu đề">
+          <Input />
+        </Form.Item>
+        <Form.Item name={['contact', 'supportCard', 'description']} label="Mô tả">
+          <Input.TextArea rows={2} />
+        </Form.Item>
+        <Form.Item name={['contact', 'supportCard', 'actionLabel']} label="Nhãn nút">
+          <Input />
+        </Form.Item>
+        <Form.Item name={['contact', 'supportCard', 'backgroundImage']} label="Ảnh nền">
+          <Input />
+        </Form.Item>
+      </Card>
+
+      <Card title="Form liên hệ" className="!rounded-lg !border-zinc-200">
+        <Form.Item name={['contact', 'contactForm', 'title']} label="Tiêu đề form">
+          <Input />
+        </Form.Item>
+        <Form.Item name={['contact', 'contactForm', 'submitLabel']} label="Nhãn nút gửi">
+          <Input />
+        </Form.Item>
+        <Form.Item name={['contact', 'contactForm', 'successMessage']} label="Thông báo gửi thành công">
+          <Input.TextArea rows={2} />
+        </Form.Item>
+        <div className="mb-5 grid gap-4 md:grid-cols-2">
+          {[
+            ['name', 'Họ tên'],
+            ['phone', 'Số điện thoại'],
+            ['email', 'Email'],
+            ['purpose', 'Mục đích liên hệ'],
+            ['guests', 'Số lượng khách'],
+            ['message', 'Tin nhắn'],
+          ].map(([key, label]) => (
+            <Card key={key} size="small" title={label} className="!rounded-lg">
+              <Form.Item name={['contact', 'contactForm', 'fields', key, 'label']} label="Label">
+                <Input />
+              </Form.Item>
+              <Form.Item name={['contact', 'contactForm', 'fields', key, 'placeholder']} label="Placeholder">
+                <Input.TextArea rows={2} />
+              </Form.Item>
+              <Form.Item name={['contact', 'contactForm', 'fields', key, 'requiredMessage']} label="Thông báo bắt buộc">
+                <Input />
+              </Form.Item>
+              {key === 'email' ? (
+                <Form.Item name={['contact', 'contactForm', 'fields', key, 'invalidMessage']} label="Thông báo email không hợp lệ">
+                  <Input />
+                </Form.Item>
+              ) : null}
+            </Card>
+          ))}
+        </div>
+        <Form.List name={['contact', 'contactForm', 'purposeOptions']}>
+          {(fields, { add, remove }) => (
+            <div className="space-y-3">
+              <Text strong>Mục đích liên hệ</Text>
+              {fields.map((field) => (
+                <div key={field.key} className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+                  <Form.Item {...field} name={[field.name, 'value']} className="!mb-0">
+                    <Input placeholder="value" />
+                  </Form.Item>
+                  <Form.Item {...field} name={[field.name, 'label']} className="!mb-0">
+                    <Input placeholder="label" />
+                  </Form.Item>
+                  <Button danger type="text" icon={<MinusCircleOutlined />} onClick={() => remove(field.name)} />
+                </div>
+              ))}
+              <Button icon={<PlusOutlined />} onClick={() => add({ value: '', label: '' })}>Thêm lựa chọn</Button>
+            </div>
+          )}
+        </Form.List>
+      </Card>
+
+      <Card title="Các card dịch vụ cuối trang" className="!rounded-lg !border-zinc-200">
+        <Form.List name={['contact', 'serviceCards']}>
+          {(fields, { add, remove }) => <EditableCardList fields={fields} add={add} remove={remove} addLabel="Thêm card dịch vụ" />}
+        </Form.List>
+      </Card>
+    </div>
+  )
+}
+
+function PrivacyResourceForm() {
+  return (
+    <div className="flex flex-col gap-8">
+      <Card title="Hero & sidebar" className="!rounded-lg !border-zinc-200">
+        <Form.Item name="label" label="Tên trang trong admin" rules={[{ required: true }]}>
+          <Input />
+        </Form.Item>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Form.Item name={['privacy', 'hero', 'eyebrow']} label="Nhãn cập nhật"><Input /></Form.Item>
+          <Form.Item name={['privacy', 'hero', 'backgroundImage']} label="Ảnh nền"><Input /></Form.Item>
+        </div>
+        <Form.Item name={['privacy', 'hero', 'title']} label="Tiêu đề"><Input /></Form.Item>
+        <Form.Item name={['privacy', 'hero', 'subtitle']} label="Phụ đề"><Input /></Form.Item>
+        <Form.Item name={['privacy', 'tocTitle']} label="Tiêu đề mục lục"><Input /></Form.Item>
+        <Form.Item name={['privacy', 'supportTitle']} label="Tiêu đề box hỗ trợ"><Input /></Form.Item>
+        <Form.Item name={['privacy', 'supportText']} label="Mô tả box hỗ trợ"><Input.TextArea rows={2} /></Form.Item>
+        <Form.Item name={['privacy', 'supportButtonLabel']} label="Nút hỗ trợ"><Input /></Form.Item>
+        <Form.Item name={['privacy', 'contentMoreLabel']} label="Nút xem thêm"><Input /></Form.Item>
+      </Card>
+
+      <Card title="Danh sách section" className="!rounded-lg !border-zinc-200">
+        <Form.List name={['privacy', 'sections']}>
+          {(fields, { add, remove }) => (
+            <div className="space-y-3">
+              {fields.map((field) => (
+                <div key={field.key} className="grid gap-3 md:grid-cols-[90px_1fr_1fr_160px_auto]">
+                  <Form.Item {...field} name={[field.name, 'number']} className="!mb-0"><Input placeholder="01." /></Form.Item>
+                  <Form.Item {...field} name={[field.name, 'id']} className="!mb-0"><Input placeholder="id" /></Form.Item>
+                  <Form.Item {...field} name={[field.name, 'title']} className="!mb-0"><Input placeholder="title" /></Form.Item>
+                  <Form.Item {...field} name={[field.name, 'iconKey']} className="!mb-0"><Input placeholder="iconKey" /></Form.Item>
+                  <Button danger type="text" icon={<MinusCircleOutlined />} onClick={() => remove(field.name)} />
+                </div>
+              ))}
+              <Button icon={<PlusOutlined />} onClick={() => add({ number: '', id: '', title: '', iconKey: 'file-protect' })}>Thêm section</Button>
+            </div>
+          )}
+        </Form.List>
+      </Card>
+
+      <Card title="01. Giới thiệu chung" className="!rounded-lg !border-zinc-200">
+        <Form.List name={['privacy', 'introParagraphs']}>
+          {(fields, { add, remove }) => <EditableList fields={fields} add={add} remove={remove} label="Các đoạn giới thiệu" />}
+        </Form.List>
+      </Card>
+
+      <Card title="02. Dữ liệu thu thập" className="!rounded-lg !border-zinc-200">
+        <Form.Item name={['privacy', 'collectedDataIntro']} label="Mô tả mở đầu"><Input.TextArea rows={2} /></Form.Item>
+        <Form.List name={['privacy', 'dataItems']}>
+          {(fields, { add, remove }) => <EditableCardList fields={fields} add={add} remove={remove} addLabel="Thêm dữ liệu" />}
+        </Form.List>
+      </Card>
+
+      <Card title="03. Mục đích sử dụng" className="!rounded-lg !border-zinc-200">
+        <Form.Item name={['privacy', 'usagePurposeIntro']} label="Mô tả mở đầu"><Input.TextArea rows={2} /></Form.Item>
+        <Form.List name={['privacy', 'purposeItems']}>
+          {(fields, { add, remove }) => <EditableCardList fields={fields} add={add} remove={remove} addLabel="Thêm mục đích" />}
+        </Form.List>
+      </Card>
+
+      <Card title="04-07. Nội dung còn lại" className="!rounded-lg !border-zinc-200">
+        <Form.List name={['privacy', 'securityParagraphs']}>
+          {(fields, { add, remove }) => <EditableList fields={fields} add={add} remove={remove} label="Cam kết bảo mật - đoạn văn" />}
+        </Form.List>
+        <Form.Item name={['privacy', 'securityHighlight']} label="Cam kết bảo mật - đoạn nhấn"><Input.TextArea rows={3} /></Form.Item>
+        <Form.Item name={['privacy', 'userRightsIntro']} label="Quyền người dùng - mở đầu"><Input.TextArea rows={2} /></Form.Item>
+        <Form.List name={['privacy', 'userRights']}>
+          {(fields, { add, remove }) => <EditableList fields={fields} add={add} remove={remove} label="Danh sách quyền" />}
+        </Form.List>
+        <Form.List name={['privacy', 'updatesParagraphs']}>
+          {(fields, { add, remove }) => <EditableList fields={fields} add={add} remove={remove} label="Cập nhật chính sách" />}
+        </Form.List>
+        <Form.Item name={['privacy', 'contactIntro']} label="Liên hệ - mở đầu"><Input.TextArea rows={2} /></Form.Item>
+        <Form.List name={['privacy', 'contactMethods']}>
+          {(fields, { add, remove }) => (
+            <div className="space-y-3">
+              <Text strong>Phương thức liên hệ</Text>
+              {fields.map((field) => (
+                <div key={field.key} className="grid gap-3 md:grid-cols-[180px_1fr_auto]">
+                  <Form.Item {...field} name={[field.name, 'iconKey']} className="!mb-0"><Input placeholder="mail/phone" /></Form.Item>
+                  <Form.Item {...field} name={[field.name, 'text']} className="!mb-0"><Input placeholder="text" /></Form.Item>
+                  <Button danger type="text" icon={<MinusCircleOutlined />} onClick={() => remove(field.name)} />
+                </div>
+              ))}
+              <Button icon={<PlusOutlined />} onClick={() => add({ iconKey: 'mail', text: '' })}>Thêm liên hệ</Button>
+            </div>
+          )}
+        </Form.List>
       </Card>
     </div>
   )
@@ -373,6 +608,35 @@ function EditableList({ fields, add, remove, label }) {
           Thêm đoạn
         </Button>
       </div>
+    </div>
+  )
+}
+
+function EditableCardList({ fields, add, remove, addLabel }) {
+  return (
+    <div className="space-y-3">
+      {fields.map((field) => (
+        <Card key={field.key} size="small" className="!rounded-lg">
+          <div className="grid gap-3 md:grid-cols-[160px_1fr_auto]">
+            <Form.Item {...field} name={[field.name, 'iconKey']} label="Icon">
+              <Input placeholder="iconKey" />
+            </Form.Item>
+            <Form.Item {...field} name={[field.name, 'title']} label="Tiêu đề">
+              <Input />
+            </Form.Item>
+            <Button danger type="text" icon={<MinusCircleOutlined />} onClick={() => remove(field.name)} />
+          </div>
+          <Form.Item {...field} name={[field.name, 'text']} label="Nội dung">
+            <Input.TextArea rows={3} />
+          </Form.Item>
+          <Form.Item {...field} name={[field.name, 'action']} label="Nút phụ nếu có">
+            <Input />
+          </Form.Item>
+        </Card>
+      ))}
+      <Button icon={<PlusOutlined />} onClick={() => add({ iconKey: '', title: '', text: '' })}>
+        {addLabel}
+      </Button>
     </div>
   )
 }

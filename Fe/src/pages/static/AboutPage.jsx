@@ -116,7 +116,9 @@ export default function AboutPage() {
   const hero = pageContent.hero || defaultAboutContent.hero
   const story = pageContent.story || defaultAboutContent.story
   const visionMission = pageContent.visionMission || defaultAboutContent.visionMission
-  const valuesSection = pageContent.valuesSection || defaultAboutContent.valuesSection
+  const values = pageContent.coreValues || defaultAboutContent.coreValues
+  const coreValuesEyebrow = pageContent.coreValuesEyebrow || 'Giá trị cốt lõi'
+  const coreValuesTitle = pageContent.coreValuesTitle || 'Bốn Giá Trị Định Hình Sakura'
   const arExperience = pageContent.arExperience || defaultAboutContent.arExperience
   const artisans = pageContent.artisans || defaultAboutContent.artisans
 
@@ -192,8 +194,12 @@ export default function AboutPage() {
       <section className="bg-white px-5 py-16 md:px-8 lg:py-20">
         <div className="mx-auto max-w-6xl">
           <div className="mb-12 text-center">
-            <Text className="!text-[11px] !font-bold !uppercase !tracking-[0.16em] !text-[#d8001e]">{valuesSection.eyebrow}</Text>
-            <Title level={2} className="!mt-2 !mb-0 !text-3xl !font-extrabold !text-slate-950 md:!text-4xl">{valuesSection.title}</Title>
+            <Text className="!text-[11px] !font-bold !uppercase !tracking-[0.16em] !text-[#d8001e]">
+              {coreValuesEyebrow}
+            </Text>
+            <Title level={2} className="!mt-2 !mb-0 !text-3xl !font-extrabold !text-slate-950 md:!text-4xl">
+              {coreValuesTitle}
+            </Title>
           </div>
           <Row gutter={[28, 28]}>
             {(valuesSection.items || []).map((item) => (

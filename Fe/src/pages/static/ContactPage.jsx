@@ -21,64 +21,132 @@ const defaultContactContent = {
       'Tại Sakura, chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn. Dù bạn có thắc mắc, cần đặt bàn hay muốn hợp tác, hãy liên hệ với chúng tôi qua các kênh dưới đây.',
     backgroundImage: '/bgheadContact.png',
   },
+  contactSection: {
+    title: 'Thông Tin Liên Hệ',
+    items: [
+      {
+        iconKey: 'environment',
+        title: 'Địa Chỉ',
+        lines: [
+          'Phong thí nghiệm AR/VR, Tầng 3, Toà nhà A',
+          'Học viện Công nghệ Bưu chính Viễn thông (PTIT)',
+          'Hà Nội, Việt Nam',
+        ],
+        action: 'Xem trên bản đồ',
+      },
+      {
+        iconKey: 'phone',
+        title: 'Hotline (24/7)',
+        lines: ['1900 xxxx', '(+84) 28 1234 5678'],
+      },
+      {
+        iconKey: 'mail',
+        title: 'Email',
+        lines: ['Chăm sóc khách hàng: cskh@sakura-ar.vn', 'Đối tác & truyền thông: partner@sakura-ar.vn'],
+      },
+      {
+        iconKey: 'clock-circle',
+        title: 'Giờ Phục Vụ',
+        lines: ['10:00 Sáng - 10:00 Tối', 'Lưu ý: Bếp nhận order cuối cùng vào lúc 9:30 Tối'],
+      },
+    ],
+  },
+  supportCard: {
+    title: 'Trải nghiệm AR của bạn gặp trục trặc?',
+    description: 'Đội ngũ kỹ thuật của chúng tôi luôn sẵn sàng hỗ trợ bạn nhanh chóng.',
+    actionLabel: 'Hỗ trợ kỹ thuật AR',
+    backgroundImage: '/bgBody.png',
+  },
+  contactForm: {
+    title: 'Gửi Thông Điệp Cho Chúng Tôi',
+    submitLabel: 'Gửi Yêu Cầu Của Bạn',
+    successMessage: 'Cảm ơn bạn. Sakura Restaurant sẽ liên hệ lại trong thời gian sớm nhất.',
+    fields: {
+      name: {
+        label: 'Họ Và Tên *',
+        placeholder: 'Nhập họ và tên của bạn',
+        requiredMessage: 'Vui lòng nhập họ tên',
+      },
+      phone: {
+        label: 'Số Điện Thoại *',
+        placeholder: 'Nhập số điện thoại của bạn',
+        requiredMessage: 'Vui lòng nhập số điện thoại',
+      },
+      email: {
+        label: 'Email *',
+        placeholder: 'Nhập email của bạn',
+        requiredMessage: 'Vui lòng nhập email',
+        invalidMessage: 'Email không hợp lệ',
+      },
+      purpose: {
+        label: 'Mục Đích Liên Hệ *',
+        placeholder: 'Chọn mục đích liên hệ',
+        requiredMessage: 'Vui lòng chọn mục đích liên hệ',
+      },
+      guests: {
+        label: 'Số Lượng Khách (Nếu đặt bàn)',
+        placeholder: 'Nhập số lượng khách',
+      },
+      message: {
+        label: 'Yêu Cầu Đặc Biệt / Tin Nhắn',
+        placeholder: 'Hãy cho chúng tôi biết thêm yêu cầu đặc biệt về vị trí ngồi, chế độ ăn, hoặc hỗ trợ kỹ thuật AR...',
+      },
+    },
+    purposeOptions: [
+      { value: 'booking', label: 'Đặt bàn' },
+      { value: 'support', label: 'Hỗ trợ trải nghiệm AR' },
+      { value: 'partner', label: 'Hợp tác đối tác' },
+      { value: 'other', label: 'Khác' },
+    ],
+  },
+  serviceCards: [
+    {
+      iconKey: 'wifi',
+      title: 'Kết nối Wifi',
+      text: 'Đảm bảo thiết bị của bạn được kết nối với mạng "Sakura_AR_Guest" để tối ưu hoá tốc độ tải mô hình 3D.',
+      action: null,
+    },
+    {
+      iconKey: 'book',
+      title: 'Hướng dẫn sử dụng',
+      text: 'Xem nhanh hướng dẫn tương tác AR để biết cách quét mã và xem món ăn chi tiết.',
+      action: 'Xem hướng dẫn',
+    },
+    {
+      iconKey: 'heart',
+      title: 'Hỗ trợ trực tiếp',
+      text: 'Vui lòng thông báo cho nhân viên phục vụ tại bàn hoặc gọi Hotline để đội ngũ kỹ thuật hỗ trợ ngay lập tức.',
+      action: null,
+    },
+  ],
 }
 
-const contactItems = [
-  {
-    icon: <EnvironmentOutlined />,
-    title: 'Địa Chỉ',
-    lines: [
-      'Phong thí nghiệm AR/VR, Tầng 3, Toà nhà A',
-      'Học viện Công nghệ Bưu chính Viễn thông (PTIT)',
-      'Hà Nội, Việt Nam',
-    ],
-    action: 'Xem trên bản đồ',
-  },
-  {
-    icon: <PhoneOutlined />,
-    title: 'Hotline (24/7)',
-    lines: ['1900 xxxx', '(+84) 28 1234 5678'],
-  },
-  {
-    icon: <MailOutlined />,
-    title: 'Email',
-    lines: ['Chăm sóc khách hàng: cskh@sakura-ar.vn', 'Đối tác & truyền thông: partner@sakura-ar.vn'],
-  },
-  {
-    icon: <ClockCircleOutlined />,
-    title: 'Giờ Phục Vụ',
-    lines: ['10:00 Sáng - 10:00 Tối', 'Lưu ý: Bếp nhận order cuối cùng vào lúc 9:30 Tối'],
-  },
-]
-
-const serviceCards = [
-  {
-    icon: <WifiOutlined />,
-    title: 'Kết nối Wifi',
-    text: 'Đảm bảo thiết bị của bạn được kết nối với mạng "Sakura_AR_Guest" để tối ưu hoá tốc độ tải mô hình 3D.',
-    action: null,
-  },
-  {
-    icon: <BookOutlined />,
-    title: 'Hướng dẫn sử dụng',
-    text: 'Xem nhanh hướng dẫn tương tác AR để biết cách quét mã và xem món ăn chi tiết.',
-    action: 'Xem hướng dẫn',
-  },
-  {
-    icon: <HeartOutlined />,
-    title: 'Hỗ trợ trực tiếp',
-    text: 'Vui lòng thông báo cho nhân viên phục vụ tại bàn hoặc gọi Hotline để đội ngũ kỹ thuật hỗ trợ ngay lập tức.',
-    action: null,
-  },
-]
+const CONTACT_ICON_MAP = {
+  environment: <EnvironmentOutlined />,
+  phone: <PhoneOutlined />,
+  mail: <MailOutlined />,
+  'clock-circle': <ClockCircleOutlined />,
+  wifi: <WifiOutlined />,
+  book: <BookOutlined />,
+  heart: <HeartOutlined />,
+}
 
 export default function ContactPage() {
   const [form] = Form.useForm()
   const pageContent = useStaticPageContent('contact', defaultContactContent)
   const hero = pageContent.hero || defaultContactContent.hero
+  const contactSection = pageContent.contactSection || defaultContactContent.contactSection
+  const supportCard = pageContent.supportCard || defaultContactContent.supportCard
+  const contactForm = pageContent.contactForm || defaultContactContent.contactForm
+  const serviceCards = pageContent.serviceCards || defaultContactContent.serviceCards
+  const contactFields = contactForm.fields || defaultContactContent.contactForm.fields
+  const getContactField = (key) => ({
+    ...(defaultContactContent.contactForm.fields[key] || {}),
+    ...(contactFields[key] || {}),
+  })
 
   const handleSubmit = () => {
-    message.success('Cảm ơn bạn. Sakura Restaurant sẽ liên hệ lại trong thời gian sớm nhất.')
+    message.success(contactForm.successMessage || defaultContactContent.contactForm.successMessage)
     form.resetFields()
   }
 
@@ -200,36 +268,31 @@ export default function ContactPage() {
             </div>
 
             <Form form={form} layout="vertical" onFinish={handleSubmit} className="contact-form">
-              <Form.Item label="Họ Và Tên *" name="name" rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}>
-                <Input placeholder="Nhập họ và tên của bạn" />
+              <Form.Item label={getContactField('name').label} name="name" rules={[{ required: true, message: getContactField('name').requiredMessage }]}>
+                <Input placeholder={getContactField('name').placeholder} />
               </Form.Item>
 
-              <Form.Item label="Số Điện Thoại *" name="phone" rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}>
-                <Input placeholder="Nhập số điện thoại của bạn" />
+              <Form.Item label={getContactField('phone').label} name="phone" rules={[{ required: true, message: getContactField('phone').requiredMessage }]}>
+                <Input placeholder={getContactField('phone').placeholder} />
               </Form.Item>
 
-              <Form.Item label="Email *" name="email" rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}>
-                <Input placeholder="Nhập email của bạn" />
+              <Form.Item label={getContactField('email').label} name="email" rules={[{ required: true, message: getContactField('email').requiredMessage }, { type: 'email', message: getContactField('email').invalidMessage }]}>
+                <Input placeholder={getContactField('email').placeholder} />
               </Form.Item>
 
-              <Form.Item label="Mục Đích Liên Hệ *" name="purpose" rules={[{ required: true, message: 'Vui lòng chọn mục đích liên hệ' }]}>
+              <Form.Item label={getContactField('purpose').label} name="purpose" rules={[{ required: true, message: getContactField('purpose').requiredMessage }]}>
                 <Select
-                  placeholder="Chọn mục đích liên hệ"
-                  options={[
-                    { value: 'booking', label: 'Đặt bàn' },
-                    { value: 'support', label: 'Hỗ trợ trải nghiệm AR' },
-                    { value: 'partner', label: 'Hợp tác đối tác' },
-                    { value: 'other', label: 'Khác' },
-                  ]}
+                  placeholder={getContactField('purpose').placeholder}
+                  options={contactForm.purposeOptions}
                 />
               </Form.Item>
 
-              <Form.Item label="Số Lượng Khách (Nếu đặt bàn)" name="guests">
-                <Input placeholder="Nhập số lượng khách" />
+              <Form.Item label={getContactField('guests').label} name="guests">
+                <Input placeholder={getContactField('guests').placeholder} />
               </Form.Item>
 
-              <Form.Item label="Yêu Cầu Đặc Biệt / Tin Nhắn" name="message">
-                <Input.TextArea rows={5} placeholder="Hãy cho chúng tôi biết thêm yêu cầu đặc biệt về vị trí ngồi, chế độ ăn, hoặc hỗ trợ kỹ thuật AR..." />
+              <Form.Item label={getContactField('message').label} name="message">
+                <Input.TextArea rows={5} placeholder={getContactField('message').placeholder} />
               </Form.Item>
 
               <Button
@@ -239,7 +302,7 @@ export default function ContactPage() {
                 iconPosition="end"
                 className="!h-11 !rounded-lg !border-0 !bg-[#8B0000] !px-6 !font-bold !text-white !shadow-[0_10px_22px_rgba(139,0,0,0.20)] !transition-all !duration-300 hover:!-translate-y-0.5 hover:!bg-[#700000] hover:!shadow-[0_14px_28px_rgba(139,0,0,0.30)]"
               >
-                Gửi Yêu Cầu Của Bạn
+                {contactForm.submitLabel || defaultContactContent.contactForm.submitLabel}
               </Button>
             </Form>
           </Card>
