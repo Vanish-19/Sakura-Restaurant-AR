@@ -11,6 +11,7 @@ import BlogPage from '../pages/BlogPage.jsx'
 import BlogDetailPage from '../pages/BlogDetailPage.jsx'
 import ContactPage from '../pages/static/ContactPage.jsx'
 import HomePage from '../pages/HomePage.jsx'
+import MenuItemDetailPage from '../pages/MenuItemDetailPage.jsx'
 import OrderHistoryPage from '../pages/OrderHistoryPage.jsx'
 import PaymentPage from '../pages/PaymentPage.jsx'
 import PrivacyPolicyPage from '../pages/static/PrivacyPolicyPage.jsx'
@@ -37,6 +38,7 @@ export default function AppRoutes() {
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/menu/:id" element={<MenuItemDetailPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/career" element={<CareerPage />} />

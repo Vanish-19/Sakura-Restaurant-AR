@@ -27,6 +27,7 @@ import userOrderRoutes from './routes/userOrderRoutes.js';
 import careerApplicationRoutes from './routes/careerApplicationRoutes.js';
 import staticPageContentRoutes from './routes/staticPageContentRoutes.js';
 import articleRoutes from './routes/articleRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
 import { handleSepayWebhookEvent, buildSepayReturnRedirectUrl } from './services/sepayPaymentService.js';
 import { ensureJwtConfig } from './services/tokenService.js';
 
@@ -199,6 +200,7 @@ app.use('/api/v1/user/orders', userOrderRoutes); // Customer order history
 app.use('/api/v1/careers', careerApplicationRoutes); // Career applications
 app.use('/api/v1/static-pages', staticPageContentRoutes); // Static page content
 app.use('/api/v1/articles', articleRoutes);      // Public blog articles
+app.use('/api/v1/chat', chatRoutes);             // Chatbot AI
 
 // ========== Admin Routes ==========
 app.use('/api/v1/admin/auth', adminAuthRoutes);       // Login/Register

@@ -365,3 +365,27 @@ body[data-client-theme='dark'] {
     }
   }
 }
+
+.chatbot-widget__scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #bf7b63 rgba(137, 69, 45, 0.08);
+}
+
+.chatbot-widget__scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.chatbot-widget__scroll::-webkit-scrollbar-track {
+  background: rgba(137, 69, 45, 0.08);
+  border-radius: 999px;
+}
+
+.chatbot-widget__scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #c97c63 0%, #8b0000 100%);
+  border-radius: 999px;
+  border: 2px solid rgba(255, 248, 243, 0.95);
+}
+
+.chatbot-widget__scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #d58f74 0%, #a10a10 100%);
+}

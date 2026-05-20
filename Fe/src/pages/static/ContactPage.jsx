@@ -21,61 +21,91 @@ const defaultContactContent = {
       'Tại Sakura, chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn. Dù bạn có thắc mắc, cần đặt bàn hay muốn hợp tác, hãy liên hệ với chúng tôi qua các kênh dưới đây.',
     backgroundImage: '/bgheadContact.png',
   },
+  contactSection: {
+    title: 'Thông Tin Liên Hệ',
+    items: [
+      {
+        iconKey: 'environment',
+        title: 'Địa Chỉ',
+        lines: [
+          'Phong thí nghiệm AR/VR, Tầng 3, Toà nhà A',
+          'Học viện Công nghệ Bưu chính Viễn thông (PTIT)',
+          'Hà Nội, Việt Nam',
+        ],
+        action: 'Xem trên bản đồ',
+      },
+      {
+        iconKey: 'phone',
+        title: 'Hotline (24/7)',
+        lines: ['1900 xxxx', '(+84) 28 1234 5678'],
+      },
+      {
+        iconKey: 'mail',
+        title: 'Email',
+        lines: ['Chăm sóc khách hàng: cskh@sakura-ar.vn', 'Đối tác & truyền thông: partner@sakura-ar.vn'],
+      },
+      {
+        iconKey: 'clock-circle',
+        title: 'Giờ Phục Vụ',
+        lines: ['10:00 Sáng - 10:00 Tối', 'Lưu ý: Bếp nhận order cuối cùng vào lúc 9:30 Tối'],
+      },
+    ],
+  },
+  supportCard: {
+    title: 'Trải nghiệm AR của bạn gặp trục trặc?',
+    description: 'Đội ngũ kỹ thuật của chúng tôi luôn sẵn sàng hỗ trợ bạn nhanh chóng.',
+    actionLabel: 'Hỗ trợ kỹ thuật AR',
+    backgroundImage: '/bgBody.png',
+  },
+  contactForm: {
+    title: 'Gửi Thông Điệp Cho Chúng Tôi',
+    purposeOptions: [
+      { value: 'booking', label: 'Đặt bàn' },
+      { value: 'support', label: 'Hỗ trợ trải nghiệm AR' },
+      { value: 'partner', label: 'Hợp tác đối tác' },
+      { value: 'other', label: 'Khác' },
+    ],
+  },
+  serviceCards: [
+    {
+      iconKey: 'wifi',
+      title: 'Kết nối Wifi',
+      text: 'Đảm bảo thiết bị của bạn được kết nối với mạng "Sakura_AR_Guest" để tối ưu hoá tốc độ tải mô hình 3D.',
+      action: null,
+    },
+    {
+      iconKey: 'book',
+      title: 'Hướng dẫn sử dụng',
+      text: 'Xem nhanh hướng dẫn tương tác AR để biết cách quét mã và xem món ăn chi tiết.',
+      action: 'Xem hướng dẫn',
+    },
+    {
+      iconKey: 'heart',
+      title: 'Hỗ trợ trực tiếp',
+      text: 'Vui lòng thông báo cho nhân viên phục vụ tại bàn hoặc gọi Hotline để đội ngũ kỹ thuật hỗ trợ ngay lập tức.',
+      action: null,
+    },
+  ],
 }
 
-const contactItems = [
-  {
-    icon: <EnvironmentOutlined />,
-    title: 'Địa Chỉ',
-    lines: [
-      'Phong thí nghiệm AR/VR, Tầng 3, Toà nhà A',
-      'Học viện Công nghệ Bưu chính Viễn thông (PTIT)',
-      'Hà Nội, Việt Nam',
-    ],
-    action: 'Xem trên bản đồ',
-  },
-  {
-    icon: <PhoneOutlined />,
-    title: 'Hotline (24/7)',
-    lines: ['1900 xxxx', '(+84) 28 1234 5678'],
-  },
-  {
-    icon: <MailOutlined />,
-    title: 'Email',
-    lines: ['Chăm sóc khách hàng: cskh@sakura-ar.vn', 'Đối tác & truyền thông: partner@sakura-ar.vn'],
-  },
-  {
-    icon: <ClockCircleOutlined />,
-    title: 'Giờ Phục Vụ',
-    lines: ['10:00 Sáng - 10:00 Tối', 'Lưu ý: Bếp nhận order cuối cùng vào lúc 9:30 Tối'],
-  },
-]
-
-const serviceCards = [
-  {
-    icon: <WifiOutlined />,
-    title: 'Kết nối Wifi',
-    text: 'Đảm bảo thiết bị của bạn được kết nối với mạng "Sakura_AR_Guest" để tối ưu hoá tốc độ tải mô hình 3D.',
-    action: null,
-  },
-  {
-    icon: <BookOutlined />,
-    title: 'Hướng dẫn sử dụng',
-    text: 'Xem nhanh hướng dẫn tương tác AR để biết cách quét mã và xem món ăn chi tiết.',
-    action: 'Xem hướng dẫn',
-  },
-  {
-    icon: <HeartOutlined />,
-    title: 'Hỗ trợ trực tiếp',
-    text: 'Vui lòng thông báo cho nhân viên phục vụ tại bàn hoặc gọi Hotline để đội ngũ kỹ thuật hỗ trợ ngay lập tức.',
-    action: null,
-  },
-]
+const CONTACT_ICON_MAP = {
+  environment: <EnvironmentOutlined />,
+  phone: <PhoneOutlined />,
+  mail: <MailOutlined />,
+  'clock-circle': <ClockCircleOutlined />,
+  wifi: <WifiOutlined />,
+  book: <BookOutlined />,
+  heart: <HeartOutlined />,
+}
 
 export default function ContactPage() {
   const [form] = Form.useForm()
   const pageContent = useStaticPageContent('contact', defaultContactContent)
   const hero = pageContent.hero || defaultContactContent.hero
+  const contactSection = pageContent.contactSection || defaultContactContent.contactSection
+  const supportCard = pageContent.supportCard || defaultContactContent.supportCard
+  const contactForm = pageContent.contactForm || defaultContactContent.contactForm
+  const serviceCards = pageContent.serviceCards || defaultContactContent.serviceCards
 
   const handleSubmit = () => {
     message.success('Cảm ơn bạn. Sakura Restaurant sẽ liên hệ lại trong thời gian sớm nhất.')
@@ -123,13 +153,13 @@ export default function ContactPage() {
           <div>
             <div className="mb-7">
               <Text className="!text-sm !font-extrabold !text-[#1C1C1E]">
-                Thông Tin Liên Hệ
+                {contactSection.title}
               </Text>
               <div className="mt-2 h-0.5 w-11 rounded-full bg-[#8B0000]" />
             </div>
 
             <div className="space-y-4">
-              {contactItems.map((item) => (
+              {contactSection.items.map((item) => (
                 <Card
                   key={item.title}
                   className="!rounded-xl !border !border-[#f1e5e5] !bg-white/88 !shadow-[0_12px_28px_rgba(17,24,39,0.05)] backdrop-blur-sm"
@@ -137,7 +167,7 @@ export default function ContactPage() {
                 >
                   <div className="flex gap-4">
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#fff1f3] text-lg text-[#d8001e]">
-                      {item.icon}
+                      {CONTACT_ICON_MAP[item.iconKey] || <EnvironmentOutlined />}
                     </span>
                     <div className="min-w-0">
                       <Text className="!block !font-extrabold !text-slate-950">
@@ -169,7 +199,7 @@ export default function ContactPage() {
               >
                 <div className="relative min-h-[150px] p-6">
                   <img
-                    src="/bgBody.png"
+                    src={supportCard.backgroundImage}
                     alt=""
                     aria-hidden="true"
                     className="absolute inset-0 h-full w-full object-cover object-right opacity-70"
@@ -177,13 +207,13 @@ export default function ContactPage() {
                   <div className="absolute inset-0 bg-white/50" />
                   <div className="relative z-10 max-w-[260px]">
                     <Text className="!block !text-base !font-extrabold !text-slate-950">
-                      Trải nghiệm AR của bạn gặp trục trặc?
+                      {supportCard.title}
                     </Text>
                     <Paragraph className="!mt-2 !mb-4 !text-xs !leading-5 !text-slate-700">
-                      Đội ngũ kỹ thuật của chúng tôi luôn sẵn sàng hỗ trợ bạn nhanh chóng.
+                      {supportCard.description}
                     </Paragraph>
                     <Button className="!h-9 !rounded-full !border-0 !bg-[#8B0000] !px-4 !text-xs !font-bold !text-white hover:!bg-[#700000]">
-                      Hỗ trợ kỹ thuật AR
+                      {supportCard.actionLabel}
                     </Button>
                   </div>
                 </div>
@@ -194,7 +224,7 @@ export default function ContactPage() {
           <Card className="!rounded-xl !border !border-[#f1e5e5] !bg-white/90 !shadow-[0_18px_42px_rgba(17,24,39,0.07)] backdrop-blur-sm" bodyStyle={{ padding: 28 }}>
             <div className="mb-7">
               <Text className="!text-sm !font-extrabold !text-[#1C1C1E]">
-                Gửi Thông Điệp Cho Chúng Tôi
+                {contactForm.title}
               </Text>
               <div className="mt-2 h-0.5 w-11 rounded-full bg-[#8B0000]" />
             </div>
@@ -215,12 +245,7 @@ export default function ContactPage() {
               <Form.Item label="Mục Đích Liên Hệ *" name="purpose" rules={[{ required: true, message: 'Vui lòng chọn mục đích liên hệ' }]}>
                 <Select
                   placeholder="Chọn mục đích liên hệ"
-                  options={[
-                    { value: 'booking', label: 'Đặt bàn' },
-                    { value: 'support', label: 'Hỗ trợ trải nghiệm AR' },
-                    { value: 'partner', label: 'Hợp tác đối tác' },
-                    { value: 'other', label: 'Khác' },
-                  ]}
+                  options={contactForm.purposeOptions}
                 />
               </Form.Item>
 
@@ -252,7 +277,7 @@ export default function ContactPage() {
             <Card key={item.title} className="!rounded-xl !border !border-[#f1e5e5] !bg-white/90 !shadow-[0_12px_28px_rgba(17,24,39,0.05)]" bodyStyle={{ padding: 24 }}>
               <div className="flex gap-4">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#fff1f3] text-lg text-[#d8001e]">
-                  {item.icon}
+                  {CONTACT_ICON_MAP[item.iconKey] || <WifiOutlined />}
                 </span>
                 <div>
                   <Text className="!block !font-extrabold !text-slate-950">{item.title}</Text>

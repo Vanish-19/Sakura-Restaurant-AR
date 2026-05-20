@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+const stringListSchema = z.array(z.string().trim().min(1)).max(20).optional();
+
 export const createFoodSchema = z.object({
   body: z.object({
     name: z.string().min(1, 'Name is required'),
@@ -11,6 +13,9 @@ export const createFoodSchema = z.object({
       glb_url: z.string().optional(),
       usdz_url: z.string().optional(),
     }).optional(),
+    ingredients: stringListSchema,
+    allergens: stringListSchema,
+    recommended_for: stringListSchema,
     is_best_seller: z.boolean().optional(),
     is_available: z.boolean().optional(),
   })
@@ -30,6 +35,9 @@ export const updateFoodSchema = z.object({
       glb_url: z.string().optional(),
       usdz_url: z.string().optional(),
     }).optional(),
+    ingredients: stringListSchema,
+    allergens: stringListSchema,
+    recommended_for: stringListSchema,
     is_best_seller: z.boolean().optional(),
     is_available: z.boolean().optional(),
   }).refine((data) => Object.values(data).some((value) => value !== undefined), {

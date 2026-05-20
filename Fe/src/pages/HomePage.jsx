@@ -42,9 +42,12 @@ function isMobileDevice() {
 }
 
 export default function HomePage() {
-  const [activeCategory, setActiveCategory] = useState('all')
   const { addItem } = useCart()
   const [searchParams, setSearchParams] = useSearchParams()
+  const [activeCategory, setActiveCategory] = useState(() => {
+    const queryCategory = String(searchParams.get('category') || 'all').toLowerCase()
+    return queryCategory || 'all'
+  })
   const navigate = useNavigate()
   const isAndroidPreview = searchParams.get('preview') === 'android'
   const [menuItems, setMenuItems] = useState([])
@@ -97,6 +100,33 @@ export default function HomePage() {
     if (activeCategory === 'all') return menuItems
     return menuItems.filter((item) => item.category === activeCategory)
   }, [activeCategory, menuItems])
+
+  useEffect(() => {
+    const queryCategory = String(searchParams.get('category') || 'all').toLowerCase()
+    if (!queryCategory) {
+      setActiveCategory('all')
+      return
+    }
+
+    if (queryCategory === 'all') {
+      setActiveCategory('all')
+      return
+    }
+
+    const categoryExists = menuItems.some((item) => item.category === queryCategory)
+    setActiveCategory(categoryExists ? queryCategory : 'all')
+  }, [menuItems, searchParams])
+
+  const handleCategoryChange = (nextCategory) => {
+    setActiveCategory(nextCategory)
+    const next = new URLSearchParams(searchParams)
+    if (!nextCategory || nextCategory === 'all') {
+      next.delete('category')
+    } else {
+      next.set('category', nextCategory)
+    }
+    setSearchParams(next, { replace: true })
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -274,7 +304,7 @@ export default function HomePage() {
       <CategoryBar
         categories={categories}
         activeKey={activeCategory}
-        onChange={setActiveCategory}
+        onChange={handleCategoryChange}
       />
 
       {isScanningQr ? (
@@ -305,6 +335,9 @@ export default function HomePage() {
                 }}
                 onViewAr={() => {
                   handleViewAr(item)
+                }}
+                onViewDetail={() => {
+                  navigate(`/menu/${encodeURIComponent(item.id)}`)
                 }}
               />
             ))}

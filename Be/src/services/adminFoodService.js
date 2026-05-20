@@ -2,6 +2,25 @@ import MenuItem from '../models/MenuItem.js';
 import { createHttpError } from '../utils/AppError.js';
 import { uploadRawBufferToCloudinary } from './cloudinaryService.js';
 
+function normalizeStringArray(values) {
+  if (!Array.isArray(values)) return undefined;
+
+  return [...new Set(values.map((value) => String(value || '').trim()).filter(Boolean))];
+}
+
+function normalizeFoodPayload(data = {}) {
+  const payload = { ...data };
+  const ingredients = normalizeStringArray(data.ingredients);
+  const allergens = normalizeStringArray(data.allergens);
+  const recommendedFor = normalizeStringArray(data.recommended_for);
+
+  if (ingredients) payload.ingredients = ingredients;
+  if (allergens) payload.allergens = allergens;
+  if (recommendedFor) payload.recommended_for = recommendedFor;
+
+  return payload;
+}
+
 function resolveModelType({ modelType, filename }) {
   const normalizedType = String(modelType || '').trim().toLowerCase();
   if (normalizedType === 'glb' || normalizedType === 'usdz') return normalizedType;
@@ -13,7 +32,7 @@ function resolveModelType({ modelType, filename }) {
 }
 
 export const createFood = async (data) => {
-  const food = new MenuItem(data);
+  const food = new MenuItem(normalizeFoodPayload(data));
   return food.save();
 };
 
@@ -31,7 +50,7 @@ export const getFoodById = async (id) => {
 };
 
 export const updateFood = async (id, data) => {
-  const updated = await MenuItem.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+  const updated = await MenuItem.findByIdAndUpdate(id, normalizeFoodPayload(data), { new: true, runValidators: true });
   if (!updated) throw createHttpError('Food item not found', 404, 'FOOD_NOT_FOUND');
   return updated;
 };

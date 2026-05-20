@@ -39,9 +39,59 @@ export async function getMenuItems(category) {
             }
           : null,
         isBestSeller: Boolean(item?.is_best_seller),
+        ingredients: Array.isArray(item?.ingredients) ? item.ingredients : [],
+        allergens: Array.isArray(item?.allergens) ? item.allergens : [],
+        recommendedFor: Array.isArray(item?.recommended_for) ? item.recommended_for : [],
       }
     })
     .filter(Boolean)
+}
+
+export async function getMenuItemById(id) {
+  const res = await apiRequest(`/menu/items/${id}`)
+  const item = res?.data
+  if (!item) return null
+
+  const mappedItems = await Promise.resolve(
+    [item]
+      .map((entry) => {
+        const mappedId = toMenuItemId(entry)
+        if (!mappedId) return null
+
+        const imageUrl =
+          entry?.assets?.image_url ||
+          entry?.image_url ||
+          'https://placehold.co/800x500?text=Dish'
+
+        return {
+          id: mappedId,
+          name: entry.name || 'Unnamed dish',
+          jpName: entry.jp_name || entry.jpName || '',
+          description: entry.description || '',
+          price: Number(entry.price || 0),
+          category: (entry.category || 'all').toLowerCase(),
+          imageUrl,
+          arModels: entry?.ar_models
+            ? {
+                glb_url: entry.ar_models.glb_url || '',
+                usdz_url: entry.ar_models.usdz_url || '',
+              }
+            : entry?.assets?.ar_models
+            ? {
+                glb_url: entry.assets.ar_models.glb || '',
+                usdz_url: entry.assets.ar_models.usdz || '',
+              }
+            : null,
+          isBestSeller: Boolean(entry?.is_best_seller),
+          ingredients: Array.isArray(entry?.ingredients) ? entry.ingredients : [],
+          allergens: Array.isArray(entry?.allergens) ? entry.allergens : [],
+          recommendedFor: Array.isArray(entry?.recommended_for) ? entry.recommended_for : [],
+        }
+      })
+      .filter(Boolean),
+  )
+
+  return mappedItems[0] || null
 }
 
 export async function scanTableSession(qrHash) {

@@ -17,6 +17,15 @@ const formatCategoryLabel = (value) => {
     .join(' ')
 }
 
+const normalizeTagValues = (values) =>
+  [...new Set((Array.isArray(values) ? values : []).map((value) => String(value || '').trim()).filter(Boolean))]
+
+function buildFoodProfileBadges(food) {
+  return [
+    food.is_best_seller ? { label: 'Bán chạy', color: 'gold' } : null,
+  ].filter(Boolean)
+}
+
 async function convertGlbToUsdzInBrowser(glbFile) {
   const [{ GLTFLoader }, { USDZExporter }] = await Promise.all([
     import('three/examples/jsm/loaders/GLTFLoader.js'),
@@ -295,11 +304,20 @@ export default function FoodManagementAdminPage() {
         glb_url: record.ar_models?.glb_url,
         usdz_url: record.ar_models?.usdz_url,
         description: record.description,
+        ingredients: record.ingredients || [],
+        allergens: record.allergens || [],
+        recommended_for: record.recommended_for || [],
       })
     } else {
       setEditingId(null)
       form.resetFields()
-      form.setFieldsValue({ is_available: true, is_best_seller: false })
+      form.setFieldsValue({
+        is_available: true,
+        is_best_seller: false,
+        ingredients: [],
+        allergens: [],
+        recommended_for: [],
+      })
     }
     setIsModalOpen(true)
   }
@@ -315,6 +333,9 @@ export default function FoodManagementAdminPage() {
         is_best_seller: values.is_best_seller,
         image_url: values.image_url,
         description: values.description,
+        ingredients: normalizeTagValues(values.ingredients),
+        allergens: normalizeTagValues(values.allergens),
+        recommended_for: normalizeTagValues(values.recommended_for),
         ar_models: {
           glb_url: values.glb_url,
           usdz_url: values.usdz_url,
@@ -346,6 +367,13 @@ export default function FoodManagementAdminPage() {
           <div>
             <p className="m-0 text-[13px] font-bold text-zinc-900">{row.name}</p>
             <p className="m-0 text-[11px] text-zinc-500 w-48 truncate">{row.description}</p>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {buildFoodProfileBadges(row).map((badge) => (
+                <Tag key={badge.label} color={badge.color} className="!m-0">
+                  {badge.label}
+                </Tag>
+              ))}
+            </div>
           </div>
         </div>
       ),
@@ -552,6 +580,33 @@ export default function FoodManagementAdminPage() {
 
           <Form.Item name="description" label="Mô tả">
             <Input.TextArea rows={2} />
+          </Form.Item>
+
+          <Form.Item name="ingredients" label="Nguyên liệu chính">
+            <Select
+              mode="tags"
+              tokenSeparators={[',']}
+              placeholder="Ví dụ: salmon, avocado, rice"
+              open={false}
+            />
+          </Form.Item>
+
+          <Form.Item name="allergens" label="Lưu ý dị ứng">
+            <Select
+              mode="tags"
+              tokenSeparators={[',']}
+              placeholder="Ví dụ: fish, shellfish, wheat"
+              open={false}
+            />
+          </Form.Item>
+
+          <Form.Item name="recommended_for" label="Phù hợp với">
+            <Select
+              mode="tags"
+              tokenSeparators={[',']}
+              placeholder="Ví dụ: first-time guests, sharing, ăn nhẹ"
+              open={false}
+            />
           </Form.Item>
 
           <Form.Item name="image_url" label="Đường dẫn ảnh">
