@@ -19,6 +19,7 @@ import PressKitPage from '../pages/static/PressKitPage.jsx'
 import TermsOfServicePage from '../pages/static/TermsOfServicePage.jsx'
 import ArScenePage from '../pages/ArScenePage.jsx'
 import AdminManagementAdminPage from '../pages/admin/AdminManagementAdminPage.jsx'
+import AiMonitoringAdminPage from '../pages/admin/AiMonitoringAdminPage.jsx'
 import ContentManagementAdminPage from '../pages/admin/ContentManagementAdminPage.jsx'
 import DashboardAdminPage from '../pages/admin/DashboardAdminPage.jsx'
 import FoodManagementAdminPage from '../pages/admin/FoodManagementAdminPage.jsx'
@@ -75,6 +76,7 @@ export default function AppRoutes() {
             <Route path="resources" element={<StaticResourcesAdminPage />} />
             <Route path="users" element={<UserManagementAdminPage />} />
             <Route path="admins" element={<AdminManagementAdminPage />} />
+            <Route path="monitoring" element={<AiMonitoringAdminPage />} />
           </Route>
         </Route>
 

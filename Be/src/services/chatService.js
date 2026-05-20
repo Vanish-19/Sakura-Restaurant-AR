@@ -1,8 +1,10 @@
+import crypto from 'node:crypto';
 import Article from '../models/Article.js';
 import MenuItem from '../models/MenuItem.js';
 import Table from '../models/Table.js';
 import { CHAT_KNOWLEDGE_BASE } from '../config/chatKnowledge.js';
-import { chatWithAI } from './aiService.js';
+import { chatWithAI, mergeUsageTotals, planAIToolCalls } from './aiService.js';
+import { estimateUsageCost, recordAiMonitoringEvent } from './aiMonitoringService.js';
 import { getStaticPages, STATIC_PAGE_DEFAULTS } from './staticPageContentService.js';
 import {
   appendConversationMessage,
@@ -615,49 +617,50 @@ function getRelevantFaqEntries(message, intent) {
   }
 }
 
-function buildRestaurantInfoTool({ intent, message, currentPath = '' }) {
+function buildRestaurantInfoTool({ intent, message, currentPath = '', topic = '' }) {
   const { restaurant, booking, ar, payments, quickLinks } = CHAT_KNOWLEDGE_BASE;
   const lines = [];
   const actions = [];
-  const faqEntries = getRelevantFaqEntries(message, intent);
+  const effectiveIntent = topic || intent;
+  const faqEntries = getRelevantFaqEntries(message, effectiveIntent);
   const normalizedPath = normalizeText(currentPath);
 
-  if (intent === 'contact_info') {
+  if (effectiveIntent === 'contact_info') {
     lines.push(`Giờ phục vụ: ${restaurant.hours}. Bếp nhận order cuối lúc ${restaurant.lastKitchenOrder}.`);
     lines.push(`Địa chỉ: ${restaurant.address.join(', ')}.`);
     lines.push(`Hotline: ${restaurant.hotline.join(' / ')}.`);
     lines.push(`Email hỗ trợ: ${restaurant.emails.support}.`);
     actions.push({ type: 'navigate', label: 'Liên hệ nhà hàng', path: quickLinks.contact });
-  } else if (intent === 'booking_support') {
+  } else if (effectiveIntent === 'booking_support') {
     lines.push(`Đặt bàn: ${booking.summary}`);
     lines.push(`Khi đến bàn: ${booking.dineIn}`);
     lines.push(`Hotline hỗ trợ nhanh: ${restaurant.hotline.join(' / ')}.`);
     actions.push({ type: 'navigate', label: 'Liên hệ / đặt bàn', path: quickLinks.contact });
-  } else if (intent === 'table_availability') {
+  } else if (effectiveIntent === 'table_availability') {
     lines.push(`Đặt bàn: ${booking.summary}`);
     lines.push(`Nếu cần giữ chỗ nhanh, khách nên liên hệ hotline ${restaurant.hotline.join(' / ')} hoặc điền form tại trang liên hệ.`);
     actions.push({ type: 'navigate', label: 'Liên hệ / đặt bàn', path: quickLinks.contact });
-  } else if (intent === 'order_support') {
+  } else if (effectiveIntent === 'order_support') {
     lines.push(`Gọi món tại bàn: ${booking.dineIn}`);
     lines.push(`Mang về/giao hàng: ${booking.takeaway}`);
     actions.push({ type: 'navigate', label: 'Mở giỏ hàng', path: quickLinks.cart });
     actions.push({ type: 'navigate', label: 'Lịch sử đơn', path: quickLinks.orderHistory });
-  } else if (intent === 'payment_support') {
+  } else if (effectiveIntent === 'payment_support') {
     lines.push(`Thanh toán: ${payments.summary}`);
     lines.push(`Phương thức hiện có: ${payments.methods.join(', ')}.`);
     lines.push(`Hoàn tiền/hỗ trợ giao dịch: ${payments.refund}`);
     actions.push({ type: 'navigate', label: 'Mở giỏ hàng', path: quickLinks.cart });
-  } else if (intent === 'ar_support') {
+  } else if (effectiveIntent === 'ar_support') {
     lines.push(`AR: ${ar.summary}`);
     lines.push(`iOS: ${ar.ios}`);
     lines.push(`Android: ${ar.android}`);
     lines.push(`Hỗ trợ khi AR lỗi: ${ar.support}`);
     lines.push(`Wifi khách: ${restaurant.guestWifi}.`);
     actions.push({ type: 'navigate', label: 'Trải nghiệm AR', path: quickLinks.ar });
-  } else if (intent === 'content_discovery') {
+  } else if (effectiveIntent === 'content_discovery') {
     lines.push('Nhà hàng có khu vực blog/bài viết để đăng tin tức, chia sẻ và chương trình khuyến mãi.');
     actions.push({ type: 'navigate', label: 'Xem blog', path: quickLinks.blog });
-  } else if (intent === 'site_info') {
+  } else if (effectiveIntent === 'site_info') {
     lines.push('Nhà hàng có các trang public để cung cấp thông tin về thương hiệu, liên hệ, tuyển dụng, press kit, chính sách và điều khoản.');
     if (normalizedPath.includes('/privacy&policy')) {
       lines.push('Trang hiện tại là chính sách bảo mật, tập trung vào dữ liệu thu thập, quyền riêng tư và quyền kiểm soát của người dùng.');
@@ -779,7 +782,7 @@ function pickRecommendedSiteActions(entries, message = '', currentPath = '') {
   );
 }
 
-async function getRelevantSiteContent(message, currentPath = '', conversationSummary = '') {
+async function getRelevantSiteContent(message, currentPath = '', conversationSummary = '', options = {}) {
   let staticPages = [];
   try {
     staticPages = await getStaticPages();
@@ -788,7 +791,9 @@ async function getRelevantSiteContent(message, currentPath = '', conversationSum
       message: error?.message,
     });
   }
-  const searchText = `${conversationSummary} ${message}`.trim();
+  const overrideQuery = String(options.query || '').trim();
+  const preferredSlug = String(options.slug || '').trim();
+  const searchText = `${conversationSummary} ${overrideQuery || message}`.trim();
   const entries = [
     ...staticPages.map(buildSiteEntry),
     ...buildSyntheticSiteEntries(),
@@ -831,6 +836,13 @@ async function getRelevantSiteContent(message, currentPath = '', conversationSum
       .slice(0, 3);
   }
 
+  if (preferredSlug) {
+    const exactSlugMatch = entries.find((entry) => entry.slug === preferredSlug);
+    if (exactSlugMatch) {
+      topEntries = [exactSlugMatch];
+    }
+  }
+
   const recommendedActions = pickRecommendedSiteActions(topEntries, message, currentPath);
 
   return {
@@ -861,8 +873,9 @@ function buildTableAvailabilityCard(table) {
   };
 }
 
-async function getTableAvailability(message) {
-  const desiredPartySize = extractPartySize(message);
+async function getTableAvailability(message, options = {}) {
+  const desiredPartySize =
+    Number(options.partySize || 0) > 0 ? Number(options.partySize) : extractPartySize(message);
   const tables = await Table.find().select('name status zone capacity').sort({ name: 1 }).lean();
   const emptyTables = tables.filter((table) => table.status === 'empty');
   const reservedTables = tables.filter((table) => table.status === 'reserved');
@@ -903,10 +916,11 @@ async function getTableAvailability(message) {
   };
 }
 
-async function getRecommendedMenuItems(message, history = [], conversationSummary = '') {
+async function getRecommendedMenuItems(message, history = [], conversationSummary = '', options = {}) {
   const availableItems = await MenuItem.find({ is_available: true }).select(MENU_ITEM_FIELDS).lean();
   const categories = uniqueStrings(availableItems.map((item) => item.category));
-  const searchText = buildMenuSearchText(message, history, conversationSummary);
+  const overrideQuery = String(options.query || '').trim();
+  const searchText = buildMenuSearchText(overrideQuery || message, history, conversationSummary);
   const preferences = extractMenuPreferences(searchText, categories);
   const filteredItems = filterMenuItems(availableItems, preferences);
   const candidates = filteredItems.length > 0 ? filteredItems : availableItems;
@@ -935,13 +949,14 @@ async function getRecommendedMenuItems(message, history = [], conversationSummar
   };
 }
 
-async function getRelatedArticles(message, conversationSummary = '') {
+async function getRelatedArticles(message, conversationSummary = '', options = {}) {
   const articles = await Article.find({ is_published: true })
     .sort({ createdAt: -1, views: -1 })
     .limit(8)
     .lean();
 
-  const normalizedMessage = normalizeText(`${conversationSummary} ${message}`);
+  const overrideQuery = String(options.query || '').trim();
+  const normalizedMessage = normalizeText(`${conversationSummary} ${overrideQuery || message}`);
 
   const scoredArticles = articles
     .map((article) => {
@@ -981,48 +996,52 @@ async function getRelatedArticles(message, conversationSummary = '') {
   };
 }
 
-function buildInternalToolPlan({ intent, message, currentPath = '' }) {
-  const plan = [];
+function buildFallbackToolSelection({ intent, message, currentPath = '' }) {
   const normalizedPath = normalizeText(currentPath);
+  const selected = [];
 
-  const addTool = (name, reason) => {
-    if (!plan.some((entry) => entry.name === name)) {
-      plan.push({ name, reason });
+  const addTool = (name, argumentsPayload = {}) => {
+    if (!selected.some((tool) => tool.name === name)) {
+      selected.push({
+        id: `fallback_${name}`,
+        name,
+        arguments: argumentsPayload,
+      });
     }
   };
 
   switch (intent) {
     case 'table_availability':
-      addTool('table_availability', 'Kiểm tra trạng thái bàn trống hiện tại.');
-      addTool('restaurant_info', 'Bổ sung hướng dẫn đặt bàn và liên hệ.');
+      addTool('table_availability', { query: message });
+      addTool('restaurant_info', { topic: 'table_availability', focus: message });
       break;
     case 'menu_recommendation':
-      addTool('menu_search', 'Tìm món phù hợp theo nhu cầu hiện tại.');
+      addTool('menu_search', { query: message });
       break;
     case 'ar_support':
-      addTool('restaurant_info', 'Cung cấp hướng dẫn AR theo thiết bị.');
-      addTool('menu_search', 'Ưu tiên các món đang có AR.');
+      addTool('restaurant_info', { topic: 'ar_support', focus: message });
+      addTool('menu_search', { query: message });
       break;
     case 'content_discovery':
-      addTool('article_search', 'Tìm bài viết hoặc khuyến mãi liên quan.');
-      addTool('restaurant_info', 'Cung cấp điều hướng blog khi cần.');
+      addTool('article_search', { query: message });
+      addTool('restaurant_info', { topic: 'content_discovery', focus: message });
       break;
     case 'site_info':
-      addTool('site_content_search', 'Tìm nội dung liên quan trên các trang public của website.');
-      addTool('restaurant_info', 'Bổ sung điều hướng và thông tin vận hành chung.');
+      addTool('site_content_search', { query: message });
+      addTool('restaurant_info', { topic: 'site_info', focus: message });
       break;
     case 'contact_info':
     case 'booking_support':
     case 'payment_support':
     case 'order_support':
-      addTool('restaurant_info', 'Trả lời bằng thông tin vận hành xác thực.');
+      addTool('restaurant_info', { topic: intent, focus: message });
       break;
     default:
       if (hasAnyKeyword(message, MENU_DISCOVERY_KEYWORDS) || normalizedPath === '/' || normalizedPath.includes('/menu')) {
-        addTool('menu_search', 'Người dùng có thể đang cần gợi ý món.');
+        addTool('menu_search', { query: message });
       }
       if (hasAnyKeyword(message, CONTENT_DISCOVERY_KEYWORDS) || normalizedPath.includes('/blog')) {
-        addTool('article_search', 'Người dùng có thể đang cần bài viết.');
+        addTool('article_search', { query: message });
       }
       if (
         hasAnyKeyword(message, SITE_CONTENT_KEYWORDS) ||
@@ -1030,55 +1049,134 @@ function buildInternalToolPlan({ intent, message, currentPath = '' }) {
           normalizedPath.includes(path),
         )
       ) {
-        addTool('site_content_search', 'Người dùng có thể đang hỏi thông tin từ các trang public.');
+        addTool('site_content_search', { query: message });
       }
       if (hasAnyKeyword(message, TABLE_AVAILABILITY_KEYWORDS)) {
-        addTool('table_availability', 'Người dùng đang hỏi trạng thái bàn hiện tại.');
+        addTool('table_availability', { query: message });
       }
-      if (plan.length === 0 || hasAnyKeyword(message, SUPPORT_KEYWORDS) || normalizedPath.includes('/ar')) {
-        addTool('restaurant_info', 'Bổ sung thông tin nhà hàng hoặc điều hướng chung.');
+      if (selected.length === 0 || hasAnyKeyword(message, SUPPORT_KEYWORDS) || normalizedPath.includes('/ar')) {
+        addTool('restaurant_info', { topic: intent, focus: message });
       }
       break;
   }
 
-  return plan;
+  return selected;
 }
 
-async function runInternalTools({ plan, intent, message, history, conversationSummary, currentPath }) {
+function buildAiToolDefinitions() {
+  return [
+    {
+      name: 'restaurant_info',
+      description: 'Tra cứu thông tin vận hành nhà hàng như giờ mở cửa, hotline, địa chỉ, đặt bàn, AR, thanh toán hoặc hướng dẫn chung.',
+      parameters: {
+        type: 'object',
+        properties: {
+          topic: {
+            type: 'string',
+            enum: [
+              'general',
+              'contact_info',
+              'booking_support',
+              'payment_support',
+              'order_support',
+              'ar_support',
+              'site_info',
+              'content_discovery',
+              'table_availability',
+            ],
+          },
+          focus: { type: 'string' },
+        },
+        additionalProperties: false,
+      },
+    },
+    {
+      name: 'menu_search',
+      description: 'Tìm các món ăn phù hợp theo nhu cầu hiện tại như loại món, giá, nguyên liệu, dị ứng, AR hoặc món bán chạy.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string' },
+        },
+        additionalProperties: false,
+      },
+    },
+    {
+      name: 'article_search',
+      description: 'Tìm bài viết, tin tức, blog hoặc khuyến mãi liên quan đến câu hỏi của khách.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string' },
+        },
+        additionalProperties: false,
+      },
+    },
+    {
+      name: 'site_content_search',
+      description: 'Tìm nội dung từ các trang public như Giới thiệu, Liên hệ, Tuyển dụng, Press Kit, Chính sách bảo mật và Điều khoản dịch vụ.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string' },
+          slug: {
+            type: 'string',
+            enum: ['about', 'contact', 'career', 'press-kit', 'privacy-policy', 'terms-of-service', 'home', 'blog', 'ar', 'cart', 'order-history'],
+          },
+        },
+        additionalProperties: false,
+      },
+    },
+    {
+      name: 'table_availability',
+      description: 'Kiểm tra trạng thái bàn trống hiện tại, số lượng bàn theo sức chứa và thông tin giữ chỗ.',
+      parameters: {
+        type: 'object',
+        properties: {
+          partySize: { type: 'number' },
+          query: { type: 'string' },
+        },
+        additionalProperties: false,
+      },
+    },
+  ];
+}
+
+async function runSelectedTools({ selectedTools, intent, message, history, conversationSummary, currentPath }) {
   const results = [];
   const failedToolNames = [];
+  const registry = {
+    restaurant_info: async (argumentsPayload = {}) =>
+      buildRestaurantInfoTool({
+        intent,
+        message: String(argumentsPayload.focus || message),
+        currentPath,
+        topic: String(argumentsPayload.topic || intent || 'general'),
+      }),
+    menu_search: async (argumentsPayload = {}) =>
+      getRecommendedMenuItems(message, history, conversationSummary, {
+        query: String(argumentsPayload.query || message),
+      }),
+    article_search: async (argumentsPayload = {}) =>
+      getRelatedArticles(message, conversationSummary, {
+        query: String(argumentsPayload.query || message),
+      }),
+    site_content_search: async (argumentsPayload = {}) =>
+      getRelevantSiteContent(message, currentPath, conversationSummary, {
+        query: String(argumentsPayload.query || message),
+        slug: String(argumentsPayload.slug || ''),
+      }),
+    table_availability: async (argumentsPayload = {}) =>
+      getTableAvailability(String(argumentsPayload.query || message), {
+        partySize: Number(argumentsPayload.partySize || 0),
+      }),
+  };
 
-  for (const tool of plan) {
+  for (const tool of selectedTools) {
     try {
-      if (tool.name === 'restaurant_info') {
-        results.push(
-          buildRestaurantInfoTool({
-            intent,
-            message,
-            currentPath,
-          }),
-        );
-        continue;
-      }
-
-      if (tool.name === 'menu_search') {
-        results.push(await getRecommendedMenuItems(message, history, conversationSummary));
-        continue;
-      }
-
-      if (tool.name === 'article_search') {
-        results.push(await getRelatedArticles(message, conversationSummary));
-        continue;
-      }
-
-      if (tool.name === 'site_content_search') {
-        results.push(await getRelevantSiteContent(message, currentPath, conversationSummary));
-        continue;
-      }
-
-      if (tool.name === 'table_availability') {
-        results.push(await getTableAvailability(message));
-      }
+      const executor = registry[tool.name];
+      if (!executor) continue;
+      results.push(await executor(tool.arguments || {}));
     } catch (error) {
       failedToolNames.push(tool.name);
       console.warn('[chat] Internal tool failed', {
@@ -1104,18 +1202,6 @@ function buildContextSections({ intent, currentPath, toolResults }) {
   ].filter(Boolean);
 
   return sections.join('\n\n');
-}
-
-function isPrivacyDataQuestion(message) {
-  return hasAnyKeyword(message, ['du lieu', 'bao mat', 'privacy', 'quyen rieng tu', 'camera', 'thu thap', 'vr']);
-}
-
-function buildPrivacyPolicyReply() {
-  return [
-    'Theo chính sách bảo mật hiện tại, khi bật AR/VR hoặc WebXR hệ thống có thể xin quyền dùng camera để hiển thị mô hình 3D trên thiết bị của khách.',
-    'Sakura cam kết không thu thập, lưu trữ, ghi hình hoặc truyền tải dữ liệu hình ảnh hay video từ camera của khách về máy chủ chỉ để chạy tính năng này.',
-    'Hệ thống chỉ có thể ghi nhận dữ liệu kỹ thuật tiêu chuẩn như IP, loại trình duyệt, hệ điều hành, thời gian truy cập, lịch sử tương tác menu AR và cookies ẩn danh để tối ưu hiệu năng.',
-  ].join(' ');
 }
 
 function formatFallbackMenuLine(item) {
@@ -1250,14 +1336,47 @@ function buildConversationSummary({ previousSummary = '', message, intent, menuI
 }
 
 export async function generateChatReply({ message, conversationId, currentPath = '' }) {
+  const startedAt = Date.now();
+  const requestId = crypto.randomUUID();
   const session = ensureConversation(conversationId);
   const history = getConversationHistory(session.conversationId).slice(-MAX_HISTORY_MESSAGES);
   const conversationSummary = getConversationSummary(session.conversationId);
   const intent = detectIntent(message);
-  const toolPlan = buildInternalToolPlan({ intent, message, currentPath });
+  const availableTools = buildAiToolDefinitions();
+  let plannerResult = {
+    model: 'gpt-4o-mini',
+    selectedTools: [],
+    usage: {
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+      requestCount: 0,
+    },
+  };
 
-  const { results: toolResults, failedToolNames } = await runInternalTools({
-    plan: toolPlan,
+  try {
+    plannerResult = await planAIToolCalls({
+      message,
+      intent,
+      currentPath,
+      conversationHistory: history,
+      conversationSummary,
+      tools: availableTools,
+    });
+  } catch (error) {
+    console.warn('[chat] Planner failed, using fallback tool selection', {
+      code: error?.code,
+      message: error?.message,
+    });
+  }
+
+  const selectedTools =
+    plannerResult.selectedTools?.length > 0
+      ? plannerResult.selectedTools
+      : buildFallbackToolSelection({ intent, message, currentPath });
+
+  const { results: toolResults, failedToolNames } = await runSelectedTools({
+    selectedTools,
     intent,
     message,
     history,
@@ -1285,7 +1404,9 @@ export async function generateChatReply({ message, conversationId, currentPath =
   let reply = '';
   let suggestions = [];
   let usedFallback = false;
-  const useDeterministicPolicyReply = intent === 'site_info' && isPrivacyDataQuestion(message);
+  let status = 'success';
+  let model = plannerResult.model || 'gpt-4o-mini';
+  let aiUsage = mergeUsageTotals(plannerResult.usage);
   const shouldSkipAI =
     (failedToolNames.includes('menu_search') && recommendedItems.length === 0 && ['menu_recommendation', 'ar_support', 'general'].includes(intent)) ||
     (failedToolNames.includes('article_search') && relatedArticles.length === 0 && ['content_discovery', 'general'].includes(intent)) ||
@@ -1293,10 +1414,7 @@ export async function generateChatReply({ message, conversationId, currentPath =
     (failedToolNames.includes('site_content_search') && ['site_info'].includes(intent));
 
   try {
-    if (useDeterministicPolicyReply) {
-      reply = buildPrivacyPolicyReply();
-      suggestions = [];
-    } else if (shouldSkipAI) {
+    if (shouldSkipAI) {
       throw Object.assign(new Error('Critical internal tool data unavailable'), { code: 'CHAT_CONTEXT_UNAVAILABLE' });
     } else {
       const aiResponse = await chatWithAI({
@@ -1306,13 +1424,16 @@ export async function generateChatReply({ message, conversationId, currentPath =
         conversationHistory: history,
         conversationSummary,
         currentPath,
-        toolNames: toolPlan.map((tool) => tool.name),
+        toolNames: selectedTools.map((tool) => tool.name),
       });
+      model = aiResponse.model || model;
+      aiUsage = mergeUsageTotals(aiUsage, aiResponse.usage);
       reply = aiResponse.reply;
       suggestions = Array.isArray(aiResponse.suggestions) ? aiResponse.suggestions : [];
     }
   } catch (error) {
     usedFallback = true;
+    status = error?.code === 'AI_PROVIDER_UNAVAILABLE' ? 'error' : 'fallback';
     console.warn('[chat] Falling back to deterministic reply', {
       intent,
       code: error?.code,
@@ -1342,6 +1463,38 @@ export async function generateChatReply({ message, conversationId, currentPath =
     }),
   );
 
+  try {
+    await recordAiMonitoringEvent({
+      conversationId: session.conversationId,
+      requestId,
+      provider: 'openai',
+      model,
+      intent,
+      message,
+      currentPath,
+      selectedTools: selectedTools.map((tool) => tool.name),
+      failedToolNames,
+      llmRequestCount: aiUsage.requestCount,
+      toolCallCount: selectedTools.length,
+      promptTokens: aiUsage.promptTokens,
+      completionTokens: aiUsage.completionTokens,
+      totalTokens: aiUsage.totalTokens,
+      estimatedCostUsd: estimateUsageCost({
+        model,
+        promptTokens: aiUsage.promptTokens,
+        completionTokens: aiUsage.completionTokens,
+      }),
+      latencyMs: Date.now() - startedAt,
+      usedFallback,
+      status,
+      replyPreview: reply,
+    });
+  } catch (error) {
+    console.warn('[chat] Failed to record AI monitoring event', {
+      message: error?.message,
+    });
+  }
+
   return {
     conversationId: session.conversationId,
     intent,
@@ -1352,7 +1505,8 @@ export async function generateChatReply({ message, conversationId, currentPath =
     meta: {
       usedFallback,
       failedToolNames,
-      toolPlan: toolPlan.map((tool) => tool.name),
+      selectedTools: selectedTools.map((tool) => tool.name),
+      usage: aiUsage,
     },
   };
 }
