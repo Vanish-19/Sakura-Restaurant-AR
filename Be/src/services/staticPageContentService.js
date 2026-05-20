@@ -1,4 +1,5 @@
 import StaticPageContent from '../models/StaticPageContent.js';
+import { STATIC_PAGE_TRANSLATIONS } from './staticPageTranslations.js';
 
 export const STATIC_PAGE_DEFAULTS = [
   {
@@ -706,15 +707,23 @@ function mergeMissing(targetValue, sourceValue) {
 export async function ensureStaticPages() {
   await Promise.all(
     STATIC_PAGE_DEFAULTS.map(async (page) => {
+      const defaultContent = {
+        ...(page.content || {}),
+        translations: {
+          ...((page.content || {}).translations || {}),
+          ...(STATIC_PAGE_TRANSLATIONS[page.slug] || {}),
+        },
+      };
+      const defaultPage = { ...page, content: defaultContent };
       const existing = await StaticPageContent.findOne({ slug: page.slug });
 
       if (!existing) {
-        await StaticPageContent.create(page);
+        await StaticPageContent.create(defaultPage);
         return;
       }
 
-      const mergedContent = mergeMissing(existing.content || {}, page.content || {});
-      const nextLabel = existing.label || page.label;
+      const mergedContent = mergeMissing(existing.content || {}, defaultPage.content || {});
+      const nextLabel = existing.label || defaultPage.label;
 
       if (
         JSON.stringify(mergedContent) !== JSON.stringify(existing.content || {}) ||
