@@ -11,7 +11,7 @@
     "japanese": "Tiếng Nhật",
     "home": "Trang chủ",
     "about": "Về chúng tôi",
-    "blog": "Blog",
+    "blog": "Bài viết",
     "contact": "Liên hệ",
     "cart": "Giỏ hàng",
     "search": "Tìm kiếm",
@@ -33,16 +33,20 @@
     "greeting": "Xin chào,"
   },
   "navigation": {
-    "home": "Home",
-    "about": "About",
-    "blog": "Blog",
-    "contact": "Contact",
-    "privacyPolicy": "Privacy Policy",
-    "termsOfService": "Terms of Service",
-    "careers": "Careers",
-    "pressKit": "Press Kit"
+    "home": "Trang chủ",
+    "about": "Về chúng tôi",
+    "blog": "Bài viết",
+    "contact": "Liên hệ",
+    "privacyPolicy": "Chính sách bảo mật",
+    "termsOfService": "Điều khoản dịch vụ",
+    "careers": "Tuyển dụng",
+    "pressKit": "Bộ truyền thông"
   },
   "home": {
+    "heroTitle": "Trải nghiệm món Nhật với AR",
+    "heroQuote": "Chúng tôi biết ngoài kia có nhiều lựa chọn, cảm ơn bạn đã chọn Sakura Restaurant",
+    "heroPrimaryPill": "Ẩm thực Nhật chuẩn vị",
+    "heroSecondaryPill": "Xem thử AR",
     "title": "Chào mừng đến Sakura Restaurant",
     "subtitle": "Trải nghiệm gọi món hiện đại với AR Menu",
     "description": "Kết hợp tinh hoa ẩm thực Nhật Bản với công nghệ AR hiện đại để tạo nên trải nghiệm sống động và đáng nhớ.",
@@ -62,6 +66,9 @@
     "brandStoryEyebrow": "Câu chuyện thương hiệu",
     "brandStoryTitle": "Khởi nguồn của một trải nghiệm khác biệt",
     "visionMissionTitle": "Tầm nhìn & Sứ mệnh",
+    "visionLabel": "Tầm nhìn",
+    "missionLabel": "Sứ mệnh",
+    "coreValuesEyebrow": "Giá trị cốt lõi",
     "coreValuesTitle": "Bốn giá trị định hình Sakura",
     "arExperienceTitle": "Trải nghiệm AR độc quyền",
     "chefStoryTitle": "Những nghệ nhân của hương vị"
