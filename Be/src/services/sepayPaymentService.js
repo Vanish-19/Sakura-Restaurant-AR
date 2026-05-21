@@ -1,6 +1,7 @@
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
 import mongoose from 'mongoose';
+import { finalizeLoyaltyForPaidOrder } from './loyaltyService.js';
 
 function getFrontendUrl() {
   return process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -222,6 +223,7 @@ export async function handleSepayWebhookEvent(payload, authorization) {
 
       const saved = await payment.save({ session });
       await Order.findByIdAndUpdate(payment.order, { status: 'paid' }, { session });
+      await finalizeLoyaltyForPaidOrder(payment.order, { session });
       const populatedPayment = await Payment.findById(saved._id).populate('order').session(session);
       result = { handled: true, rspCode: '00', message: 'Confirm Success', payment: populatedPayment };
     });

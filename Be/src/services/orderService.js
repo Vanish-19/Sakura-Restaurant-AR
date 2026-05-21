@@ -2,11 +2,12 @@ import mongoose from 'mongoose';
 import MenuItem from '../models/MenuItem.js';
 import Order from '../models/Order.js';
 import Table from '../models/Table.js';
+import { finalizeLoyaltyForPaidOrder, reserveRewardVoucherForOrder, revertLoyaltyForCancelledOrder } from './loyaltyService.js';
 import { createHttpError } from '../utils/AppError.js';
 
 function normalizeOrderItems(itemsData = [], menuItems = []) {
   const menuMap = new Map(menuItems.map((item) => [String(item._id), item]));
-  let totalAmount = 0;
+  let subtotalAmount = 0;
 
   const processedItems = itemsData.map((item) => {
     const menuItem = menuMap.get(String(item.menu_item_id));
@@ -16,7 +17,7 @@ function normalizeOrderItems(itemsData = [], menuItems = []) {
 
     const quantity = Number(item.quantity || 1);
     const lineTotal = menuItem.price * quantity;
-    totalAmount += lineTotal;
+    subtotalAmount += lineTotal;
 
     return {
       menu_item: menuItem._id,
@@ -27,7 +28,7 @@ function normalizeOrderItems(itemsData = [], menuItems = []) {
     };
   });
 
-  return { processedItems, totalAmount };
+  return { processedItems, subtotalAmount };
 }
 
 async function getAvailableMenuItems(itemsData, session) {
@@ -44,9 +45,12 @@ const createNewOrder = async (
   userId = null,
   customerPhone = '',
   tableSessionId = null,
+  rewardVoucherId = '',
+  userPhone = '',
 ) => {
   const session = await mongoose.startSession();
   let savedOrderId = null;
+  const effectiveCustomerPhone = String(customerPhone || userPhone || '').trim();
 
   try {
     await session.withTransaction(async () => {
@@ -56,7 +60,7 @@ const createNewOrder = async (
       }
 
       const menuItems = await getAvailableMenuItems(itemsData, session);
-      const { processedItems, totalAmount } = normalizeOrderItems(itemsData, menuItems);
+      const { processedItems, subtotalAmount } = normalizeOrderItems(itemsData, menuItems);
 
       const [savedOrder] = await Order.create(
         [
@@ -65,13 +69,40 @@ const createNewOrder = async (
             table: tableId,
             table_session: tableSessionId || undefined,
             user: userId || undefined,
-            customer_phone: customerPhone || undefined,
+            customer_phone: effectiveCustomerPhone || undefined,
             items: processedItems,
-            total_amount: totalAmount,
+            subtotal_amount: subtotalAmount,
+            total_amount: subtotalAmount,
+            loyalty: {
+              phone: effectiveCustomerPhone || undefined,
+            },
           },
         ],
         { session },
       );
+
+      if (rewardVoucherId) {
+        const { profile, discountAmount, rewardRedemption } = await reserveRewardVoucherForOrder(
+          {
+            phone: effectiveCustomerPhone,
+            voucherId: rewardVoucherId,
+            subtotal: subtotalAmount,
+            orderId: savedOrder._id,
+            userId,
+          },
+          { session },
+        );
+
+        savedOrder.discount_amount = discountAmount;
+        savedOrder.total_amount = Math.max(0, subtotalAmount - discountAmount);
+        savedOrder.loyalty = {
+          ...savedOrder.loyalty?.toObject?.(),
+          phone: effectiveCustomerPhone || undefined,
+          profile: profile?._id,
+          reward_redemption: rewardRedemption || undefined,
+        };
+        await savedOrder.save({ session });
+      }
 
       savedOrderId = savedOrder._id;
     });
@@ -102,6 +133,12 @@ const updateOrderStatus = async (orderId, newStatus) => {
 
   if (!updatedOrder) {
     throw createHttpError('Order not found', 404, 'ORDER_NOT_FOUND');
+  }
+
+  if (newStatus === 'paid') {
+    await finalizeLoyaltyForPaidOrder(updatedOrder._id);
+  } else if (newStatus === 'cancelled') {
+    await revertLoyaltyForCancelledOrder(updatedOrder._id);
   }
 
   return updatedOrder;

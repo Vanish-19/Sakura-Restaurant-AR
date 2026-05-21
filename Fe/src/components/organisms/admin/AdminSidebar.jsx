@@ -1,6 +1,7 @@
 import {
   DashboardOutlined,
   ForkOutlined,
+  GiftOutlined,
   RadarChartOutlined,
   OrderedListOutlined,
   QuestionCircleOutlined,
@@ -21,6 +22,7 @@ const navItems = [
   { key: '/admin/orders', label: 'Order Management', icon: <OrderedListOutlined /> },
   { key: '/admin/tables', label: 'Table Management', icon: <TableOutlined /> },
   { key: '/admin/users', label: 'User Management', icon: <TeamOutlined /> },
+  { key: '/admin/loyalty', label: 'Loyalty & Voucher', icon: <GiftOutlined /> },
   { key: '/admin/admins', label: 'Admin Management', icon: <UserSwitchOutlined /> },
   { key: '/admin/content', label: 'Content Management', icon: <ReadOutlined /> },
   { key: '/admin/resources', label: 'Resource Management', icon: <ToolOutlined /> },

@@ -29,3 +29,13 @@ export const tableIdSchema = z.object({
     id: z.string().regex(objectIdRegex, 'Invalid table ID')
   })
 });
+
+export const updateReservationStatusSchema = z.object({
+  params: z.object({
+    id: z.string().regex(objectIdRegex, 'Invalid table ID'),
+    reservationId: z.string().regex(objectIdRegex, 'Invalid reservation ID'),
+  }),
+  body: z.object({
+    status: z.enum(['seated', 'completed', 'cancelled', 'no_show']),
+  }),
+});

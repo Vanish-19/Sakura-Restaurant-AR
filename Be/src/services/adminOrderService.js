@@ -1,6 +1,7 @@
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
 import { createHttpError } from '../utils/AppError.js';
+import { finalizeLoyaltyForPaidOrder, revertLoyaltyForCancelledOrder } from './loyaltyService.js';
 
 async function attachPaymentStatus(orders) {
   const orderIds = orders.map((order) => order._id);
@@ -146,6 +147,11 @@ const updateOrderStatus = async (id, newStatus) => {
   }
 
   const updated = await order.save();
+  if (newStatus === 'paid') {
+    await finalizeLoyaltyForPaidOrder(updated._id);
+  } else if (newStatus === 'cancelled') {
+    await revertLoyaltyForCancelledOrder(updated._id);
+  }
   const populated = await getPopulatedOrder(updated._id);
   const [orderWithPayment] = await attachPaymentStatus([populated]);
   return orderWithPayment;
@@ -200,7 +206,9 @@ const cancelOrder = async (id) => {
   order.items.forEach((item) => {
     item.status = 'cancelled';
   });
-  return order.save();
+  const cancelled = await order.save();
+  await revertLoyaltyForCancelledOrder(cancelled._id);
+  return cancelled;
 };
 
 const hardDeleteOrder = async (id) => {

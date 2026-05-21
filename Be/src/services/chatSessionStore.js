@@ -29,6 +29,9 @@ function createSession(conversationId) {
     conversationId,
     messages: [],
     summary: '',
+    metadata: {
+      bookingDraft: null,
+    },
     createdAt: now,
     updatedAt: now,
   };
@@ -64,6 +67,20 @@ export function updateConversationSummary(conversationId, summary) {
   session.summary = sanitizeSummary(summary);
   session.updatedAt = Date.now();
   return session.summary;
+}
+
+export function getConversationMetadata(conversationId) {
+  return ensureConversation(conversationId).metadata || {};
+}
+
+export function updateConversationMetadata(conversationId, metadata = {}) {
+  const session = ensureConversation(conversationId);
+  session.metadata = {
+    ...(session.metadata || {}),
+    ...(metadata || {}),
+  };
+  session.updatedAt = Date.now();
+  return session.metadata;
 }
 
 export function appendConversationMessage(conversationId, message) {

@@ -108,6 +108,7 @@ export async function createDineInOrder(token, items) {
 export async function createDineInOrderWithUser(tableToken, items, options = {}) {
   const userAccessToken = options.userAccessToken || ''
   const customerPhone = options.customerPhone || ''
+  const rewardVoucherId = options.rewardVoucherId || ''
 
   return apiRequest('/orders', {
     method: 'POST',
@@ -118,6 +119,7 @@ export async function createDineInOrderWithUser(tableToken, items, options = {})
     body: {
       items,
       ...(customerPhone ? { customer_phone: customerPhone } : {}),
+      ...(rewardVoucherId ? { reward_voucher_id: rewardVoucherId } : {}),
     },
   })
 }

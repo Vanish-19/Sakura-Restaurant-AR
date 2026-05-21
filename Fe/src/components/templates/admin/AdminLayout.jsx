@@ -138,7 +138,7 @@ export default function AdminLayout() {
       const tableName = reservation?.table?.name || 'bàn phù hợp'
       const reservationTime = formatReservationTime(reservation?.reservation_time)
       const title = 'Đặt bàn quá hạn đã tự hủy'
-      const description = `${reservation?.customer_name || 'Khách hàng'} đặt ${tableName} lúc ${reservationTime} đã quá 30 phút, hệ thống đã hủy và trả bàn về trạng thái trống.`
+      const description = `${reservation?.customer_name || 'Khách hàng'} đặt ${tableName} lúc ${reservationTime} đã quá 90 phút, hệ thống đã hủy và trả bàn về trạng thái trống.`
 
       addAdminNotification({
         type: 'reservation_expired',
@@ -155,6 +155,10 @@ export default function AdminLayout() {
         onAction: () => navigate('/admin/tables'),
       })
       dispatchReservationUpdate('expired', reservation)
+    })
+
+    socket.on('reservation_updated', (reservation) => {
+      dispatchReservationUpdate('updated', reservation)
     })
 
     return () => {

@@ -24,12 +24,14 @@ import adminUserRoutes from './routes/adminUserRoutes.js';
 import adminAccountRoutes from './routes/adminAccountRoutes.js';
 import adminDashboardRoutes from './routes/adminDashboardRoutes.js';
 import adminAiMonitoringRoutes from './routes/adminAiMonitoringRoutes.js';
+import adminLoyaltyRoutes from './routes/adminLoyaltyRoutes.js';
 import userAuthRoutes from './routes/userAuthRoutes.js';
 import userOrderRoutes from './routes/userOrderRoutes.js';
 import careerApplicationRoutes from './routes/careerApplicationRoutes.js';
 import staticPageContentRoutes from './routes/staticPageContentRoutes.js';
 import articleRoutes from './routes/articleRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import loyaltyRoutes from './routes/loyaltyRoutes.js';
 import { handleSepayWebhookEvent, buildSepayReturnRedirectUrl } from './services/sepayPaymentService.js';
 import { ensureJwtConfig } from './services/tokenService.js';
 import { ensureStaticPages } from './services/staticPageContentService.js';
@@ -223,6 +225,7 @@ app.use('/api/v1/careers', careerApplicationRoutes); // Career applications
 app.use('/api/v1/static-pages', staticPageContentRoutes); // Static page content
 app.use('/api/v1/articles', articleRoutes);      // Public blog articles
 app.use('/api/v1/chat', chatRoutes);             // Chatbot AI
+app.use('/api/v1/loyalty', loyaltyRoutes);       // Loyalty lookup and preview
 
 // ========== Admin Routes ==========
 app.use('/api/v1/admin/auth', adminAuthRoutes);       // Login/Register
@@ -236,6 +239,7 @@ app.use('/api/v1/admin/users', adminUserRoutes);      // Customer management
 app.use('/api/v1/admin/accounts', adminAccountRoutes);   // Admin account management
 app.use('/api/v1/admin/dashboard', adminDashboardRoutes); // Dashboard stats
 app.use('/api/v1/admin/ai-monitoring', adminAiMonitoringRoutes); // AI monitoring
+app.use('/api/v1/admin/loyalty', adminLoyaltyRoutes); // Loyalty profiles and reward vouchers
 
 app.use((error, _req, res, _next) => {
   let status = Number(error?.status || error?.statusCode || 500);

@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
 import { createHttpError } from '../utils/AppError.js';
+import { finalizeLoyaltyForPaidOrder, revertLoyaltyForCancelledOrder } from './loyaltyService.js';
 
 const createPayment = async (orderId, method) => {
   const session = await mongoose.startSession();
@@ -39,6 +40,7 @@ const createPayment = async (orderId, method) => {
       if (method === 'online') {
         order.status = 'paid';
         await order.save({ session });
+        await finalizeLoyaltyForPaidOrder(order._id, { session });
       }
 
       savedPaymentId = payment._id;
@@ -96,6 +98,7 @@ const refundPayment = async (paymentId) => {
       const saved = await payment.save({ session });
 
       await Order.findByIdAndUpdate(payment.order, { status: 'cancelled' }, { session });
+      await revertLoyaltyForCancelledOrder(payment.order, { session });
       savedPaymentId = saved._id;
     });
   } finally {
@@ -121,6 +124,7 @@ const confirmCodPayment = async (paymentId) => {
       const saved = await payment.save({ session });
 
       await Order.findByIdAndUpdate(payment.order, { status: 'paid' }, { session });
+      await finalizeLoyaltyForPaidOrder(payment.order, { session });
       savedPaymentId = saved._id;
     });
   } finally {

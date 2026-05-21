@@ -6,6 +6,7 @@ import {
   deleteTable as svcDeleteTable,
   resetTable as svcResetTable,
   getTableReservations as svcGetTableReservations,
+  updateTableReservationStatus as svcUpdateTableReservationStatus,
 } from '../services/adminTableService.js';
 
 const getAllTables = asyncHandler(async (req, res) => {
@@ -41,4 +42,10 @@ const getTableReservations = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, count: reservations.length, data: reservations });
 });
 
-export { getAllTables, createTable, updateTable, deleteTable, resetTable, getTableReservations };
+const updateTableReservationStatus = asyncHandler(async (req, res) => {
+  const reservation = await svcUpdateTableReservationStatus(req.params.id, req.params.reservationId, req.body.status);
+  if (req.io) req.io.to('admin').emit('reservation_updated', reservation);
+  res.status(200).json({ success: true, data: reservation });
+});
+
+export { getAllTables, createTable, updateTable, deleteTable, resetTable, getTableReservations, updateTableReservationStatus };

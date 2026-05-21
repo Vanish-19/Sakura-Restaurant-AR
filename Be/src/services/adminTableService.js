@@ -1,12 +1,41 @@
 import Order from '../models/Order.js';
 import Table from '../models/Table.js';
+import TableReservation from '../models/TableReservation.js';
 import { createHttpError } from '../utils/AppError.js';
 import { revokeActiveTableSessions } from './tableSessionService.js';
-import { getReservationsByTable, refreshReservedTableStatuses } from './tableReservationService.js';
+import { getReservationsByTable, refreshReservedTableStatuses, updateReservationStatus as svcUpdateReservationStatus } from './tableReservationService.js';
+
+function addMinutes(date, minutes) {
+  return new Date(date.getTime() + minutes * 60 * 1000);
+}
 
 const getAllTables = async () => {
   await refreshReservedTableStatuses();
-  return Table.find().sort({ name: 1 }).lean();
+  const now = new Date();
+  const [tables, activeReservations] = await Promise.all([
+    Table.find().sort({ name: 1 }).lean(),
+    TableReservation.find({
+      status: { $in: ['confirmed', 'seated'] },
+      reservation_time: {
+        $gte: addMinutes(now, -90),
+      },
+    })
+      .sort({ reservation_time: 1 })
+      .lean(),
+  ]);
+
+  const reservationByTableId = new Map();
+  for (const reservation of activeReservations) {
+    const tableId = String(reservation.table);
+    if (!reservationByTableId.has(tableId)) {
+      reservationByTableId.set(tableId, reservation);
+    }
+  }
+
+  return tables.map((table) => ({
+    ...table,
+    active_reservation: reservationByTableId.get(String(table._id)) || null,
+  }));
 };
 
 const createTable = async (data) => {
@@ -67,6 +96,10 @@ const resetTable = async (id) => {
   table.status = 'empty';
   const saved = await table.save();
   await revokeActiveTableSessions(id);
+  await TableReservation.updateMany(
+    { table: id, status: 'seated' },
+    { $set: { status: 'completed' } },
+  );
   return saved;
 };
 
@@ -79,4 +112,13 @@ const getTableReservations = async (id) => {
   return getReservationsByTable(id);
 };
 
-export { getAllTables, createTable, updateTable, deleteTable, resetTable, getTableReservations };
+const updateTableReservationStatus = async (tableId, reservationId, status) => {
+  const table = await Table.findById(tableId).lean();
+  if (!table) {
+    throw createHttpError('Table not found', 404, 'TABLE_NOT_FOUND');
+  }
+
+  return svcUpdateReservationStatus({ tableId, reservationId, status });
+};
+
+export { getAllTables, createTable, updateTable, deleteTable, resetTable, getTableReservations, updateTableReservationStatus };
