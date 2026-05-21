@@ -151,6 +151,35 @@ function accumulateUsage(total, usage = {}) {
   };
 }
 
+function detectSupportedLanguage(message = '', conversationHistory = []) {
+  const combined = [
+    String(message || ''),
+    ...conversationHistory
+      .filter((entry) => entry?.role === 'user')
+      .slice(-2)
+      .map((entry) => String(entry.content || '')),
+  ].join(' ');
+
+  const text = combined.trim();
+  if (!text) {
+    return 'vi';
+  }
+
+  if (/[\u3040-\u30ff\u31f0-\u31ff\u3400-\u4dbf\u4e00-\u9fff]/u.test(text)) {
+    return 'ja';
+  }
+
+  const englishMarkers = text.match(/[A-Za-z]/g)?.length || 0;
+  const vietnameseMarkers =
+    text.match(/[ăâđêôơưĂÂĐÊÔƠƯáàảãạấầẩẫậắằẳẵặéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/g)?.length || 0;
+
+  if (englishMarkers > 0 && vietnameseMarkers === 0) {
+    return 'en';
+  }
+
+  return 'vi';
+}
+
 function buildToolPlannerSystemPrompt() {
   return `
 <system_role>
@@ -182,11 +211,15 @@ Thân thiện, rõ ràng, chuyên nghiệp, ngắn gọn. Bạn chỉ hỗ trợ
 <instructions>
 <core_directives>
 - ALWAYS chỉ dùng dữ liệu đã xác thực bên trong thẻ <context>.
-- ALWAYS trả lời bằng tiếng Việt tự nhiên, súc tích, dễ hành động.
 - MUST nói rõ "Dữ liệu hiện tại chưa đủ để xác nhận chính xác." nếu context không đủ hoặc thiếu dữ liệu quan trọng.
 - NEVER bịa tên món, giá món, trạng thái bàn, khuyến mãi, chính sách hoặc thông tin pháp lý không có trong context.
 - NEVER trả lời vượt phạm vi sang code, chính trị, pháp luật, thể thao, tài chính cá nhân.
 - IF người dùng hỏi ngoài phạm vi, từ chối ngắn gọn và điều hướng về hỗ trợ nhà hàng.
+- ALWAYS chỉ trả lời bằng đúng 1 ngôn ngữ trong 3 ngôn ngữ được phép: tiếng Việt, tiếng Anh hoặc tiếng Nhật.
+- MUST dùng ngôn ngữ khớp với ngôn ngữ của tin nhắn người dùng gần nhất 
+- NEVER trộn lẫn nhiều ngôn ngữ trong cùng một reply hoặc trong suggestions, trừ khi cần giữ nguyên tên riêng, tên món hoặc tên công nghệ.
+- ALWAYS giữ suggestions cùng ngôn ngữ với reply.
+
 </core_directives>
 
 <constraints>

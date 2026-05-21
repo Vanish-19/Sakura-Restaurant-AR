@@ -5,10 +5,11 @@ import {
   DollarOutlined,
   FireOutlined,
   LoadingOutlined,
+  ReloadOutlined,
   RobotOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons'
-import { Card, Col, Row, Select, Spin, Table, Tag, message } from 'antd'
+import { Button, Card, Col, Row, Segmented, Spin, Table, Tag, message } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import AdminSectionHeader from '../../components/molecules/admin/AdminSectionHeader.jsx'
 import AdminStatCard from '../../components/molecules/admin/AdminStatCard.jsx'
@@ -74,10 +75,9 @@ export default function AiMonitoringAdminPage() {
 
   const statItems = [
     { key: 'requests', title: 'LƯỢT REQUEST', value: formatNumber(summary.totalRequests), note: `${formatNumber(summary.uniqueConversationCount)} hội thoại` },
-    { key: 'input', title: 'INPUT TOKENS', value: formatNumber(summary.totalPromptTokens), note: `${formatNumber(summary.totalLlmRequests)} lần gọi LLM` },
-    { key: 'output', title: 'OUTPUT TOKENS', value: formatNumber(summary.totalCompletionTokens), note: `${formatNumber(summary.totalTokens)} tổng token` },
+    { key: 'tokens', title: 'TỔNG TOKENS', value: formatNumber(summary.totalTokens), note: `In ${formatNumber(summary.totalPromptTokens)} • Out ${formatNumber(summary.totalCompletionTokens)}` },
     { key: 'cost', title: 'TỔNG COST', value: formatUsd(summary.totalCostUsd), note: `${formatUsd(summary.avgCostPerRequestUsd)} / request` },
-    { key: 'latency', title: 'LATENCY TB', value: `${Number(summary.avgLatencyMs || 0).toFixed(2)} ms`, note: `${Number(summary.fallbackRate || 0).toFixed(2)}% fallback` },
+    { key: 'latency', title: 'LATENCY TB', value: `${Number(summary.avgLatencyMs || 0).toFixed(0)} ms`, note: `${Number(summary.fallbackRate || 0).toFixed(2)}% fallback` },
   ]
 
   const recentColumns = [
@@ -167,39 +167,94 @@ export default function AiMonitoringAdminPage() {
     <div className="admin-page pb-20">
       <AdminSectionHeader
         eyebrow="AI Observatory"
-        title="Monitoring chatbot AI"
-        subtitle="Theo dõi token, cost, chất lượng phục hồi fallback, nhóm câu hỏi phổ biến và mức độ sử dụng tool của trợ lý AI."
+        title="AI Monitoring"
+        subtitle="Theo dõi chi phí, token, độ ổn định và nhóm câu hỏi nổi bật của trợ lý AI theo các mốc thời gian rõ ràng."
         action={
-          <Select
-            value={windowDays}
-            onChange={setWindowDays}
-            options={dayOptions}
-            style={{ width: 140 }}
-          />
+          <div className="flex flex-wrap items-center gap-3">
+            <Segmented
+              options={dayOptions}
+              value={windowDays}
+              onChange={setWindowDays}
+              className="brand-segmented"
+            />
+            <Button icon={<ReloadOutlined />} onClick={() => fetchData(windowDays)}>
+              Làm mới
+            </Button>
+          </div>
         }
       />
 
       <Row gutter={[16, 16]}>
+        <Col xs={24} xl={16}>
+          <Card className="admin-panel-card admin-spotlight-card h-full">
+            <p className="admin-spotlight-card__eyebrow">Cửa sổ phân tích</p>
+            <h3 className="admin-spotlight-card__title">Dữ liệu AI trong {windowDays} ngày gần nhất</h3>
+            <p className="admin-spotlight-card__meta">
+              {formatNumber(summary.totalRequests)} request • {formatNumber(summary.totalTokens)} tokens • {formatUsd(summary.totalCostUsd)} chi phí ước tính
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Tag className="!m-0 !rounded-full !border-zinc-200 !bg-white !px-3 !py-1 !text-xs !font-semibold !text-zinc-700">
+                {formatNumber(summary.totalLlmRequests)} lần gọi LLM
+              </Tag>
+              <Tag className="!m-0 !rounded-full !border-zinc-200 !bg-white !px-3 !py-1 !text-xs !font-semibold !text-zinc-700">
+                {formatNumber(summary.totalToolCalls)} tool calls
+              </Tag>
+              <Tag className="!m-0 !rounded-full !border-zinc-200 !bg-white !px-3 !py-1 !text-xs !font-semibold !text-zinc-700">
+                {Number(summary.fallbackRate || 0).toFixed(2)}% fallback
+              </Tag>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} xl={8}>
+          <Card className="admin-panel-card h-full" bodyStyle={{ padding: 18 }}>
+            <div className="mb-4 flex items-center gap-3">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff1f3] text-[#8B0000]">
+                <RobotOutlined className="text-lg" />
+              </div>
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.16em] text-zinc-400">Sức khỏe hệ thống</div>
+                <div className="text-base font-semibold text-zinc-900">Tổng quan vận hành AI</div>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+              <div className="rounded-xl border border-zinc-200 bg-white px-4 py-3">
+                <div className="text-[10px] uppercase tracking-[0.14em] text-zinc-400">Fallback rate</div>
+                <div className="mt-1 text-lg font-bold text-zinc-900">{Number(summary.fallbackRate || 0).toFixed(2)}%</div>
+              </div>
+              <div className="rounded-xl border border-zinc-200 bg-white px-4 py-3">
+                <div className="text-[10px] uppercase tracking-[0.14em] text-zinc-400">Cost / request</div>
+                <div className="mt-1 text-lg font-bold text-zinc-900">{formatUsd(summary.avgCostPerRequestUsd)}</div>
+              </div>
+              <div className="rounded-xl border border-zinc-200 bg-white px-4 py-3">
+                <div className="text-[10px] uppercase tracking-[0.14em] text-zinc-400">Latency TB</div>
+                <div className="mt-1 text-lg font-bold text-zinc-900">{Number(summary.avgLatencyMs || 0).toFixed(0)} ms</div>
+              </div>
+            </div>
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]}>
         {statItems.map((stat, index) => (
-          <Col key={stat.key} xs={24} sm={12} xl={24 / 5}>
-            <AdminStatCard title={stat.title} value={stat.value} note={stat.note} accent={index === 3} />
+          <Col key={stat.key} xs={24} sm={12} xl={6}>
+            <AdminStatCard title={stat.title} value={stat.value} note={stat.note} accent={index === 2} />
           </Col>
         ))}
       </Row>
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} xl={15}>
+        <Col xs={24} xl={16}>
           <Card className="admin-panel-card h-full">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <h3 className="m-0 text-[24px] font-semibold text-zinc-900">Xu hướng 7 ngày gần nhất</h3>
-                <p className="mt-1 mb-0 text-sm text-zinc-500">Requests, token và chi phí AI theo ngày.</p>
+                <p className="mt-1 mb-0 text-sm text-zinc-500">Biểu đồ request theo ngày và danh sách nhanh để đọc nhịp sử dụng.</p>
               </div>
               <BarChartOutlined className="text-xl text-zinc-400" />
             </div>
 
             <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="h-[260px] rounded-xl border border-[#ececef] bg-[#fafafb] px-4 py-5">
+              <div className="h-[240px] rounded-xl border border-[#ececef] bg-[#fafafb] px-4 py-5">
                 <div className="flex h-full items-end gap-3">
                   {dailyTrend.map((entry) => {
                     const ratio = Number(entry.requests || 0) / maxDailyRequests
@@ -222,17 +277,17 @@ export default function AiMonitoringAdminPage() {
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {dailyTrend.map((entry) => (
-                  <div key={entry.date} className="rounded-xl border border-zinc-200 bg-white p-3">
+                  <div key={entry.date} className="rounded-lg border border-zinc-200 bg-white p-3">
                     <div className="flex items-center justify-between gap-3">
                       <div className="text-sm font-semibold text-zinc-900">{entry.label}</div>
                       <Tag className="!m-0">{entry.requests} req</Tag>
                     </div>
-                    <div className="mt-2 text-xs text-zinc-500">
-                      Input: {formatNumber(entry.promptTokens)} • Output: {formatNumber(entry.completionTokens)}
+                    <div className="mt-1 text-[11px] text-zinc-500">
+                      In {formatNumber(entry.promptTokens)} • Out {formatNumber(entry.completionTokens)}
                     </div>
-                    <div className="mt-1 text-xs font-semibold text-[#8B0000]">{formatUsd(entry.totalCostUsd)}</div>
+                    <div className="mt-1 text-[11px] font-semibold text-[#8B0000]">{formatUsd(entry.totalCostUsd)}</div>
                   </div>
                 ))}
               </div>
@@ -240,51 +295,70 @@ export default function AiMonitoringAdminPage() {
           </Card>
         </Col>
 
-        <Col xs={24} xl={9}>
+        <Col xs={24} xl={8}>
           <Card className="admin-panel-card h-full">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <h3 className="m-0 text-[24px] font-semibold text-zinc-900">Tình trạng hệ thống AI</h3>
-                <p className="mt-1 mb-0 text-sm text-zinc-500">Một số chỉ báo bổ sung để kiểm soát trải nghiệm và chi phí.</p>
+                <h3 className="m-0 text-[24px] font-semibold text-zinc-900">Breakdown nhanh</h3>
+                <p className="mt-1 mb-0 text-sm text-zinc-500">Tóm tắt model, intent, tool và trạng thái trên một cột gọn.</p>
               </div>
               <RobotOutlined className="text-xl text-zinc-400" />
             </div>
 
             <div className="space-y-3">
               <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                <div className="flex items-center gap-3">
-                  <ThunderboltOutlined className="text-lg text-[#8B0000]" />
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-400">Tool calls</div>
-                    <div className="text-lg font-semibold text-zinc-900">{formatNumber(summary.totalToolCalls)} lần</div>
-                  </div>
+                <div className="mb-2 flex items-center gap-2">
+                  <ThunderboltOutlined className="text-base text-[#8B0000]" />
+                  <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-400">Tool usage</div>
+                </div>
+                <div className="space-y-2">
+                  {topTools.slice(0, 4).map((entry) => (
+                    <div key={entry.tool} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="font-medium text-zinc-800">{entry.tool}</span>
+                      <Tag className="!m-0">{entry.requests}</Tag>
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                <div className="flex items-center gap-3">
-                  <ClockCircleOutlined className="text-lg text-[#8B0000]" />
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-400">Latency trung bình</div>
-                    <div className="text-lg font-semibold text-zinc-900">{Number(summary.avgLatencyMs || 0).toFixed(2)} ms</div>
-                  </div>
+                <div className="mb-2 flex items-center gap-2">
+                  <FireOutlined className="text-base text-[#8B0000]" />
+                  <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-400">Top intent</div>
+                </div>
+                <div className="space-y-2">
+                  {intentBreakdown.slice(0, 4).map((entry) => (
+                    <div key={entry.intent} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="font-medium text-zinc-800">{entry.intent}</span>
+                      <Tag className="!m-0">{entry.requests}</Tag>
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                <div className="flex items-center gap-3">
-                  <AlertOutlined className="text-lg text-[#8B0000]" />
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-400">Fallback rate</div>
-                    <div className="text-lg font-semibold text-zinc-900">{Number(summary.fallbackRate || 0).toFixed(2)}%</div>
-                  </div>
+                <div className="mb-2 flex items-center gap-2">
+                  <RobotOutlined className="text-base text-[#8B0000]" />
+                  <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-400">Model</div>
+                </div>
+                <div className="space-y-2">
+                  {modelBreakdown.slice(0, 3).map((entry) => (
+                    <div key={entry.model} className="text-sm text-zinc-800">
+                      <div className="font-medium">{entry.model}</div>
+                      <div className="text-[11px] text-zinc-500">{entry.requests} req • {formatUsd(entry.totalCostUsd)}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                <div className="flex items-center gap-3">
-                  <DollarOutlined className="text-lg text-[#8B0000]" />
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-400">Cost / request</div>
-                    <div className="text-lg font-semibold text-zinc-900">{formatUsd(summary.avgCostPerRequestUsd)}</div>
-                  </div>
+                <div className="mb-2 flex items-center gap-2">
+                  <AlertOutlined className="text-base text-[#8B0000]" />
+                  <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-400">Status</div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {statusBreakdown.map((entry) => (
+                    <Tag key={entry.status} color={statusTone(entry.status)}>
+                      {entry.status}: {entry.requests}
+                    </Tag>
+                  ))}
                 </div>
               </div>
             </div>
@@ -293,31 +367,31 @@ export default function AiMonitoringAdminPage() {
       </Row>
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} xl={12}>
+        <Col xs={24} xl={8}>
           <Card className="admin-panel-card h-full">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <h3 className="m-0 text-[24px] font-semibold text-zinc-900">Top 10 nhóm câu hỏi</h3>
-                <p className="mt-1 mb-0 text-sm text-zinc-500">Những cụm nhu cầu người dùng hỏi nhiều nhất trong cửa sổ đang chọn.</p>
+                <p className="mt-1 mb-0 text-sm text-zinc-500">Các nhóm câu hỏi được hỏi nhiều nhất trong {windowDays} ngày.</p>
               </div>
               <FireOutlined className="text-xl text-zinc-400" />
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {topQuestionGroups.length === 0 ? (
                 <p className="text-sm text-zinc-500">Chưa có dữ liệu đủ để thống kê nhóm câu hỏi.</p>
               ) : (
                 topQuestionGroups.map((entry, index) => (
-                  <div key={entry.group} className="rounded-xl border border-zinc-200 bg-white p-4">
+                  <div key={entry.group} className="rounded-lg border border-zinc-200 bg-white p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-400">#{index + 1}</div>
-                        <div className="mt-1 text-base font-semibold text-zinc-900">{entry.group}</div>
+                        <div className="mt-1 text-sm font-semibold text-zinc-900">{entry.group}</div>
                       </div>
-                      <Tag className="!m-0 !rounded-full !border-rose-200 !bg-rose-50 !text-rose-700">{entry.requests} lượt</Tag>
+                      <Tag className="!m-0 !rounded-full !border-rose-200 !bg-rose-50 !text-rose-700">{entry.requests}</Tag>
                     </div>
-                    <div className="mt-2 text-xs text-zinc-500">
-                      Input: {formatNumber(entry.promptTokens)} • Output: {formatNumber(entry.completionTokens)} • Cost: {formatUsd(entry.totalCostUsd)}
+                    <div className="mt-1 text-[11px] text-zinc-500">
+                      {formatNumber(entry.promptTokens + entry.completionTokens)} tokens • {formatUsd(entry.totalCostUsd)}
                     </div>
                   </div>
                 ))
@@ -326,60 +400,22 @@ export default function AiMonitoringAdminPage() {
           </Card>
         </Col>
 
-        <Col xs={24} xl={12}>
+        <Col xs={24} xl={16}>
           <Card className="admin-panel-card h-full">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <h3 className="m-0 text-[24px] font-semibold text-zinc-900">Breakdown mô hình, intent và tool</h3>
-                <p className="mt-1 mb-0 text-sm text-zinc-500">Những chỉ báo bổ sung để xem LLM đang được dùng ra sao.</p>
-              </div>
-              <RobotOutlined className="text-xl text-zinc-400" />
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-400">Model</div>
-                <div className="mt-3 space-y-2">
-                  {modelBreakdown.map((entry) => (
-                    <div key={entry.model} className="text-sm text-zinc-800">
-                      <div className="font-semibold">{entry.model}</div>
-                      <div className="text-xs text-zinc-500">{entry.requests} req • {formatUsd(entry.totalCostUsd)}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-400">Intent</div>
-                <div className="mt-3 space-y-2">
-                  {intentBreakdown.map((entry) => (
-                    <div key={entry.intent} className="text-sm text-zinc-800">
-                      <div className="font-semibold">{entry.intent}</div>
-                      <div className="text-xs text-zinc-500">{entry.requests} req</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-400">Tools / Status</div>
-                <div className="mt-3 space-y-2">
-                  {topTools.map((entry) => (
-                    <div key={entry.tool} className="text-sm text-zinc-800">
-                      <div className="font-semibold">{entry.tool}</div>
-                      <div className="text-xs text-zinc-500">{entry.requests} req</div>
-                    </div>
-                  ))}
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {statusBreakdown.map((entry) => (
-                      <Tag key={entry.status} color={statusTone(entry.status)}>
-                        {entry.status}: {entry.requests}
-                      </Tag>
-                    ))}
-                  </div>
-                </div>
+                <h3 className="m-0 text-[24px] font-semibold text-zinc-900">Recent AI requests</h3>
+                <p className="mt-1 mb-0 text-sm text-zinc-500">Danh sách request gần đây để debug nhóm câu hỏi, tool, token và chi phí.</p>
               </div>
             </div>
+
+            <Table
+              columns={recentColumns}
+              dataSource={recentRequests}
+              rowKey="id"
+              pagination={{ pageSize: 8 }}
+              scroll={{ x: 980 }}
+            />
           </Card>
         </Col>
       </Row>
@@ -387,18 +423,39 @@ export default function AiMonitoringAdminPage() {
       <Card className="admin-panel-card">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h3 className="m-0 text-[24px] font-semibold text-zinc-900">Recent AI requests</h3>
-            <p className="mt-1 mb-0 text-sm text-zinc-500">Nhìn nhanh từng request gần đây để debug nhóm câu hỏi, tool và cost trên từng lượt.</p>
+            <h3 className="m-0 text-[24px] font-semibold text-zinc-900">Kết luận nhanh</h3>
+            <p className="mt-1 mb-0 text-sm text-zinc-500">Những tín hiệu quan trọng nhất để bạn đọc nhanh tình hình AI mà không cần soi toàn bộ bảng.</p>
           </div>
         </div>
-
-        <Table
-          columns={recentColumns}
-          dataSource={recentRequests}
-          rowKey="id"
-          pagination={{ pageSize: 8 }}
-          scroll={{ x: 1080 }}
-        />
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl border border-zinc-200 bg-white p-4">
+            <div className="mb-2 flex items-center gap-2 text-zinc-400">
+              <ClockCircleOutlined className="text-base" />
+              <span className="text-[11px] uppercase tracking-[0.14em]">Hiệu năng</span>
+            </div>
+            <p className="m-0 text-sm text-zinc-700">
+              Latency trung bình đang ở <span className="font-semibold text-zinc-900">{Number(summary.avgLatencyMs || 0).toFixed(0)} ms</span>.
+            </p>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-white p-4">
+            <div className="mb-2 flex items-center gap-2 text-zinc-400">
+              <DollarOutlined className="text-base" />
+              <span className="text-[11px] uppercase tracking-[0.14em]">Chi phí</span>
+            </div>
+            <p className="m-0 text-sm text-zinc-700">
+              Chi phí trung bình mỗi request là <span className="font-semibold text-zinc-900">{formatUsd(summary.avgCostPerRequestUsd)}</span>.
+            </p>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-white p-4">
+            <div className="mb-2 flex items-center gap-2 text-zinc-400">
+              <AlertOutlined className="text-base" />
+              <span className="text-[11px] uppercase tracking-[0.14em]">Độ ổn định</span>
+            </div>
+            <p className="m-0 text-sm text-zinc-700">
+              Fallback rate hiện tại là <span className="font-semibold text-zinc-900">{Number(summary.fallbackRate || 0).toFixed(2)}%</span>.
+            </p>
+          </div>
+        </div>
       </Card>
     </div>
   )
