@@ -3,6 +3,7 @@ import TableReservation from '../models/TableReservation.js';
 import { createHttpError } from '../utils/AppError.js';
 
 const RESERVATION_HOLD_MINUTES = 90;
+const RESERVATION_GRACE_MINUTES = 30;
 const MIN_ADVANCE_MINUTES = 120;
 const DEFAULT_DURATION_MINUTES = 120;
 
@@ -79,7 +80,7 @@ async function pickAvailableTable({ partySize, reservationTime, expectedDuration
 }
 
 async function refreshReservedTableStatuses(now = new Date()) {
-  const holdStart = now;
+  const holdStart = addMinutes(now, -RESERVATION_GRACE_MINUTES);
   const holdEnd = addMinutes(now, RESERVATION_HOLD_MINUTES);
   const reservations = await TableReservation.find({
     status: 'confirmed',
@@ -142,7 +143,7 @@ async function getReservationsByTable(tableId) {
 async function getUpcomingReservations(limit = 20) {
   return TableReservation.find({
     status: { $in: ['confirmed', 'seated'] },
-    reservation_time: { $gte: addMinutes(new Date(), -RESERVATION_HOLD_MINUTES) },
+    reservation_time: { $gte: addMinutes(new Date(), -RESERVATION_GRACE_MINUTES) },
   })
     .sort({ reservation_time: 1 })
     .limit(limit)
@@ -155,7 +156,7 @@ async function getReservationBlockingTableUse(tableId, now = new Date()) {
     table: tableId,
     status: 'confirmed',
     reservation_time: {
-      $gte: now,
+      $gte: addMinutes(now, -RESERVATION_GRACE_MINUTES),
       $lte: addMinutes(now, RESERVATION_HOLD_MINUTES),
     },
   })
@@ -166,13 +167,40 @@ async function getReservationBlockingTableUse(tableId, now = new Date()) {
 function getReservationPolicy() {
   return {
     holdMinutesBeforeArrival: RESERVATION_HOLD_MINUTES,
+    graceMinutesAfterArrival: RESERVATION_GRACE_MINUTES,
     minimumAdvanceMinutes: MIN_ADVANCE_MINUTES,
     defaultDurationMinutes: DEFAULT_DURATION_MINUTES,
   };
 }
 
+async function expireOverdueReservations(now = new Date()) {
+  const cutoff = addMinutes(now, -RESERVATION_GRACE_MINUTES);
+  const overdueReservations = await TableReservation.find({
+    status: 'confirmed',
+    reservation_time: { $lte: cutoff },
+  })
+    .select('_id')
+    .lean();
+
+  if (overdueReservations.length === 0) return [];
+
+  const reservationIds = overdueReservations.map((reservation) => reservation._id);
+
+  await TableReservation.updateMany(
+    { _id: { $in: reservationIds }, status: 'confirmed' },
+    { $set: { status: 'cancelled' } },
+  );
+
+  await refreshReservedTableStatuses(now);
+
+  return TableReservation.find({ _id: { $in: reservationIds } })
+    .populate('table', 'name zone capacity status')
+    .lean();
+}
+
 export {
   createReservation,
+  expireOverdueReservations,
   findConflictingReservation,
   getReservationsByTable,
   getReservationPolicy,

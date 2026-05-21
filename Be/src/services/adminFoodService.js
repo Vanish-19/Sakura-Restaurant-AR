@@ -2,24 +2,7 @@ import MenuItem from '../models/MenuItem.js';
 import { createHttpError } from '../utils/AppError.js';
 import { uploadRawBufferToCloudinary } from './cloudinaryService.js';
 
-function normalizeStringArray(values) {
-  if (!Array.isArray(values)) return undefined;
-
-  return [...new Set(values.map((value) => String(value || '').trim()).filter(Boolean))];
-}
-
-function normalizeFoodPayload(data = {}) {
-  const payload = { ...data };
-  const ingredients = normalizeStringArray(data.ingredients);
-  const allergens = normalizeStringArray(data.allergens);
-  const recommendedFor = normalizeStringArray(data.recommended_for);
-
-  if (ingredients) payload.ingredients = ingredients;
-  if (allergens) payload.allergens = allergens;
-  if (recommendedFor) payload.recommended_for = recommendedFor;
-
-  return payload;
-}
+const MODEL_UPLOAD_MAX_SIZE_MB = 10;
 
 function resolveModelType({ modelType, filename }) {
   const normalizedType = String(modelType || '').trim().toLowerCase();
@@ -32,7 +15,7 @@ function resolveModelType({ modelType, filename }) {
 }
 
 export const createFood = async (data) => {
-  const food = new MenuItem(normalizeFoodPayload(data));
+  const food = new MenuItem(data);
   return food.save();
 };
 
@@ -50,7 +33,7 @@ export const getFoodById = async (id) => {
 };
 
 export const updateFood = async (id, data) => {
-  const updated = await MenuItem.findByIdAndUpdate(id, normalizeFoodPayload(data), { new: true, runValidators: true });
+  const updated = await MenuItem.findByIdAndUpdate(id, data, { new: true, runValidators: true });
   if (!updated) throw createHttpError('Food item not found', 404, 'FOOD_NOT_FOUND');
   return updated;
 };
@@ -68,11 +51,20 @@ export const uploadFoodModel = async ({ file, modelType }) => {
 
   const resolvedModelType = resolveModelType({ modelType, filename: file.originalname });
 
-  const uploadResult = await uploadRawBufferToCloudinary({
-    buffer: file.buffer,
-    originalFilename: file.originalname,
-    folder: `ar-models/${resolvedModelType}`,
-  });
+  let uploadResult;
+  try {
+    uploadResult = await uploadRawBufferToCloudinary({
+      buffer: file.buffer,
+      originalFilename: file.originalname,
+      folder: `ar-models/${resolvedModelType}`,
+    });
+  } catch (error) {
+    if (/file size too large/i.test(error?.message || '')) {
+      throw createHttpError(`Kích thước file model vượt giới hạn lưu trữ hiện tại. Vui lòng upload file tối đa ${MODEL_UPLOAD_MAX_SIZE_MB}MB.`, 413, 'MODEL_FILE_TOO_LARGE');
+    }
+
+    throw error;
+  }
 
   const result = {
     modelType: resolvedModelType,
@@ -82,37 +74,6 @@ export const uploadFoodModel = async ({ file, modelType }) => {
     bytes: uploadResult?.bytes,
     format: uploadResult?.format,
   };
-
-  const enableAutoUsdzConversion = process.env.ENABLE_AUTO_USDZ_CONVERSION === 'true';
-
-  if (resolvedModelType === 'glb') {
-    if (!enableAutoUsdzConversion) {
-      result.conversionWarning = 'Auto GLB to USDZ conversion is disabled. Upload a native USDZ for iOS Quick Look.';
-      return result;
-    }
-
-    try {
-      const { convertGlbToUsdz } = await import('./glbToUsdzConverter.js');
-      const usdzBuffer = await convertGlbToUsdz(file.buffer);
-
-      const usdzFilename = file.originalname.replace(/\.glb$/i, '.usdz');
-      const usdzUploadResult = await uploadRawBufferToCloudinary({
-        buffer: usdzBuffer,
-        originalFilename: usdzFilename,
-        folder: 'ar-models/usdz',
-      });
-
-      result.convertedUsdz = {
-        url: usdzUploadResult?.delivery_url || usdzUploadResult?.signed_url || usdzUploadResult?.secure_url,
-        signedUrl: usdzUploadResult?.signed_url,
-        publicId: usdzUploadResult?.public_id,
-        bytes: usdzUploadResult?.bytes,
-      };
-    } catch (conversionError) {
-      console.warn('[GLB->USDZ] Conversion failed:', conversionError?.message || conversionError);
-      result.conversionError = conversionError?.message || 'Cannot convert GLB to USDZ';
-    }
-  }
 
   return result;
 };

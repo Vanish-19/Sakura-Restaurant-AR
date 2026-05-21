@@ -279,7 +279,7 @@ export default function CartPage() {
     )
   }
 
-  const summaryActionButtonClass = 'ui-btn-primary mt-3 h-12 w-full text-base disabled:cursor-not-allowed disabled:opacity-60'
+  const summaryActionButtonClass = 'ui-btn-primary mt-3 h-12 w-full text-base !text-white hover:!text-white disabled:cursor-not-allowed disabled:opacity-60'
 
   const continueShoppingClass =
     'ui-btn-soft mt-3 flex h-12 w-full items-center justify-center text-[1.02rem] tracking-[0.01em] !text-[#3f3a37] visited:!text-[#3f3a37] no-underline font-[var(--font-heading)]'

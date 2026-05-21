@@ -22,37 +22,13 @@ const formatCategoryLabel = (value) => {
 const normalizeTagValues = (values) =>
   [...new Set((Array.isArray(values) ? values : []).map((value) => String(value || '').trim()).filter(Boolean))]
 
+const MODEL_UPLOAD_MAX_SIZE_MB = 10
+const MODEL_UPLOAD_MAX_SIZE_BYTES = MODEL_UPLOAD_MAX_SIZE_MB * 1024 * 1024
+
 function buildFoodProfileBadges(food) {
   return [
     food.is_best_seller ? { label: 'Bán chạy', color: 'gold' } : null,
   ].filter(Boolean)
-}
-
-async function convertGlbToUsdzInBrowser(glbFile) {
-  const [{ GLTFLoader }, { USDZExporter }] = await Promise.all([
-    import('three/examples/jsm/loaders/GLTFLoader.js'),
-    import('three/examples/jsm/exporters/USDZExporter.js'),
-  ])
-
-  const objectUrl = URL.createObjectURL(glbFile)
-
-  try {
-    const loader = new GLTFLoader()
-    const gltf = await loader.loadAsync(objectUrl)
-
-    const exporter = new USDZExporter()
-    const usdzArrayBuffer = await exporter.parseAsync(gltf.scene, {
-      maxTextureSize: 2048,
-    })
-
-    return new File(
-      [usdzArrayBuffer],
-      String(glbFile.name || 'model.glb').replace(/\.glb$/i, '.usdz'),
-      { type: 'model/vnd.usdz+zip' },
-    )
-  } finally {
-    URL.revokeObjectURL(objectUrl)
-  }
 }
 
 export default function FoodManagementAdminPage() {
@@ -134,9 +110,9 @@ export default function FoodManagementAdminPage() {
       return Upload.LIST_IGNORE
     }
 
-    const isWithinLimit = (file?.size || 0) <= 20 * 1024 * 1024
+    const isWithinLimit = (file?.size || 0) <= MODEL_UPLOAD_MAX_SIZE_BYTES
     if (!isWithinLimit) {
-      message.error('Kích thước file tối đa là 40MB')
+      message.error(`Kích thước file tối đa là ${MODEL_UPLOAD_MAX_SIZE_MB}MB`)
       return Upload.LIST_IGNORE
     }
 
@@ -158,36 +134,8 @@ export default function FoodManagementAdminPage() {
       }
 
       if (modelType === 'glb') {
-        let usdzUrl = res?.data?.convertedUsdz?.url
-
-        if (!usdzUrl) {
-          try {
-            message.loading({
-              content: 'Đang convert GLB -> USDZ trên trình duyệt để giữ màu...',
-              key: 'glb-usdz-convert',
-              duration: 0,
-            })
-
-            const usdzFile = await convertGlbToUsdzInBrowser(file)
-            const usdzRes = await uploadFoodModel(usdzFile, 'usdz')
-            usdzUrl = usdzRes?.data?.url || ''
-
-            message.success({
-              content: 'Convert và upload USDZ thành công (giữ màu tốt hơn)',
-              key: 'glb-usdz-convert',
-            })
-          } catch (convertError) {
-            message.warning({
-              content: `Không thể auto-convert USDZ giữ màu: ${convertError?.message || 'unknown error'}`,
-              key: 'glb-usdz-convert',
-            })
-          }
-        }
-
-        form.setFieldsValue({
-          glb_url: uploadedUrl,
-          ...(usdzUrl ? { usdz_url: usdzUrl } : {}),
-        })
+        form.setFieldsValue({ glb_url: uploadedUrl })
+        message.success('Upload .glb thành công')
       } else {
         form.setFieldsValue({ usdz_url: uploadedUrl })
         message.success('Upload .usdz thành công')
@@ -505,11 +453,6 @@ export default function FoodManagementAdminPage() {
         eyebrow="Kitchen Catalog"
         title="Quản lý món ăn"
         subtitle="Quản lý thực đơn số, cập nhật giá bán, mô hình AR và danh mục món theo cùng nhịp hiển thị với trang blog."
-        action={
-          <Button onClick={() => handleOpenModal()} icon={<PlusOutlined />} className="admin-primary-btn" type="primary">
-            Thêm món mới
-          </Button>
-        }
       />
 
       <Row gutter={[16, 16]}>
@@ -586,6 +529,9 @@ export default function FoodManagementAdminPage() {
               ]}
               style={{ width: 170 }}
             />
+            <Button onClick={() => handleOpenModal()} icon={<PlusOutlined />} className="admin-primary-btn" type="primary">
+              Thêm món mới
+            </Button>
           </div>
         </div>
 
@@ -680,15 +626,6 @@ export default function FoodManagementAdminPage() {
           <Form.Item name="image_url" label="Đường dẫn ảnh">
             <Input />
           </Form.Item>
-
-          <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
-            <p className="m-0 text-[12px] text-blue-700 font-medium">
-              💡 Upload file .glb sẽ tự động convert sang .usdz (iOS)
-            </p>
-            <p className="m-0 mt-1 text-[11px] text-blue-500">
-              Bạn chỉ cần upload file GLB, hệ thống sẽ tự tạo file USDZ tương ứng.
-            </p>
-          </div>
 
           <div className="grid grid-cols-2 gap-4 border-t pt-4 mt-2">
             <Form.Item name="glb_url" label="Mô hình AR (.glb) - Android/Web">

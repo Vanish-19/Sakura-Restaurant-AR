@@ -33,6 +33,7 @@ import chatRoutes from './routes/chatRoutes.js';
 import { handleSepayWebhookEvent, buildSepayReturnRedirectUrl } from './services/sepayPaymentService.js';
 import { ensureJwtConfig } from './services/tokenService.js';
 import { ensureStaticPages } from './services/staticPageContentService.js';
+import { expireOverdueReservations } from './services/tableReservationService.js';
 
 // Khởi tạo Database MongoDB
 await connectDB();
@@ -128,6 +129,21 @@ const io = new Server(httpServer, {
     methods: ['GET', 'POST'],
   }
 });
+
+async function publishExpiredReservations() {
+  try {
+    const expiredReservations = await expireOverdueReservations();
+    for (const reservation of expiredReservations) {
+      io.to('admin').emit('reservation_expired', reservation);
+    }
+  } catch (error) {
+    console.error('Reservation expiry job error:', error?.message || error);
+  }
+}
+
+const reservationExpiryInterval = setInterval(publishExpiredReservations, 60 * 1000);
+reservationExpiryInterval.unref?.();
+publishExpiredReservations();
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors(corsOptions));
