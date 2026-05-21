@@ -27,7 +27,7 @@ const scanTable = asyncHandler(async (req, res) => {
     return res.status(409).json({
       success: false,
       code: 'TABLE_RESERVED_SOON',
-      error: 'This table is reserved and cannot be used before the reservation time',
+      error: 'This table is reserved and cannot be used during the reservation hold window',
       reservation_time: blockingReservation.reservation_time,
     });
   }

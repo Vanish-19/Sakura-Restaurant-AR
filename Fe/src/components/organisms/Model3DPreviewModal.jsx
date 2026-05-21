@@ -5,6 +5,35 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 
+const PREVIEW_STAGE_BACKGROUND = '/bgBody.png'
+
+function createPreviewStage() {
+  const group = new THREE.Group()
+  const texture = new THREE.TextureLoader().load(PREVIEW_STAGE_BACKGROUND)
+  texture.colorSpace = THREE.SRGBColorSpace
+
+  const geometry = new THREE.SphereGeometry(30, 64, 32)
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    side: THREE.BackSide,
+    toneMapped: false,
+  })
+
+  const backdrop = new THREE.Mesh(geometry, material)
+  backdrop.rotation.y = Math.PI
+  group.add(backdrop)
+
+  group.userData.disposables = [texture, geometry, material]
+  return group
+}
+
+function disposePreviewStage(stage) {
+  const disposables = stage?.userData?.disposables || []
+  for (const item of disposables) {
+    item?.dispose?.()
+  }
+}
+
 function fitCameraToObject(camera, controls, object) {
   const box = new THREE.Box3().setFromObject(object)
   const size = box.getSize(new THREE.Vector3())
@@ -30,6 +59,7 @@ function Model3DViewer({ glbUrl, setLoading, setErrorText }) {
   const cameraRef = useRef(null)
   const controlsRef = useRef(null)
   const modelRef = useRef(null)
+  const stageRef = useRef(null)
   const resizeObserverRef = useRef(null)
   const frameIdRef = useRef(0)
 
@@ -38,7 +68,7 @@ function Model3DViewer({ glbUrl, setLoading, setErrorText }) {
     if (!mountEl) return
 
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color('#f8fafc')
+    scene.background = new THREE.Color('#111111')
 
     const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 200)
     camera.position.set(0, 1.2, 2.8)
@@ -52,7 +82,10 @@ function Model3DViewer({ glbUrl, setLoading, setErrorText }) {
     controls.enableDamping = true
     controls.dampingFactor = 0.08
     controls.minDistance = 0.2
-    controls.maxDistance = 20
+    controls.maxDistance = 12
+
+    const stage = createPreviewStage()
+    scene.add(stage)
 
     const hemi = new THREE.HemisphereLight(0xffffff, 0xdbeafe, 1)
     scene.add(hemi)
@@ -65,16 +98,13 @@ function Model3DViewer({ glbUrl, setLoading, setErrorText }) {
     fillLight.position.set(-2, 2, -3)
     scene.add(fillLight)
 
-    const grid = new THREE.GridHelper(6, 20, 0xcbd5e1, 0xe2e8f0)
-    grid.position.y = -0.001
-    scene.add(grid)
-
     mountEl.appendChild(renderer.domElement)
 
     sceneRef.current = scene
     cameraRef.current = camera
     controlsRef.current = controls
     rendererRef.current = renderer
+    stageRef.current = stage
 
     const resize = () => {
       const width = mountEl.clientWidth || 640
@@ -104,6 +134,7 @@ function Model3DViewer({ glbUrl, setLoading, setErrorText }) {
       resizeObserverRef.current = null
 
       controls.dispose()
+      disposePreviewStage(stageRef.current)
       renderer.dispose()
 
       if (renderer.domElement.parentElement === mountEl) {
@@ -115,6 +146,7 @@ function Model3DViewer({ glbUrl, setLoading, setErrorText }) {
       controlsRef.current = null
       rendererRef.current = null
       modelRef.current = null
+      stageRef.current = null
     }
   }, [])
 
@@ -159,6 +191,8 @@ function Model3DViewer({ glbUrl, setLoading, setErrorText }) {
 
         scene.add(root)
         modelRef.current = root
+        const center = new THREE.Box3().setFromObject(root).getCenter(new THREE.Vector3())
+        if (stageRef.current) stageRef.current.position.copy(center)
         fitCameraToObject(camera, controls, root)
         setLoading(false)
       },
@@ -185,10 +219,7 @@ export default function Model3DPreviewModal({ open, item, onClose, onOpenAr }) {
   const glbUrl = item?.arModels?.glb_url || ''
 
   const arMeta = useMemo(() => {
-    if (!item) return ''
-    if (item?.arModels?.glb_url && item?.arModels?.usdz_url) return 'Có GLB và USDZ'
-    if (item?.arModels?.glb_url) return 'Có GLB (Web/Android)'
-    if (item?.arModels?.usdz_url) return 'Có USDZ (iOS)'
+    if (item) return 'Model AR'
     return 'Chưa có model AR'
   }, [item])
 
@@ -212,7 +243,9 @@ export default function Model3DPreviewModal({ open, item, onClose, onOpenAr }) {
       <div className="space-y-3">
         <p className="text-xs font-medium text-zinc-500">{arMeta}</p>
 
-        <div className="relative h-[460px] w-full overflow-hidden rounded-xl border border-zinc-200 bg-slate-50">
+        <div
+          className="relative h-[460px] w-full overflow-hidden rounded-xl border border-zinc-200 bg-zinc-900"
+        >
           {open && (
             <Model3DViewer
               glbUrl={glbUrl}

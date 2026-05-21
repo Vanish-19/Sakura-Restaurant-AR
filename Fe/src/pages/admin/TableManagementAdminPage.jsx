@@ -22,7 +22,7 @@ import {
   Typography,
   message,
 } from 'antd'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import AdminSectionHeader from '../../components/molecules/admin/AdminSectionHeader.jsx'
 import AdminStatCard from '../../components/molecules/admin/AdminStatCard.jsx'
 import { buildTableQrUrls, TABLE_QR_BASE_URL } from '../../constants/tableQrRoutes.js'
@@ -105,7 +105,7 @@ export default function TableManagementAdminPage() {
     return byCode
   }, [qrBaseUrl])
 
-  const fetchTables = async () => {
+  const fetchTables = useCallback(async () => {
     try {
       setLoading(true)
       const res = await getAllTables()
@@ -135,11 +135,17 @@ export default function TableManagementAdminPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchTables()
-  }, [])
+  }, [fetchTables])
+
+  useEffect(() => {
+    const handleReservationUpdate = () => fetchTables()
+    window.addEventListener('admin-reservation-updated', handleReservationUpdate)
+    return () => window.removeEventListener('admin-reservation-updated', handleReservationUpdate)
+  }, [fetchTables])
 
   const floorOptions = useMemo(() => {
     const zones = Array.from(new Set(tables.map((table) => table.zone).filter(Boolean)))

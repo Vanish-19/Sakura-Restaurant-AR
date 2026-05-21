@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { useCart } from '../contexts/CartContext.jsx'
 import { getMenuItems } from '../services/orderApi.js'
 
 function makeReticle() {
@@ -15,15 +14,6 @@ function makeReticle() {
   reticle.matrixAutoUpdate = false
   reticle.visible = false
   return reticle
-}
-
-function toCountMap(entries) {
-  const result = {}
-  for (const [id, qty] of entries) {
-    const quantity = Math.max(0, Math.floor(Number(qty) || 0))
-    if (quantity > 0) result[id] = quantity
-  }
-  return result
 }
 
 function isIOSDevice() {
@@ -65,7 +55,6 @@ export default function ArScenePage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const itemIdFromQuery = searchParams.get('itemId') || ''
-  const { entries } = useCart()
 
   const mountRef = useRef(null)
   const rendererRef = useRef(null)
@@ -87,41 +76,17 @@ export default function ArScenePage() {
   const [isLoadingModel, setIsLoadingModel] = useState(false)
   const [modelScale, setModelScale] = useState(0.2)
 
-  const cartCountById = useMemo(() => toCountMap(entries), [entries])
-
   const arItems = useMemo(() => {
-    const mapById = new Map(menuItems.map((item) => [item.id, item]))
-
-    const fromCart = Object.keys(cartCountById)
-      .map((id) => mapById.get(id))
-      .filter(Boolean)
-
-    const fromQuery = mapById.get(itemIdFromQuery)
-    const merged = []
-    const seen = new Set()
+    const fromQuery = menuItems.find((item) => item.id === itemIdFromQuery)
 
     if (fromQuery && (fromQuery.arModels?.glb_url || fromQuery.arModels?.usdz_url)) {
-      merged.push(fromQuery)
-      seen.add(fromQuery.id)
+      return [fromQuery]
     }
 
-    for (const item of fromCart) {
-      if (!item?.arModels?.glb_url) continue
-      if (seen.has(item.id)) continue
-      merged.push(item)
-      seen.add(item.id)
-    }
-
-    if (merged.length === 0) {
-      for (const item of menuItems) {
-        if (!item?.arModels?.glb_url) continue
-        merged.push(item)
-        if (merged.length >= 8) break
-      }
-    }
-
-    return merged
-  }, [cartCountById, itemIdFromQuery, menuItems])
+    return menuItems
+      .filter((item) => item?.arModels?.glb_url)
+      .slice(0, 8)
+  }, [itemIdFromQuery, menuItems])
 
   useEffect(() => {
     let mounted = true
@@ -405,9 +370,7 @@ export default function ArScenePage() {
         throw lastError || new Error('Unable to start immersive-ar session')
       }
 
-      session.addEventListener('select', () => {
-        placeSelectedModel()
-      })
+      session.addEventListener('select', placeSelectedModel)
 
       await renderer.xr.setSession(session)
       setIsArActive(true)
@@ -512,12 +475,13 @@ export default function ArScenePage() {
       </div>
 
       <div className="absolute bottom-3 left-3 right-3 z-20 rounded-2xl border border-white/15 bg-black/60 p-3 backdrop-blur">
-        <div className="mb-2 text-sm font-semibold">Chọn món để đặt lên bàn (chạm nhiều lần để đặt nhiều món)</div>
+        <div className="mb-2 text-sm font-semibold">
+          Chọn món để đặt lên bàn
+        </div>
 
         <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
           {arItems.map((item) => {
             const active = selectedItemId === item.id
-            const expected = cartCountById[item.id] || 0
             const placed = placedCounts[item.id] || 0
             return (
               <button
@@ -530,7 +494,7 @@ export default function ArScenePage() {
                     : 'border-white/25 bg-white/10 text-white'
                 }`}
               >
-                {item.name} ({placed}/{expected || 0})
+                {item.name} ({placed})
               </button>
             )
           })}
