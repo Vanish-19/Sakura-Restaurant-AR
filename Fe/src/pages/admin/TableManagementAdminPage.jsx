@@ -3,6 +3,7 @@ import {
   ReloadOutlined,
   SearchOutlined,
   TeamOutlined,
+  EyeOutlined,
 } from '@ant-design/icons'
 import {
   Button,
@@ -25,7 +26,7 @@ import { useEffect, useMemo, useState } from 'react'
 import AdminSectionHeader from '../../components/molecules/admin/AdminSectionHeader.jsx'
 import AdminStatCard from '../../components/molecules/admin/AdminStatCard.jsx'
 import { buildTableQrUrls, TABLE_QR_BASE_URL } from '../../constants/tableQrRoutes.js'
-import { getAllTables, resetTable } from '../../services/adminTableApi.js'
+import { getAllTables, getTableReservations, resetTable } from '../../services/adminTableApi.js'
 
 const floorLabelMap = {
   'main hall': 'Sảnh chính',
@@ -90,6 +91,10 @@ export default function TableManagementAdminPage() {
   const [loading, setLoading] = useState(true)
   const [qrModalOpen, setQrModalOpen] = useState(false)
   const [selectedTableForQr, setSelectedTableForQr] = useState(null)
+  const [detailModalOpen, setDetailModalOpen] = useState(false)
+  const [selectedTableForDetail, setSelectedTableForDetail] = useState(null)
+  const [reservationLoading, setReservationLoading] = useState(false)
+  const [tableReservations, setTableReservations] = useState([])
   const qrBaseUrl = TABLE_QR_BASE_URL
 
   const qrUrlByCode = useMemo(() => {
@@ -190,6 +195,22 @@ export default function TableManagementAdminPage() {
     }
   }
 
+  const openDetailModal = async (table) => {
+    setSelectedTableForDetail(table)
+    setDetailModalOpen(true)
+    setReservationLoading(true)
+    try {
+      const res = await getTableReservations(table.id)
+      setTableReservations(Array.isArray(res?.data) ? res.data : [])
+    } catch (err) {
+      console.error(err)
+      message.error(err?.message || 'Không thể tải lịch đặt bàn')
+      setTableReservations([])
+    } finally {
+      setReservationLoading(false)
+    }
+  }
+
   const columns = [
     {
       title: 'BÀN',
@@ -226,6 +247,9 @@ export default function TableManagementAdminPage() {
         <Space size="small">
           <Button size="small" icon={<QrcodeOutlined />} onClick={() => openQrModal(row)}>
             Xem QR
+          </Button>
+          <Button size="small" icon={<EyeOutlined />} onClick={() => openDetailModal(row)}>
+            Chi tiết
           </Button>
           <Popconfirm
             title="Reset bàn này về trạng thái trống?"
@@ -400,6 +424,69 @@ export default function TableManagementAdminPage() {
             Quét mã này để mở giao diện gọi món đúng cho bàn {selectedTableForQr?.code || '--'}.
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        title={selectedTableForDetail ? `Lịch đặt ${selectedTableForDetail.name}` : 'Lịch đặt bàn'}
+        open={detailModalOpen}
+        onCancel={() => {
+          setDetailModalOpen(false)
+          setSelectedTableForDetail(null)
+          setTableReservations([])
+        }}
+        footer={null}
+        width={820}
+      >
+        <Table
+          size="small"
+          rowKey="_id"
+          loading={reservationLoading}
+          dataSource={tableReservations}
+          pagination={{ pageSize: 6 }}
+          columns={[
+            {
+              title: 'Khách hàng',
+              dataIndex: 'customer_name',
+              key: 'customer_name',
+              render: (value, row) => (
+                <div>
+                  <div className="font-semibold text-zinc-900">{value}</div>
+                  <div className="text-xs text-zinc-500">{row.customer_phone}</div>
+                </div>
+              ),
+            },
+            {
+              title: 'Giờ đặt',
+              dataIndex: 'reservation_time',
+              key: 'reservation_time',
+              render: (value) => (value ? new Date(value).toLocaleString('vi-VN') : '--'),
+            },
+            {
+              title: 'Số khách',
+              dataIndex: 'party_size',
+              key: 'party_size',
+              render: (value) => `${value || 0} khách`,
+            },
+            {
+              title: 'Nguồn',
+              dataIndex: 'source',
+              key: 'source',
+              render: (value) => <Tag>{value || 'contact'}</Tag>,
+            },
+            {
+              title: 'Trạng thái',
+              dataIndex: 'status',
+              key: 'status',
+              render: (value) => <Tag color={value === 'confirmed' ? 'green' : 'default'}>{value}</Tag>,
+            },
+            {
+              title: 'Ghi chú',
+              dataIndex: 'note',
+              key: 'note',
+              ellipsis: true,
+            },
+          ]}
+        />
       </Modal>
     </div>
   )

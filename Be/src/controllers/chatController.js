@@ -3,7 +3,7 @@ import { generateChatReply } from '../services/chatService.js';
 
 export const handleChat = asyncHandler(async (req, res) => {
   const { message, conversationId, currentPath } = req.body;
-  const result = await generateChatReply({ message, conversationId, currentPath });
+  const result = await generateChatReply({ message, conversationId, currentPath, io: req.io });
 
   res.status(200).json({
     success: true,

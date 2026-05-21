@@ -11,6 +11,7 @@ import { connectDB } from './config/db.js';
 import orderRoutes from './routes/orderRoutes.js';
 import menuRoutes from './routes/menuRoutes.js';
 import tableRoutes from './routes/tableRoutes.js';
+import reservationRoutes from './routes/reservationRoutes.js';
 import adminAuthRoutes from './routes/adminAuthRoutes.js';
 import adminOrderRoutes from './routes/adminOrderRoutes.js';
 import adminTableRoutes from './routes/adminTableRoutes.js';
@@ -143,6 +144,7 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use('/api/v1/auth', authLimiter);
 app.use('/api/v1/admin/auth', authLimiter);
 app.use('/api/v1/tables/scan', orderLimiter);
+app.use('/api/v1/reservations', orderLimiter);
 app.use('/api/v1/orders', orderLimiter);
 app.use('/api/v1/takeaway/orders', orderLimiter);
 app.use('/api/v1/careers/applications', uploadLimiter);
@@ -197,6 +199,7 @@ io.on('connection', (socket) => {
 app.use('/api/v1/orders', orderRoutes);         // Dine-in ordering (table session)
 app.use('/api/v1/menu', menuRoutes);             // Menu browsing
 app.use('/api/v1/tables', tableRoutes);          // QR scan
+app.use('/api/v1/reservations', reservationRoutes); // Public table reservations
 app.use('/api/v1/takeaway', takeawayRoutes);     // Takeaway/Delivery ordering
 app.use('/api/v1/auth', userAuthRoutes);         // Customer auth
 app.use('/api/v1/user/orders', userOrderRoutes); // Customer order history

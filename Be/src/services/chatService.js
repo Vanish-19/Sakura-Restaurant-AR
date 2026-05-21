@@ -5,6 +5,7 @@ import Table from '../models/Table.js';
 import { CHAT_KNOWLEDGE_BASE } from '../config/chatKnowledge.js';
 import { chatWithAI, mergeUsageTotals, planAIToolCalls } from './aiService.js';
 import { estimateUsageCost, recordAiMonitoringEvent } from './aiMonitoringService.js';
+import { createReservation } from './tableReservationService.js';
 import { getStaticPages, STATIC_PAGE_DEFAULTS } from './staticPageContentService.js';
 import {
   appendConversationMessage,
@@ -322,6 +323,86 @@ function extractPartySize(message) {
   if (!match) return null;
   const count = Number(match[1]);
   return Number.isFinite(count) && count > 0 ? count : null;
+}
+
+function extractPhoneNumber(message) {
+  const match = String(message || '').match(/(?:\+?84|0)\d[\d\s.-]{7,12}\d/);
+  return match ? match[0].replace(/[^\d+]/g, '') : '';
+}
+
+function extractReservationDate(message) {
+  const text = normalizeText(message);
+  const isoMatch = text.match(/\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})\b/);
+  if (isoMatch) {
+    return {
+      year: Number(isoMatch[1]),
+      month: Number(isoMatch[2]),
+      day: Number(isoMatch[3]),
+    };
+  }
+
+  const vnMatch = text.match(/\b(\d{1,2})[/-](\d{1,2})(?:[/-](20\d{2}))?\b/);
+  if (vnMatch) {
+    const now = new Date();
+    return {
+      year: vnMatch[3] ? Number(vnMatch[3]) : now.getFullYear(),
+      month: Number(vnMatch[2]),
+      day: Number(vnMatch[1]),
+    };
+  }
+
+  const now = new Date();
+  if (text.includes('ngay mai') || text.includes('tomorrow')) {
+    const target = new Date(now);
+    target.setDate(target.getDate() + 1);
+    return { year: target.getFullYear(), month: target.getMonth() + 1, day: target.getDate() };
+  }
+
+  if (text.includes('hom nay') || text.includes('today')) {
+    return { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() };
+  }
+
+  return null;
+}
+
+function extractReservationTime(message) {
+  const normalized = normalizeText(message);
+  const match = normalized.match(/\b(\d{1,2})(?::|h)(\d{2})?\b/);
+  if (!match) return null;
+
+  let hour = Number(match[1]);
+  const minute = Number(match[2] || 0);
+  if (hour < 12 && hasAnyKeyword(normalized, ['toi', 'chieu', 'pm'])) hour += 12;
+  if (!Number.isFinite(hour) || !Number.isFinite(minute) || hour > 23 || minute > 59) return null;
+
+  return { hour, minute };
+}
+
+function extractCustomerName(message) {
+  const raw = String(message || '');
+  const match = raw.match(/(?:tên|ten|name)\s*(?:là|la|:)?\s*([A-Za-zÀ-ỹ\s]{2,40})(?=,|\.|;|\s+(?:sdt|số|so|phone|lúc|luc|ngày|ngay|\d)|$)/i);
+  return match ? match[1].trim() : '';
+}
+
+function buildReservationDateTime(message) {
+  const date = extractReservationDate(message);
+  const time = extractReservationTime(message);
+  if (!date || !time) return null;
+
+  const reservationTime = new Date(date.year, date.month - 1, date.day, time.hour, time.minute, 0, 0);
+  if (Number.isNaN(reservationTime.getTime())) return null;
+  return reservationTime;
+}
+
+function extractBookingPayload(message) {
+  const reservationTime = buildReservationDateTime(message);
+  return {
+    customer_name: extractCustomerName(message),
+    customer_phone: extractPhoneNumber(message),
+    party_size: extractPartySize(message),
+    reservation_time: reservationTime,
+    note: String(message || '').trim(),
+  };
 }
 
 function hasAnyKeyword(message, keywords) {
@@ -916,6 +997,70 @@ async function getTableAvailability(message, options = {}) {
   };
 }
 
+async function createReservationFromChat(message, options = {}) {
+  const payload = {
+    ...extractBookingPayload(message),
+    ...(options || {}),
+    source: 'ai',
+  };
+  const missingFields = [];
+
+  if (!payload.customer_name) missingFields.push('tên khách');
+  if (!payload.customer_phone) missingFields.push('số điện thoại');
+  if (!payload.party_size) missingFields.push('số lượng khách');
+  if (!payload.reservation_time) missingFields.push('ngày và giờ đặt');
+
+  if (missingFields.length > 0) {
+    return {
+      name: 'reservation_booking',
+      items: [],
+      articles: [],
+      cards: [],
+      actions: uniqueActions([{ type: 'navigate', label: 'Mở form đặt bàn', path: CHAT_KNOWLEDGE_BASE.quickLinks.contact }]),
+      context: `AI chưa đủ thông tin để đặt bàn. Cần bổ sung: ${missingFields.join(', ')}. Quy định: đặt trước tối thiểu 2 tiếng; bàn được giữ từ 90 phút trước giờ khách đến.`,
+    };
+  }
+
+  let reservation;
+  try {
+    reservation = await createReservation(payload);
+    if (options.io) {
+      options.io.to('admin').emit('reservation_created', reservation);
+    }
+  } catch (error) {
+    return {
+      name: 'reservation_booking',
+      items: [],
+      articles: [],
+      cards: [],
+      actions: uniqueActions([{ type: 'navigate', label: 'Mở form đặt bàn', path: CHAT_KNOWLEDGE_BASE.quickLinks.contact }]),
+      context: `Chưa thể tạo đặt bàn: ${error?.message || 'khung giờ không khả dụng'}. Quy định: đặt trước tối thiểu 2 tiếng; bàn được giữ từ 90 phút trước giờ khách đến.`,
+    };
+  }
+
+  const reservationTimeText = new Date(reservation.reservation_time).toLocaleString('vi-VN');
+  const tableName = reservation.table?.name || 'bàn phù hợp';
+
+  return {
+    name: 'reservation_booking',
+    items: [reservation],
+    articles: [],
+    cards: [
+      {
+        type: 'reservation',
+        title: `Đã đặt ${tableName}`,
+        subtitle: reservationTimeText,
+        description: `${reservation.customer_name} - ${reservation.party_size} khách. Sakura sẽ giữ bàn từ 90 phút trước giờ đặt.`,
+        imageUrl: '',
+        badges: ['Đặt bàn thành công'],
+        actions: [{ type: 'navigate', label: 'Xem liên hệ', path: CHAT_KNOWLEDGE_BASE.quickLinks.contact }],
+      },
+    ],
+    actions: [],
+    context: `Đặt bàn thành công cho ${reservation.customer_name}, ${reservation.party_size} khách, lúc ${reservationTimeText}, tại ${tableName}.`,
+  };
+}
+
 async function getRecommendedMenuItems(message, history = [], conversationSummary = '', options = {}) {
   const availableItems = await MenuItem.find({ is_available: true }).select(MENU_ITEM_FIELDS).lean();
   const categories = uniqueStrings(availableItems.map((item) => item.category));
@@ -1031,9 +1176,12 @@ function buildFallbackToolSelection({ intent, message, currentPath = '' }) {
       addTool('restaurant_info', { topic: 'site_info', focus: message });
       break;
     case 'contact_info':
-    case 'booking_support':
     case 'payment_support':
     case 'order_support':
+      addTool('restaurant_info', { topic: intent, focus: message });
+      break;
+    case 'booking_support':
+      addTool('reservation_booking', { query: message });
       addTool('restaurant_info', { topic: intent, focus: message });
       break;
     default:
@@ -1139,10 +1287,21 @@ function buildAiToolDefinitions() {
         additionalProperties: false,
       },
     },
+    {
+      name: 'reservation_booking',
+      description: 'Tạo đặt bàn khi khách đã cung cấp tên, số điện thoại, số khách, ngày và giờ đặt. Nếu thiếu thông tin, trả về các trường cần bổ sung.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string' },
+        },
+        additionalProperties: false,
+      },
+    },
   ];
 }
 
-async function runSelectedTools({ selectedTools, intent, message, history, conversationSummary, currentPath }) {
+async function runSelectedTools({ selectedTools, intent, message, history, conversationSummary, currentPath, io }) {
   const results = [];
   const failedToolNames = [];
   const registry = {
@@ -1170,6 +1329,8 @@ async function runSelectedTools({ selectedTools, intent, message, history, conve
       getTableAvailability(String(argumentsPayload.query || message), {
         partySize: Number(argumentsPayload.partySize || 0),
       }),
+    reservation_booking: async (argumentsPayload = {}) =>
+      createReservationFromChat(String(argumentsPayload.query || message), { io }),
   };
 
   for (const tool of selectedTools) {
@@ -1335,7 +1496,7 @@ function buildConversationSummary({ previousSummary = '', message, intent, menuI
   return entries.slice(-MAX_SUMMARY_ENTRIES).join('\n');
 }
 
-export async function generateChatReply({ message, conversationId, currentPath = '' }) {
+export async function generateChatReply({ message, conversationId, currentPath = '', io }) {
   const startedAt = Date.now();
   const requestId = crypto.randomUUID();
   const session = ensureConversation(conversationId);
@@ -1375,6 +1536,14 @@ export async function generateChatReply({ message, conversationId, currentPath =
       ? plannerResult.selectedTools
       : buildFallbackToolSelection({ intent, message, currentPath });
 
+  if (intent === 'booking_support' && !selectedTools.some((tool) => tool.name === 'reservation_booking')) {
+    selectedTools.unshift({
+      id: 'forced_reservation_booking',
+      name: 'reservation_booking',
+      arguments: { query: message },
+    });
+  }
+
   const { results: toolResults, failedToolNames } = await runSelectedTools({
     selectedTools,
     intent,
@@ -1382,6 +1551,7 @@ export async function generateChatReply({ message, conversationId, currentPath =
     history,
     conversationSummary,
     currentPath,
+    io,
   });
 
   const context = buildContextSections({
