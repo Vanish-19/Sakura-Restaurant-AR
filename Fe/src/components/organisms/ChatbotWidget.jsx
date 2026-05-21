@@ -78,6 +78,10 @@ function HeaderIconButton({ icon, title, onClick }) {
   )
 }
 
+function isReservationCard(card) {
+  return card?.type === 'reservation' || card?.type === 'reservation_followup'
+}
+
 export default function ChatbotWidget() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -221,7 +225,12 @@ export default function ChatbotWidget() {
         {cards.map((card, index) => (
           <div
             key={`${messageId}-card-${index}`}
-            className="overflow-hidden rounded-[22px] border border-[#eedccf] bg-[linear-gradient(180deg,#fffefd_0%,#fff8f4_100%)] shadow-[0_14px_28px_rgba(62,28,18,0.06)]"
+            className={[
+              'overflow-hidden rounded-[22px] border shadow-[0_14px_28px_rgba(62,28,18,0.06)]',
+              isReservationCard(card)
+                ? 'border-[#f0d4cb] bg-[linear-gradient(180deg,#fffdfb_0%,#fff4ef_100%)]'
+                : 'border-[#eedccf] bg-[linear-gradient(180deg,#fffefd_0%,#fff8f4_100%)]',
+            ].join(' ')}
           >
             {card.imageUrl ? (
               <div className="h-28 w-full overflow-hidden bg-[#f3ece6]">
@@ -229,24 +238,62 @@ export default function ChatbotWidget() {
               </div>
             ) : null}
 
+            {isReservationCard(card) ? (
+              <div className="border-b border-[#f0ddd6] bg-[linear-gradient(135deg,#7a0614_0%,#a91522_58%,#d85a39_100%)] px-3.5 py-3 text-white">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75">
+                      {card.type === 'reservation' ? 'Reservation Confirmed' : 'Reservation Follow-up'}
+                    </p>
+                    <p className="m-0 mt-1 font-[var(--font-heading)] text-xl leading-none text-white">{card.title}</p>
+                  </div>
+                  {card.badges?.[1] ? (
+                    <div className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold tracking-[0.12em] text-white">
+                      {card.badges[1]}
+                    </div>
+                  ) : null}
+                </div>
+                {card.subtitle ? (
+                  <p className="m-0 mt-2 text-xs font-medium text-white/80">{card.subtitle}</p>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="p-3.5">
+              {!isReservationCard(card) ? (
+                <>
               <p className="m-0 font-[var(--font-heading)] text-lg leading-none text-[#241512]">{card.title}</p>
               {card?.subtitle ? (
                 <p className="m-0 mt-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a13d2f]">
                   {card.subtitle}
                 </p>
               ) : null}
+                </>
+              ) : null}
               <p className="mt-2 mb-0 text-xs leading-5 text-[#6b5148]">{card.description}</p>
 
               {card.badges?.length > 0 ? (
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {card.badges.map((badge) => (
+                  {card.badges
+                    .filter((badge, badgeIndex) => !isReservationCard(card) || badgeIndex === 0)
+                    .map((badge) => (
                     <Tag
                       key={`${card.title}-${badge}`}
                       className="!m-0 !rounded-full !border-[#e7d3c5] !bg-white/90 !px-2 !py-0.5 !text-[10px] !font-semibold !uppercase !tracking-[0.12em] !text-[#7f241f]"
                     >
                       {badge}
                     </Tag>
+                    ))}
+                </div>
+              ) : null}
+
+              {Array.isArray(card.metaRows) && card.metaRows.length > 0 ? (
+                <div className="mt-3 space-y-2 rounded-2xl border border-[#eadfd7] bg-white/90 p-3">
+                  {card.metaRows.map((row) => (
+                    <div key={`${card.title}-${row.label}`} className="flex items-start justify-between gap-3 text-xs">
+                      <span className="min-w-0 text-[#8b6d62]">{row.label}</span>
+                      <span className="text-right font-semibold text-[#2f241f]">{row.value}</span>
+                    </div>
                   ))}
                 </div>
               ) : null}
@@ -258,7 +305,12 @@ export default function ChatbotWidget() {
                       key={`${card.title}-${action.label}`}
                       size="small"
                       onClick={() => handleActionClick(action)}
-                      className="!rounded-full !border-[#e6c4b9] !bg-white !text-[11px] !font-semibold !text-[#7f241f] hover:!border-[#bf5c48] hover:!text-[#8b0000]"
+                      className={[
+                        '!rounded-full !text-[11px] !font-semibold',
+                        isReservationCard(card)
+                          ? '!border-[#f0c7ba] !bg-[#fff7f3] !text-[#8b0000] hover:!border-[#c95a49] hover:!text-[#8b0000]'
+                          : '!border-[#e6c4b9] !bg-white !text-[#7f241f] hover:!border-[#bf5c48] hover:!text-[#8b0000]',
+                      ].join(' ')}
                     >
                       {action.label}
                     </Button>

@@ -11,8 +11,10 @@ import {
   appendConversationMessage,
   ensureConversation,
   getConversationHistory,
+  getConversationMetadata,
   getConversationSummary,
   updateConversationSummary,
+  updateConversationMetadata,
 } from './chatSessionStore.js';
 
 const MENU_ITEM_FIELDS = [
@@ -248,6 +250,8 @@ function normalizeText(value = '') {
   return String(value)
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
     .toLowerCase()
     .trim();
 }
@@ -380,8 +384,36 @@ function extractReservationTime(message) {
 
 function extractCustomerName(message) {
   const raw = String(message || '');
-  const match = raw.match(/(?:tên|ten|name)\s*(?:là|la|:)?\s*([A-Za-zÀ-ỹ\s]{2,40})(?=,|\.|;|\s+(?:sdt|số|so|phone|lúc|luc|ngày|ngay|\d)|$)/i);
-  return match ? match[1].trim() : '';
+  const match = raw.match(/(?:tên|ten|name)(?:\s+tôi|\s+toi)?\s*(?:là|la|:)?\s*([A-Za-zÀ-ỹ\s]{2,40})(?=,|\.|;|\s+(?:sdt|số|so|phone|lúc|luc|ngày|ngay|\d)|$)/i);
+  if (match) return match[1].trim();
+
+  const leadingSegment = raw.split(',')[0]?.trim() || '';
+  if (
+    leadingSegment &&
+    !/\d/.test(leadingSegment) &&
+    leadingSegment.length >= 2 &&
+    leadingSegment.length <= 40 &&
+    !/(dat ban|reservation|book ban|xac nhan|confirm|toi muon|giup toi)/i.test(leadingSegment)
+  ) {
+    return leadingSegment;
+  }
+
+  return '';
+}
+
+function extractPreferredTableCode(message) {
+  const raw = String(message || '').toUpperCase();
+  const explicitCodeMatch = raw.match(/\bT\s?(\d{1,2})\b/);
+  if (explicitCodeMatch) {
+    return `T${String(explicitCodeMatch[1]).padStart(2, '0')}`;
+  }
+
+  const tableMatch = normalizeText(message).match(/(?:ban|table)\s*(\d{1,2})\b/);
+  if (tableMatch) {
+    return `T${String(tableMatch[1]).padStart(2, '0')}`;
+  }
+
+  return '';
 }
 
 function buildReservationDateTime(message) {
@@ -394,15 +426,33 @@ function buildReservationDateTime(message) {
   return reservationTime;
 }
 
-function extractBookingPayload(message) {
+function extractBookingPayload(message, noteMessage = null) {
   const reservationTime = buildReservationDateTime(message);
   return {
     customer_name: extractCustomerName(message),
     customer_phone: extractPhoneNumber(message),
     party_size: extractPartySize(message),
     reservation_time: reservationTime,
-    note: String(message || '').trim(),
+    preferred_table_code: extractPreferredTableCode(message),
+    note: String(noteMessage ?? message ?? '').trim(),
   };
+}
+
+function hasBookingPayloadSignal(message) {
+  const payload = extractBookingPayload(message);
+  return Boolean(payload.customer_name || payload.customer_phone || payload.party_size || payload.reservation_time);
+}
+
+function isBookingConversationActive(history = [], conversationSummary = '') {
+  const summaryText = normalizeText(conversationSummary);
+  if (summaryText.includes('intent booking_support') || summaryText.includes('intent booking_followup')) {
+    return true;
+  }
+
+  return history.some((entry) => {
+    const content = normalizeText(entry?.content || '');
+    return content.includes('dat ban') || content.includes('reservation') || content.includes('book ban');
+  });
 }
 
 function hasAnyKeyword(message, keywords) {
@@ -410,7 +460,12 @@ function hasAnyKeyword(message, keywords) {
   return keywords.some((keyword) => normalized.includes(keyword));
 }
 
-function detectIntent(message) {
+function detectIntent(message, history = [], conversationSummary = '') {
+  const hasBookingKeyword = hasAnyKeyword(message, ['dat ban', 'reservation', 'book ban']);
+  const bookingFollowup =
+    isBookingConversationActive(history, conversationSummary) &&
+    (hasBookingPayloadSignal(message) || hasBookingKeyword || isBookingConfirmationMessage(message) || Boolean(extractPreferredTableCode(message)));
+
   if (hasAnyKeyword(message, TABLE_AVAILABILITY_KEYWORDS)) {
     return 'table_availability';
   }
@@ -435,7 +490,11 @@ function detectIntent(message) {
     return 'site_info';
   }
 
-  if (hasAnyKeyword(message, ['dat ban', 'reservation', 'book ban'])) {
+  if (bookingFollowup) {
+    return 'booking_followup';
+  }
+
+  if (hasBookingKeyword) {
     return 'booking_support';
   }
 
@@ -997,12 +1056,113 @@ async function getTableAvailability(message, options = {}) {
   };
 }
 
+async function buildTableTypeSummary() {
+  const tables = await Table.find().select('name zone capacity').sort({ capacity: 1, name: 1 }).lean();
+  if (tables.length === 0) {
+    return {
+      summary: 'Hiện chưa đọc được dữ liệu loại bàn từ hệ thống.',
+      capacitySummary: '',
+      zoneSummary: '',
+    };
+  }
+
+  const capacityMap = new Map();
+  const zoneMap = new Map();
+
+  for (const table of tables) {
+    const capacity = Number(table.capacity || 0);
+    const zone = String(table.zone || 'Main Hall');
+
+    if (!capacityMap.has(capacity)) capacityMap.set(capacity, 0);
+    capacityMap.set(capacity, Number(capacityMap.get(capacity)) + 1);
+
+    if (!zoneMap.has(zone)) zoneMap.set(zone, []);
+    zoneMap.get(zone).push(table);
+  }
+
+  const capacitySummary = [...capacityMap.entries()]
+    .sort((left, right) => left[0] - right[0])
+    .map(([capacity, count]) => `${count} bàn ${capacity} khách`)
+    .join(', ');
+
+  const zoneSummary = [...zoneMap.entries()]
+    .map(([zone, zoneTables]) => {
+      const capacities = [...new Set(zoneTables.map((item) => Number(item.capacity || 0)))].sort((a, b) => a - b);
+      return `${zone} (${capacities.join('/')} khách)`;
+    })
+    .join('; ');
+
+  return {
+    summary: `Nhà hàng hiện có các nhóm bàn theo sức chứa: ${capacitySummary}. Khu vực nổi bật: ${zoneSummary}.`,
+    capacitySummary,
+    zoneSummary,
+  };
+}
+
+function mergeBookingDraft(baseDraft = {}, nextDraft = {}) {
+  return {
+    customer_name: nextDraft.customer_name || baseDraft.customer_name || '',
+    customer_phone: nextDraft.customer_phone || baseDraft.customer_phone || '',
+    party_size: nextDraft.party_size || baseDraft.party_size || null,
+    reservation_time: nextDraft.reservation_time || baseDraft.reservation_time || null,
+    preferred_table_code: nextDraft.preferred_table_code || baseDraft.preferred_table_code || '',
+    preferred_table_id: nextDraft.preferred_table_id || baseDraft.preferred_table_id || '',
+    preferred_table_name: nextDraft.preferred_table_name || baseDraft.preferred_table_name || '',
+    note: nextDraft.note || baseDraft.note || '',
+  };
+}
+
+function isBookingConfirmationMessage(message = '') {
+  return hasAnyKeyword(message, ['xac nhan', 'confirm', 'dong y', 'ok dat ban', 'hoan tat dat ban']);
+}
+
+function getNormalizedTableCode(name = '') {
+  const explicitCodeMatch = String(name || '').toUpperCase().match(/\bT\s?(\d{1,2})\b/);
+  if (explicitCodeMatch) {
+    return `T${String(explicitCodeMatch[1]).padStart(2, '0')}`;
+  }
+
+  const digits = String(name || '').match(/\d+/)?.[0];
+  return digits ? `T${String(digits).padStart(2, '0')}` : '';
+}
+
+async function resolvePreferredTable(code = '') {
+  if (!code) return null;
+
+  const tables = await Table.find().select('_id name zone capacity status').sort({ name: 1 }).lean();
+  return tables.find((table) => getNormalizedTableCode(table.name) === code) || null;
+}
+
 async function createReservationFromChat(message, options = {}) {
+  const extractionMessage = options.query ? `${message}\n${String(options.query).trim()}` : message;
+  const tableTypeSummary = await buildTableTypeSummary();
+  const sessionDraft = options.bookingDraft || {};
+  const extractedPayload = {
+    ...extractBookingPayload(extractionMessage, message),
+  };
+  const mergedDraft = mergeBookingDraft(sessionDraft, extractedPayload);
+  const preferredTableCode = mergedDraft.preferred_table_code || '';
+  const preferredTable = preferredTableCode ? await resolvePreferredTable(preferredTableCode) : null;
   const payload = {
-    ...extractBookingPayload(message),
-    ...(options || {}),
+    customer_name: mergedDraft.customer_name || '',
+    customer_phone: mergedDraft.customer_phone || '',
+    party_size: mergedDraft.party_size || null,
+    reservation_time: mergedDraft.reservation_time || null,
+    table: preferredTable?._id,
+    note: mergedDraft.note || String(message || '').trim(),
     source: 'ai',
   };
+
+  if (options.conversationId) {
+    updateConversationMetadata(options.conversationId, {
+      bookingDraft: {
+        ...mergedDraft,
+        preferred_table_id: preferredTable?._id ? String(preferredTable._id) : '',
+        preferred_table_name: preferredTable?.name || mergedDraft.preferred_table_name || '',
+      },
+    });
+  }
+
   const missingFields = [];
 
   if (!payload.customer_name) missingFields.push('tên khách');
@@ -1011,13 +1171,54 @@ async function createReservationFromChat(message, options = {}) {
   if (!payload.reservation_time) missingFields.push('ngày và giờ đặt');
 
   if (missingFields.length > 0) {
+    const completedDetails = [
+      payload.customer_name ? `Tên khách: ${payload.customer_name}` : null,
+      payload.customer_phone ? `SĐT: ${payload.customer_phone}` : null,
+      payload.party_size ? `Số khách: ${payload.party_size}` : null,
+      payload.reservation_time ? `Thời gian: ${new Date(payload.reservation_time).toLocaleString('vi-VN')}` : null,
+      preferredTable?.name ? `Bàn đã chọn: ${preferredTable.name}` : preferredTableCode ? `Bàn đã chọn: ${preferredTableCode}` : null,
+    ].filter(Boolean);
+    const selectedTableHint = preferredTable?.name
+      ? ` Mình đã ghi nhận bạn muốn ưu tiên ${preferredTable.name}.`
+      : preferredTableCode
+        ? ` Mình đã ghi nhận bạn muốn ưu tiên ${preferredTableCode}.`
+        : '';
+    const combinedReply = `Mình có thể đặt bàn giúp bạn.${selectedTableHint} Bạn không cần tự biết trước loại bàn nếu chưa chắc, hệ thống sẽ ưu tiên bàn phù hợp theo số khách. ${tableTypeSummary.summary} Bạn gửi giúp mình đầy đủ ${missingFields.join(', ')} trong cùng một tin nhắn nhé. Ví dụ: "Tôi tên Nguyễn Văn An, số điện thoại 0901234567, đặt bàn cho 4 người lúc 19h ngày 24/05/2026."`;
+    const combinedSuggestions = [
+      {
+        label: 'Gửi đủ thông tin',
+        prompt: 'Tôi tên Nguyễn Văn An, số điện thoại 0901234567, đặt bàn cho 4 người lúc 19h ngày 24/05/2026.',
+      },
+      {
+        label: 'Đặt bàn 2 người',
+        prompt: 'Tôi tên Trần Minh Châu, số điện thoại 0987654321, muốn đặt bàn cho 2 người lúc 20h ngày 25/05/2026.',
+      },
+    ];
+
     return {
       name: 'reservation_booking',
       items: [],
       articles: [],
-      cards: [],
+      cards: [
+        {
+          type: 'reservation_followup',
+          title: 'Cần đủ thông tin để đặt bàn',
+          subtitle: 'Gửi một tin nhắn gồm tên, số điện thoại, số khách, mã bàn và thời gian đặt',
+          description: combinedReply,
+          imageUrl: '',
+          badges: ['Thiếu dữ liệu đặt chỗ'],
+          metaRows: [
+            { label: 'Đã nhận', value: completedDetails.length > 0 ? completedDetails.join(' • ') : 'Chưa có thông tin hoàn chỉnh' },
+            { label: 'Cần bổ sung', value: missingFields.join(', ') },
+            { label: 'Loại bàn hiện có', value: tableTypeSummary.capacitySummary || 'Sẽ chọn bàn phù hợp theo số khách' },
+          ],
+          actions: [
+            { type: 'navigate', label: 'Mở form đặt bàn', path: CHAT_KNOWLEDGE_BASE.quickLinks.contact },
+          ],
+        },
+      ],
       actions: uniqueActions([{ type: 'navigate', label: 'Mở form đặt bàn', path: CHAT_KNOWLEDGE_BASE.quickLinks.contact }]),
-      context: `AI chưa đủ thông tin để đặt bàn. Cần bổ sung: ${missingFields.join(', ')}. Quy định: đặt trước tối thiểu 2 tiếng; bàn được giữ từ 90 phút trước giờ khách đến.`,
+      context: `AI chưa đủ thông tin để đặt bàn. Cần bổ sung: ${missingFields.join(', ')}. ${tableTypeSummary.summary} Hãy nói rõ rằng khách không cần biết trước tên bàn, hệ thống sẽ tự chọn bàn phù hợp theo số khách. Gợi ý trả lời: ${combinedReply}. Gợi ý follow-up: ${combinedSuggestions.map((item) => `${item.label}: ${item.prompt}`).join(' | ')}. Quy định: đặt trước tối thiểu 2 tiếng; bàn được giữ từ 90 phút trước giờ khách đến.`,
     };
   }
 
@@ -1034,13 +1235,17 @@ async function createReservationFromChat(message, options = {}) {
       articles: [],
       cards: [],
       actions: uniqueActions([{ type: 'navigate', label: 'Mở form đặt bàn', path: CHAT_KNOWLEDGE_BASE.quickLinks.contact }]),
-      context: `Chưa thể tạo đặt bàn: ${error?.message || 'khung giờ không khả dụng'}. Quy định: đặt trước tối thiểu 2 tiếng; bàn được giữ từ 90 phút trước giờ khách đến.`,
+      context: `Chưa thể tạo đặt bàn: ${error?.message || 'khung giờ không khả dụng'}. Hãy giải thích ngắn gọn cho khách và đề nghị chọn khung giờ khác nếu cần. Quy định: đặt trước tối thiểu 2 tiếng; bàn được giữ từ 90 phút trước giờ khách đến.`,
     };
   }
 
   const reservationTimeText = new Date(reservation.reservation_time).toLocaleString('vi-VN');
   const tableName = reservation.table?.name || 'bàn phù hợp';
-
+  if (options.conversationId) {
+    updateConversationMetadata(options.conversationId, {
+      bookingDraft: null,
+    });
+  }
   return {
     name: 'reservation_booking',
     items: [reservation],
@@ -1050,14 +1255,22 @@ async function createReservationFromChat(message, options = {}) {
         type: 'reservation',
         title: `Đã đặt ${tableName}`,
         subtitle: reservationTimeText,
-        description: `${reservation.customer_name} - ${reservation.party_size} khách. Sakura sẽ giữ bàn từ 90 phút trước giờ đặt.`,
+        description: `${reservation.customer_name} - ${reservation.party_size} khách. Khi tới quán, bạn chỉ cần cung cấp tên và số điện thoại để nhân viên xác nhận bàn đã đặt.`,
         imageUrl: '',
         badges: ['Đặt bàn thành công'],
-        actions: [{ type: 'navigate', label: 'Xem liên hệ', path: CHAT_KNOWLEDGE_BASE.quickLinks.contact }],
+        metaRows: [
+          { label: 'Bàn', value: tableName },
+          { label: 'Khách', value: `${reservation.party_size} người` },
+          { label: 'Liên hệ', value: reservation.customer_phone },
+        ],
+        actions: [
+          { type: 'navigate', label: 'Xem thực đơn', path: CHAT_KNOWLEDGE_BASE.quickLinks.home },
+          { type: 'navigate', label: 'Xem liên hệ', path: CHAT_KNOWLEDGE_BASE.quickLinks.contact },
+        ],
       },
     ],
-    actions: [],
-    context: `Đặt bàn thành công cho ${reservation.customer_name}, ${reservation.party_size} khách, lúc ${reservationTimeText}, tại ${tableName}.`,
+    actions: [{ type: 'navigate', label: 'Xem thực đơn', path: CHAT_KNOWLEDGE_BASE.quickLinks.home }],
+    context: `Đặt bàn thành công cho ${reservation.customer_name}, ${reservation.party_size} khách, lúc ${reservationTimeText}, tại ${tableName}. Khi tới quán, khách chỉ cần cung cấp tên và số điện thoại để nhân viên xác nhận bàn đã đặt.`,
   };
 }
 
@@ -1181,6 +1394,7 @@ function buildFallbackToolSelection({ intent, message, currentPath = '' }) {
       addTool('restaurant_info', { topic: intent, focus: message });
       break;
     case 'booking_support':
+    case 'booking_followup':
       addTool('reservation_booking', { query: message });
       addTool('restaurant_info', { topic: intent, focus: message });
       break;
@@ -1301,7 +1515,7 @@ function buildAiToolDefinitions() {
   ];
 }
 
-async function runSelectedTools({ selectedTools, intent, message, history, conversationSummary, currentPath, io }) {
+async function runSelectedTools({ selectedTools, intent, message, history, conversationSummary, currentPath, io, conversationId, bookingDraft }) {
   const results = [];
   const failedToolNames = [];
   const registry = {
@@ -1329,8 +1543,15 @@ async function runSelectedTools({ selectedTools, intent, message, history, conve
       getTableAvailability(String(argumentsPayload.query || message), {
         partySize: Number(argumentsPayload.partySize || 0),
       }),
-    reservation_booking: async (argumentsPayload = {}) =>
-      createReservationFromChat(String(argumentsPayload.query || message), { io }),
+    reservation_booking: async (argumentsPayload = {}) => {
+      const toolQuery = String(argumentsPayload.query || '').trim();
+      return createReservationFromChat(message, {
+        io,
+        query: toolQuery,
+        conversationId,
+        bookingDraft,
+      });
+    },
   };
 
   for (const tool of selectedTools) {
@@ -1412,6 +1633,7 @@ function buildFallbackReply({ intent, menuItems = [], articles = [], failedToolN
       return `${ar.summary} iPhone/iPad dùng Quick Look, Android dùng Scene Viewer hoặc WebXR.${arHint} Nếu chưa mở được, hãy kiểm tra quyền camera và Wifi ${restaurant.guestWifi}.`;
     }
     case 'booking_support':
+    case 'booking_followup':
       return `${booking.summary} ${booking.dineIn} Nếu cần nhanh, bạn có thể liên hệ ${restaurant.hotline.join(' / ')}.`;
     case 'contact_info':
       return `Sakura phục vụ ${restaurant.hours}, bếp nhận order cuối lúc ${restaurant.lastKitchenOrder}. Hotline: ${restaurant.hotline.join(' / ')}. Email hỗ trợ: ${restaurant.emails.support}.`;
@@ -1459,6 +1681,7 @@ function getIntentActions(intent, cards = []) {
       return [];
     case 'contact_info':
     case 'booking_support':
+    case 'booking_followup':
       return [{ type: 'navigate', label: 'Liên hệ / đặt bàn', path: quickLinks.contact }];
     case 'payment_support':
       return [{ type: 'navigate', label: 'Mở giỏ hàng', path: quickLinks.cart }];
@@ -1502,7 +1725,9 @@ export async function generateChatReply({ message, conversationId, currentPath =
   const session = ensureConversation(conversationId);
   const history = getConversationHistory(session.conversationId).slice(-MAX_HISTORY_MESSAGES);
   const conversationSummary = getConversationSummary(session.conversationId);
-  const intent = detectIntent(message);
+  const conversationMetadata = getConversationMetadata(session.conversationId);
+  const bookingDraft = conversationMetadata?.bookingDraft || null;
+  const intent = detectIntent(message, history, conversationSummary);
   const availableTools = buildAiToolDefinitions();
   let plannerResult = {
     model: 'gpt-4o-mini',
@@ -1536,7 +1761,7 @@ export async function generateChatReply({ message, conversationId, currentPath =
       ? plannerResult.selectedTools
       : buildFallbackToolSelection({ intent, message, currentPath });
 
-  if (intent === 'booking_support' && !selectedTools.some((tool) => tool.name === 'reservation_booking')) {
+  if (['booking_support', 'booking_followup'].includes(intent) && !selectedTools.some((tool) => tool.name === 'reservation_booking')) {
     selectedTools.unshift({
       id: 'forced_reservation_booking',
       name: 'reservation_booking',
@@ -1552,6 +1777,8 @@ export async function generateChatReply({ message, conversationId, currentPath =
     conversationSummary,
     currentPath,
     io,
+    conversationId: session.conversationId,
+    bookingDraft,
   });
 
   const context = buildContextSections({
@@ -1563,6 +1790,8 @@ export async function generateChatReply({ message, conversationId, currentPath =
   const recommendedItems = toolResults.flatMap((result) => result.items || []);
   const relatedArticles = toolResults.flatMap((result) => result.articles || []);
   const cards = toolResults.flatMap((result) => result.cards || []).slice(0, 4);
+  const replyOverride = toolResults.find((result) => result.replyOverride)?.replyOverride || '';
+  const suggestionsOverride = toolResults.find((result) => Array.isArray(result.suggestionsOverride) && result.suggestionsOverride.length > 0)?.suggestionsOverride || [];
   const hasSiteContentActions = toolResults.some(
     (result) => result.name === 'site_content_search' && Array.isArray(result.actions) && result.actions.length > 0,
   );
@@ -1584,7 +1813,11 @@ export async function generateChatReply({ message, conversationId, currentPath =
     (failedToolNames.includes('site_content_search') && ['site_info'].includes(intent));
 
   try {
-    if (shouldSkipAI) {
+    if (replyOverride) {
+      reply = replyOverride;
+      suggestions = suggestionsOverride;
+      model = 'tool-response';
+    } else if (shouldSkipAI) {
       throw Object.assign(new Error('Critical internal tool data unavailable'), { code: 'CHAT_CONTEXT_UNAVAILABLE' });
     } else {
       const aiResponse = await chatWithAI({

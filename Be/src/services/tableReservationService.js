@@ -3,7 +3,7 @@ import TableReservation from '../models/TableReservation.js';
 import { createHttpError } from '../utils/AppError.js';
 
 const RESERVATION_HOLD_MINUTES = 90;
-const RESERVATION_GRACE_MINUTES = 30;
+const RESERVATION_GRACE_MINUTES = 90;
 const MIN_ADVANCE_MINUTES = 120;
 const DEFAULT_DURATION_MINUTES = 120;
 
@@ -151,6 +151,45 @@ async function getUpcomingReservations(limit = 20) {
     .lean();
 }
 
+async function updateReservationStatus({ tableId, reservationId, status }) {
+  const reservation = await TableReservation.findOne({
+    _id: reservationId,
+    table: tableId,
+  }).populate('table', 'name zone capacity status');
+
+  if (!reservation) {
+    throw createHttpError('Reservation not found', 404, 'RESERVATION_NOT_FOUND');
+  }
+
+  const allowedTransitions = {
+    confirmed: ['seated', 'cancelled', 'no_show'],
+    seated: ['completed'],
+  };
+
+  const currentStatus = reservation.status;
+  const allowed = allowedTransitions[currentStatus] || [];
+  if (!allowed.includes(status)) {
+    throw createHttpError(
+      `Cannot transition reservation from ${currentStatus} to ${status}`,
+      409,
+      'INVALID_RESERVATION_STATUS_TRANSITION',
+    );
+  }
+
+  reservation.status = status;
+  await reservation.save();
+
+  if (status === 'seated') {
+    await Table.findByIdAndUpdate(tableId, { status: 'dining' });
+  } else {
+    await refreshReservedTableStatuses();
+  }
+
+  return TableReservation.findById(reservationId)
+    .populate('table', 'name zone capacity status')
+    .lean();
+}
+
 async function getReservationBlockingTableUse(tableId, now = new Date()) {
   return TableReservation.findOne({
     table: tableId,
@@ -207,4 +246,5 @@ export {
   getReservationBlockingTableUse,
   getUpcomingReservations,
   refreshReservedTableStatuses,
+  updateReservationStatus,
 };

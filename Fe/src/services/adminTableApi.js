@@ -23,3 +23,10 @@ export async function resetTable(id) {
 export async function getTableReservations(id) {
   return apiRequest(`/admin/tables/${id}/reservations`, { method: 'GET' });
 }
+
+export async function updateTableReservationStatus(tableId, reservationId, status) {
+  return apiRequest(`/admin/tables/${tableId}/reservations/${reservationId}/status`, {
+    method: 'PATCH',
+    body: { status },
+  });
+}

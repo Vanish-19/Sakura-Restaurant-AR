@@ -26,7 +26,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import AdminSectionHeader from '../../components/molecules/admin/AdminSectionHeader.jsx'
 import AdminStatCard from '../../components/molecules/admin/AdminStatCard.jsx'
 import { buildTableQrUrls, TABLE_QR_BASE_URL } from '../../constants/tableQrRoutes.js'
-import { getAllTables, getTableReservations, resetTable } from '../../services/adminTableApi.js'
+import { getAllTables, getTableReservations, resetTable, updateTableReservationStatus } from '../../services/adminTableApi.js'
 
 const floorLabelMap = {
   'main hall': 'Sảnh chính',
@@ -83,6 +83,15 @@ function tableStateStyle(state) {
   return 'border-emerald-200 bg-emerald-50/60 text-emerald-700'
 }
 
+function formatReservationStatus(status) {
+  if (status === 'confirmed') return { color: 'gold', label: 'Đã đặt trước' }
+  if (status === 'seated') return { color: 'blue', label: 'Đã tới quán' }
+  if (status === 'completed') return { color: 'green', label: 'Hoàn tất' }
+  if (status === 'no_show') return { color: 'red', label: 'Không đến' }
+  if (status === 'cancelled') return { color: 'default', label: 'Đã hủy' }
+  return { color: 'default', label: status || 'Không rõ' }
+}
+
 export default function TableManagementAdminPage() {
   const [query, setQuery] = useState('')
   const [floorFilter, setFloorFilter] = useState('all')
@@ -112,7 +121,8 @@ export default function TableManagementAdminPage() {
       if (res?.success && Array.isArray(res.data)) {
         setTables(
           res.data.map((table) => {
-            const status = mapTableStatus(table.status)
+            const hasUpcomingReservation = Boolean(table.active_reservation) && table.status !== 'dining'
+            const status = hasUpcomingReservation ? mapTableStatus('reserved') : mapTableStatus(table.status)
             return {
               id: table._id,
               name: table.name,
@@ -120,11 +130,12 @@ export default function TableManagementAdminPage() {
               zone: String(table.zone || 'Main Hall').trim(),
               capacity: table.capacity || 4,
               qrHash: table.qr_hash || '',
-              rawStatus: table.status || 'empty',
+              rawStatus: hasUpcomingReservation ? 'reserved' : table.status || 'empty',
               state: status.key,
               stateLabel: status.label,
               stateTone: status.tone,
               note: status.note,
+              activeReservation: table.active_reservation || null,
             }
           }),
         )
@@ -217,6 +228,18 @@ export default function TableManagementAdminPage() {
     }
   }
 
+  const handleReservationStatusChange = async (reservation, nextStatus) => {
+    if (!selectedTableForDetail?.id || !reservation?._id) return
+    try {
+      await updateTableReservationStatus(selectedTableForDetail.id, reservation._id, nextStatus)
+      message.success(nextStatus === 'seated' ? 'Đã xác nhận khách tới quán' : nextStatus === 'no_show' ? 'Đã đánh dấu khách không đến' : 'Đã cập nhật lịch đặt')
+      await Promise.all([fetchTables(), openDetailModal(selectedTableForDetail)])
+    } catch (err) {
+      console.error(err)
+      message.error(err?.message || 'Không thể cập nhật lịch đặt')
+    }
+  }
+
   const columns = [
     {
       title: 'BÀN',
@@ -225,6 +248,11 @@ export default function TableManagementAdminPage() {
         <div>
           <div className="font-semibold text-zinc-900">{row.name}</div>
           <div className="text-[11px] text-zinc-500">Mã QR: {row.qrHash || `table-${row.code}`}</div>
+          {row.activeReservation ? (
+            <div className="mt-1 text-[11px] text-zinc-500">
+              {row.activeReservation.customer_name} • {row.activeReservation.customer_phone}
+            </div>
+          ) : null}
         </div>
       ),
     },
@@ -381,6 +409,16 @@ export default function TableManagementAdminPage() {
                 : 'QR sẽ hiện ở modal riêng để dễ copy và in cho từng vị trí phục vụ.'}
             </p>
 
+            {selectedTableForQr?.activeReservation ? (
+              <div className="mt-3 rounded-xl border border-[#f3d9bf] bg-white/90 px-4 py-3">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-amber-600">Khách đang giữ bàn</div>
+                <div className="mt-1 text-sm font-semibold text-zinc-900">{selectedTableForQr.activeReservation.customer_name}</div>
+                <div className="mt-1 text-xs text-zinc-500">
+                  {selectedTableForQr.activeReservation.customer_phone} • {new Date(selectedTableForQr.activeReservation.reservation_time).toLocaleString('vi-VN')}
+                </div>
+              </div>
+            ) : null}
+
             <div className="mt-5 space-y-3">
               {floorOptions
                 .filter((option) => option.value !== 'all')
@@ -483,13 +521,44 @@ export default function TableManagementAdminPage() {
               title: 'Trạng thái',
               dataIndex: 'status',
               key: 'status',
-              render: (value) => <Tag color={value === 'confirmed' ? 'green' : 'default'}>{value}</Tag>,
+              render: (value) => {
+                const mapped = formatReservationStatus(value)
+                return <Tag color={mapped.color}>{mapped.label}</Tag>
+              },
             },
             {
               title: 'Ghi chú',
               dataIndex: 'note',
               key: 'note',
               ellipsis: true,
+            },
+            {
+              title: 'Thao tác',
+              key: 'actions',
+              render: (_, row) => (
+                <Space size="small" wrap>
+                  {row.status === 'confirmed' ? (
+                    <>
+                      <Button size="small" type="primary" onClick={() => handleReservationStatusChange(row, 'seated')}>
+                        Khách đã tới
+                      </Button>
+                      <Popconfirm
+                        title="Đánh dấu khách không đến và trả bàn về trạng thái trống?"
+                        onConfirm={() => handleReservationStatusChange(row, 'no_show')}
+                      >
+                        <Button size="small" danger>
+                          Không đến
+                        </Button>
+                      </Popconfirm>
+                    </>
+                  ) : null}
+                  {row.status === 'seated' ? (
+                    <Button size="small" onClick={() => handleReservationStatusChange(row, 'completed')}>
+                      Hoàn tất
+                    </Button>
+                  ) : null}
+                </Space>
+              ),
             },
           ]}
         />
