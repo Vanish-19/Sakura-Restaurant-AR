@@ -1,4 +1,3 @@
-import { RestOutlined } from '@ant-design/icons'
 import { useSiteSettings } from '../../utils/siteSettings.js'
 
 export default function Brand({ className = '', name, tagline }) {
@@ -8,7 +7,7 @@ export default function Brand({ className = '', name, tagline }) {
 
   return (
     <div className={['flex min-w-0 items-center gap-2 sm:gap-3', className].join(' ')}>
-      <RestOutlined className="shrink-0 -rotate-12 text-xl sm:text-2xl" />
+      <img src="/logo.png" alt="" className="h-7 w-7 shrink-0 object-contain sm:h-9 sm:w-9" />
       <div className="min-w-0 leading-tight">
         <div className="max-w-[120px] truncate text-sm font-semibold tracking-wide font-[var(--font-heading)] sm:max-w-none sm:text-lg">
           {clientWebsiteName}

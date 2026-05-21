@@ -33,16 +33,20 @@
     "greeting": "こんにちは,"
   },
   "navigation": {
-    "home": "Home",
-    "about": "About",
-    "blog": "Blog",
-    "contact": "Contact",
-    "privacyPolicy": "Privacy Policy",
-    "termsOfService": "Terms of Service",
-    "careers": "Careers",
-    "pressKit": "Press Kit"
+    "home": "ホーム",
+    "about": "私たちについて",
+    "blog": "ブログ",
+    "contact": "お問い合わせ",
+    "privacyPolicy": "プライバシーポリシー",
+    "termsOfService": "利用規約",
+    "careers": "採用情報",
+    "pressKit": "プレスキット"
   },
   "home": {
+    "heroTitle": "ARで楽しむ日本料理体験",
+    "heroQuote": "数ある選択肢の中からSakura Restaurantをお選びいただきありがとうございます",
+    "heroPrimaryPill": "本格的な日本の味",
+    "heroSecondaryPill": "ARを試す",
     "title": "Sakura Restaurantへようこそ",
     "subtitle": "ARメニューで現代的な注文体験を",
     "description": "日本の食文化と最新のAR技術を融合し、臨場感のある記憶に残る食体験を提供します。",
@@ -62,6 +66,9 @@
     "brandStoryEyebrow": "ブランドストーリー",
     "brandStoryTitle": "特別な体験のはじまり",
     "visionMissionTitle": "ビジョン & ミッション",
+    "visionLabel": "ビジョン",
+    "missionLabel": "ミッション",
+    "coreValuesEyebrow": "コアバリュー",
     "coreValuesTitle": "Sakuraを形づくる4つの価値",
     "arExperienceTitle": "独自のAR体験",
     "chefStoryTitle": "味を支える職人たち"

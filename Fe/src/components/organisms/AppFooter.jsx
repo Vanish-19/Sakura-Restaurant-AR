@@ -39,6 +39,13 @@ const footerIconMap = {
   reviews: <RestOutlined />,
 }
 
+const footerNavigationKeyByPath = {
+  '/privacy&policy': 'privacyPolicy',
+  '/term&service': 'termsOfService',
+  '/career': 'careers',
+  '/press-kit': 'pressKit',
+}
+
 export default function AppFooter() {
   const { t } = useTranslation()
   const layoutContent = useStaticPageContent('site-layout', emptyLayoutContent)
@@ -82,12 +89,20 @@ export default function AppFooter() {
       icon: footerIconMap[item.iconKey] || <HeartOutlined />,
     }))
     : fallbackHighlights
-  const footerLinks = footerContent.links?.length ? footerContent.links : [
+  const defaultFooterLinks = [
     { label: t('navigation.privacyPolicy'), to: '/privacy&policy' },
     { label: t('navigation.termsOfService'), to: '/term&service' },
     { label: t('navigation.careers'), to: '/career' },
     { label: t('navigation.pressKit'), to: '/press-kit' },
   ]
+  const footerLinks = footerContent.links?.length
+    ? footerContent.links.map((item) => {
+      const navigationKey = footerNavigationKeyByPath[item.to]
+      return navigationKey
+        ? { ...item, label: t(`navigation.${navigationKey}`) }
+        : item
+    })
+    : defaultFooterLinks
   const resolvedSocialLinks = footerContent.socialLinks?.length
     ? footerContent.socialLinks.map((item) => ({ ...item, icon: footerIconMap[item.iconKey] || <RestOutlined /> }))
     : socialLinks
@@ -107,8 +122,8 @@ export default function AppFooter() {
         <div className="relative z-10 mx-auto grid w-full max-w-[1680px] gap-10 px-6 py-12 md:grid-cols-[1.1fr_1.25fr_1.15fr] md:px-14 xl:px-20 2xl:px-28">
           <div>
             <Link to="/" className="inline-flex items-center gap-3 no-underline">
-              <span className="grid h-11 w-11 place-items-center rounded-md text-3xl text-[#e0001d]">
-                <RestOutlined className="-rotate-12" />
+              <span className="grid h-11 w-11 place-items-center rounded-md">
+                <img src="/logo.png" alt="" className="h-10 w-10 object-contain" />
               </span>
               <span>
                 <Text className="!block font-[var(--font-heading)] !text-3xl !font-extrabold !leading-none !text-[#d8001e]">

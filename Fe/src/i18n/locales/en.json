@@ -43,6 +43,10 @@
     "pressKit": "Press Kit"
   },
   "home": {
+    "heroTitle": "Experience Japanese cuisine with AR",
+    "heroQuote": "We know there are many choices out there. Thank you for choosing Sakura Restaurant",
+    "heroPrimaryPill": "Authentic Japanese flavor",
+    "heroSecondaryPill": "Try AR preview",
     "title": "Welcome to Sakura Restaurant",
     "subtitle": "Experience modern ordering with AR Menu",
     "description": "Japanese culinary heritage meets modern AR technology for an immersive and memorable dining experience.",
@@ -62,6 +66,9 @@
     "brandStoryEyebrow": "Brand story",
     "brandStoryTitle": "The origin of a distinctive experience",
     "visionMissionTitle": "Vision & Mission",
+    "visionLabel": "Vision",
+    "missionLabel": "Mission",
+    "coreValuesEyebrow": "Core values",
     "coreValuesTitle": "Four Values That Shape Sakura",
     "arExperienceTitle": "Exclusive AR Experience",
     "chefStoryTitle": "The artisans behind the flavor"

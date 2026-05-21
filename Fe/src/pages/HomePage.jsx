@@ -1,6 +1,7 @@
 import { RestOutlined, ScanOutlined } from '@ant-design/icons'
 import { message } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import FeaturePill from '../components/molecules/FeaturePill.jsx'
 import ServiceTypeModal from '../components/organisms/ServiceTypeModal.jsx'
@@ -42,6 +43,7 @@ function isMobileDevice() {
 }
 
 export default function HomePage() {
+  const { t } = useTranslation()
   const { addItem } = useCart()
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeCategory, setActiveCategory] = useState(() => {
@@ -274,7 +276,7 @@ export default function HomePage() {
                 : 'text-4xl font-semibold tracking-tight font-[var(--font-heading)] md:text-6xl'
             }
           >
-            Trải nghiệm món Nhật với AR
+            {t('home.heroTitle')}
           </h1>
           <p
             className={
@@ -285,7 +287,7 @@ export default function HomePage() {
           >
             <em className="inline-flex items-center gap-1.5">
               <span aria-hidden="true" className="text-4xl font-black leading-none text-white/60 md:text-5xl">❝</span>
-              <span>Chúng tôi biết ngoài kia có nhiều lựa chọn, cảm ơn bạn đã chọn Sakura Restaurant</span>
+              <span>{t('home.heroQuote')}</span>
               <span aria-hidden="true" className="text-4xl font-black leading-none text-white/60 md:text-5xl">❞</span>
             </em>
           </p>
@@ -293,10 +295,10 @@ export default function HomePage() {
           <div className="mt-12 flex flex-wrap justify-center gap-4">
             <FeaturePill
               icon={<RestOutlined />}
-              text="Ẩm thực Nhật chuẩn vị"
+              text={t('home.heroPrimaryPill')}
               variant="hero-primary"
             />
-            <FeaturePill icon={<ScanOutlined />} text="Xem thử AR" variant="hero-secondary" />
+            <FeaturePill icon={<ScanOutlined />} text={t('home.heroSecondaryPill')} variant="hero-secondary" />
           </div>
         </div>
       </section>

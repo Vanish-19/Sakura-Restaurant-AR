@@ -6,6 +6,7 @@ import {
   ScanOutlined,
 } from '@ant-design/icons'
 import { Card, Col, Row, Typography } from 'antd'
+import { useTranslation } from 'react-i18next'
 import useStaticPageContent from '../../hooks/useStaticPageContent.js'
 
 const { Paragraph, Text, Title } = Typography
@@ -106,6 +107,7 @@ const VALUE_ICON_MAP = {
 }
 
 export default function AboutPage() {
+  const { t } = useTranslation()
   const pageContent = useStaticPageContent('about', defaultAboutContent)
   const hero = pageContent.hero || defaultAboutContent.hero
   const brandStory = pageContent.brandStory || defaultAboutContent.brandStory
@@ -204,7 +206,7 @@ export default function AboutPage() {
             <Col xs={24} md={12}>
               <Card className="!h-full !rounded-lg !border-0 !bg-white !p-2 !shadow-[0_14px_34px_rgba(15,23,42,0.06)]">
                 <Title level={3} className="!mb-4 !border-l-4 !border-[#d8001e] !pl-3 !text-xl !font-bold !text-slate-950">
-                  Tầm nhìn
+                  {t('about.visionLabel')}
                 </Title>
                 <Paragraph className="!mb-0 !text-sm !leading-7 !text-slate-600">
                   {visionMission.vision}
@@ -214,7 +216,7 @@ export default function AboutPage() {
             <Col xs={24} md={12}>
               <Card className="!h-full !rounded-lg !border-0 !bg-white !p-2 !shadow-[0_14px_34px_rgba(15,23,42,0.06)]">
                 <Title level={3} className="!mb-4 !border-l-4 !border-[#d8001e] !pl-3 !text-xl !font-bold !text-slate-950">
-                  Sứ mệnh
+                  {t('about.missionLabel')}
                 </Title>
                 <Paragraph className="!mb-0 !text-sm !leading-7 !text-slate-600">
                   {visionMission.mission}
@@ -229,10 +231,10 @@ export default function AboutPage() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-12 text-center">
             <Text className="!text-[11px] !font-bold !uppercase !tracking-[0.16em] !text-[#d8001e]">
-              Giá trị cốt lõi
+              {t('about.coreValuesEyebrow')}
             </Text>
             <Title level={2} className="!mt-2 !mb-0 !text-3xl !font-extrabold !text-slate-950 md:!text-4xl">
-              Bốn Giá Trị Định Hình Sakura
+              {t('about.coreValuesTitle')}
             </Title>
           </div>
           <Row gutter={[28, 28]}>

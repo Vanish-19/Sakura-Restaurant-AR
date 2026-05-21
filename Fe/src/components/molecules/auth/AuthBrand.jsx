@@ -1,12 +1,10 @@
-import { AppstoreAddOutlined } from '@ant-design/icons'
-
 export default function AuthBrand({ dark = false, compact = false, mini = false }) {
   if (mini) {
     // Phiên bản mini: chỉ icon + tên nhỏ, dùng ở góc trên hero login
     return (
       <div className="auth-brand auth-brand--mini">
         <div className="auth-brand__mark auth-brand__mark--mini">
-          <AppstoreAddOutlined />
+          <img src="/logo.png" alt="" className="h-full w-full object-contain" />
         </div>
         <div>
           <div className="auth-brand__title auth-brand__title--mini">
@@ -23,7 +21,7 @@ export default function AuthBrand({ dark = false, compact = false, mini = false 
   return (
     <div className={compact ? 'auth-brand auth-brand--compact' : 'auth-brand'}>
       <div className={dark ? 'auth-brand__mark auth-brand__mark--dark' : 'auth-brand__mark'}>
-        <AppstoreAddOutlined />
+        <img src="/logo.png" alt="" className="h-full w-full object-contain" />
       </div>
       <div>
         <div className={dark ? 'auth-brand__title auth-brand__title--dark' : 'auth-brand__title'}>
