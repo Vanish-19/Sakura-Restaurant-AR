@@ -4,7 +4,8 @@ import {
   createTable as svcCreateTable,
   updateTable as svcUpdateTable,
   deleteTable as svcDeleteTable,
-  resetTable as svcResetTable
+  resetTable as svcResetTable,
+  getTableReservations as svcGetTableReservations,
 } from '../services/adminTableService.js';
 
 const getAllTables = asyncHandler(async (req, res) => {
@@ -35,4 +36,9 @@ const resetTable = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: table });
 });
 
-export { getAllTables, createTable, updateTable, deleteTable, resetTable };
+const getTableReservations = asyncHandler(async (req, res) => {
+  const reservations = await svcGetTableReservations(req.params.id);
+  res.status(200).json({ success: true, count: reservations.length, data: reservations });
+});
+
+export { getAllTables, createTable, updateTable, deleteTable, resetTable, getTableReservations };

@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler';
 import Table from '../models/Table.js';
 import { signAccessToken } from '../services/tokenService.js';
 import { createTableSession } from '../services/tableSessionService.js';
+import { getReservationBlockingTableUse } from '../services/tableReservationService.js';
 
 const scanTable = asyncHandler(async (req, res) => {
   const { qr_hash } = req.body;
@@ -19,6 +20,16 @@ const scanTable = asyncHandler(async (req, res) => {
 
   if (!table) {
     return res.status(404).json({ success: false, error: 'Table not found' });
+  }
+
+  const blockingReservation = await getReservationBlockingTableUse(table._id);
+  if (blockingReservation) {
+    return res.status(409).json({
+      success: false,
+      code: 'TABLE_RESERVED_SOON',
+      error: 'This table is reserved and cannot be used before the reservation time',
+      reservation_time: blockingReservation.reservation_time,
+    });
   }
 
   table.status = 'dining';

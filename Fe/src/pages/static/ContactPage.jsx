@@ -8,8 +8,10 @@ import {
   PhoneOutlined,
   WifiOutlined,
 } from '@ant-design/icons'
-import { Button, Card, Form, Input, Select, Typography, message } from 'antd'
+import { Button, Card, DatePicker, Form, Input, InputNumber, Select, Typography, notification } from 'antd'
 import useStaticPageContent from '../../hooks/useStaticPageContent.js'
+import { createReservation } from '../../services/reservationApi.js'
+import { showReservationNotification } from '../../utils/reservationNotification.jsx'
 
 const { Paragraph, Text, Title } = Typography
 
@@ -133,6 +135,7 @@ const CONTACT_ICON_MAP = {
 
 export default function ContactPage() {
   const [form] = Form.useForm()
+  const [notificationApi, notificationContextHolder] = notification.useNotification()
   const pageContent = useStaticPageContent('contact', defaultContactContent)
   const hero = pageContent.hero || defaultContactContent.hero
   const contactSection = pageContent.contactSection || defaultContactContent.contactSection
@@ -145,13 +148,49 @@ export default function ContactPage() {
     ...(contactFields[key] || {}),
   })
 
-  const handleSubmit = () => {
-    message.success(contactForm.successMessage || defaultContactContent.contactForm.successMessage)
-    form.resetFields()
+  const handleSubmit = async (values) => {
+    if (values.purpose !== 'booking') {
+      showReservationNotification(notificationApi, {
+        message: 'Đã nhận yêu cầu liên hệ',
+        description: contactForm.successMessage || defaultContactContent.contactForm.successMessage,
+      })
+      form.resetFields()
+      return
+    }
+
+    try {
+      const reservationDate = values.reservation_time?.toDate
+        ? values.reservation_time.toDate()
+        : new Date(values.reservation_time)
+      const res = await createReservation({
+        customer_name: values.name,
+        customer_phone: values.phone,
+        customer_email: values.email,
+        party_size: values.guests,
+        reservation_time: reservationDate.toISOString(),
+        note: values.message,
+        source: 'contact',
+      })
+      const reservation = res?.data
+      const tableName = reservation?.table?.name || 'bàn phù hợp'
+
+      showReservationNotification(notificationApi, {
+        message: 'Đặt bàn thành công',
+        description: `Sakura đã giữ ${tableName} cho ${values.guests} khách. Vui lòng đến đúng giờ, bàn sẽ được giữ từ 90 phút trước giờ đặt.`,
+      })
+      form.resetFields()
+    } catch (err) {
+      showReservationNotification(notificationApi, {
+        type: 'error',
+        message: 'Không thể đặt bàn',
+        description: err?.message || 'Khung giờ này không còn phù hợp, vui lòng chọn thời gian khác.',
+      })
+    }
   }
 
   return (
     <div className="bg-[#fffafa] text-[#1C1C1E]">
+      {notificationContextHolder}
       <section className="relative min-h-[560px] overflow-hidden bg-white md:min-h-[640px] xl:min-h-[700px]">
         <div
           className="absolute inset-x-0 top-0 h-full overflow-hidden"
@@ -287,8 +326,47 @@ export default function ContactPage() {
                 />
               </Form.Item>
 
-              <Form.Item label={getContactField('guests').label} name="guests">
-                <Input placeholder={getContactField('guests').placeholder} />
+              <Form.Item
+                label={getContactField('guests').label}
+                name="guests"
+                dependencies={['purpose']}
+                rules={[
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (getFieldValue('purpose') !== 'booking') return Promise.resolve()
+                      if (!value || Number(value) < 1) return Promise.reject(new Error('Vui lòng nhập số lượng khách'))
+                      return Promise.resolve()
+                    },
+                  }),
+                ]}
+              >
+                <InputNumber min={1} className="!w-full" placeholder={getContactField('guests').placeholder} />
+              </Form.Item>
+
+              <Form.Item
+                label="Thời gian đặt bàn"
+                name="reservation_time"
+                dependencies={['purpose']}
+                rules={[
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (getFieldValue('purpose') !== 'booking') return Promise.resolve()
+                      if (!value) return Promise.reject(new Error('Vui lòng chọn thời gian đặt bàn'))
+                      const selected = value?.toDate ? value.toDate() : new Date(value)
+                      if (selected.getTime() < Date.now() + 2 * 60 * 60 * 1000) {
+                        return Promise.reject(new Error('Vui lòng đặt trước tối thiểu 2 tiếng'))
+                      }
+                      return Promise.resolve()
+                    },
+                  }),
+                ]}
+              >
+                <DatePicker
+                  showTime={{ format: 'HH:mm' }}
+                  format="DD/MM/YYYY HH:mm"
+                  className="!w-full"
+                  placeholder="Chọn ngày và giờ đến"
+                />
               </Form.Item>
 
               <Form.Item label={getContactField('message').label} name="message">

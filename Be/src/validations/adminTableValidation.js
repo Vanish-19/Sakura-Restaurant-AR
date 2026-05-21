@@ -6,6 +6,8 @@ export const createTableSchema = z.object({
   body: z.object({
     name: z.string().min(1, 'Table name is required'),
     qr_hash: z.string().min(1, 'QR hash is required'),
+    zone: z.string().optional(),
+    capacity: z.coerce.number().int().min(1).optional(),
   })
 });
 
@@ -15,7 +17,10 @@ export const updateTableSchema = z.object({
   }),
   body: z.object({
     name: z.string().min(1).optional(),
-    status: z.enum(['empty', 'dining']).optional(),
+    qr_hash: z.string().min(1).optional(),
+    zone: z.string().optional(),
+    capacity: z.coerce.number().int().min(1).optional(),
+    status: z.enum(['empty', 'dining', 'reserved']).optional(),
   })
 });
 

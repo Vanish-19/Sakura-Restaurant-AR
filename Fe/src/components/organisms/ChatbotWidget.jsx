@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Avatar, Button, Card, Input, Tag } from 'antd'
+import { Avatar, Button, Card, Input, Tag, notification } from 'antd'
 import {
   CloseOutlined,
   ExpandAltOutlined,
@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { sendChatMessage } from '../../services/chatApi.js'
+import { showReservationNotification } from '../../utils/reservationNotification.jsx'
 
 const DEFAULT_SUGGESTIONS = [
   {
@@ -80,6 +81,7 @@ function HeaderIconButton({ icon, title, onClick }) {
 export default function ChatbotWidget() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [notificationApi, notificationContextHolder] = notification.useNotification()
   const [isOpen, setIsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const [conversationId, setConversationId] = useState('')
@@ -120,6 +122,17 @@ export default function ChatbotWidget() {
   }
 
   const pushAssistantMessage = (payload) => {
+    const reservationCard = Array.isArray(payload?.cards)
+      ? payload.cards.find((card) => card?.type === 'reservation')
+      : null
+
+    if (reservationCard) {
+      showReservationNotification(notificationApi, {
+        message: reservationCard.badges?.[0] || 'Đặt bàn thành công',
+        description: reservationCard.description || 'Sakura đã ghi nhận lịch đặt bàn của bạn.',
+      })
+    }
+
     setMessages((prev) => [
       ...prev,
       {
@@ -327,6 +340,7 @@ export default function ChatbotWidget() {
 
   return (
     <>
+      {notificationContextHolder}
       {isOpen ? (
         <div className={shellClassName}>
           <Card

@@ -2,8 +2,10 @@ import Order from '../models/Order.js';
 import Table from '../models/Table.js';
 import { createHttpError } from '../utils/AppError.js';
 import { revokeActiveTableSessions } from './tableSessionService.js';
+import { getReservationsByTable, refreshReservedTableStatuses } from './tableReservationService.js';
 
 const getAllTables = async () => {
+  await refreshReservedTableStatuses();
   return Table.find().sort({ name: 1 }).lean();
 };
 
@@ -68,4 +70,13 @@ const resetTable = async (id) => {
   return saved;
 };
 
-export { getAllTables, createTable, updateTable, deleteTable, resetTable };
+const getTableReservations = async (id) => {
+  const table = await Table.findById(id).lean();
+  if (!table) {
+    throw createHttpError('Table not found', 404, 'TABLE_NOT_FOUND');
+  }
+
+  return getReservationsByTable(id);
+};
+
+export { getAllTables, createTable, updateTable, deleteTable, resetTable, getTableReservations };
