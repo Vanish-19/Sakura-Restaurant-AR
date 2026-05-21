@@ -3,11 +3,12 @@ import MenuItem from '../models/MenuItem.js';
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
 import { createHttpError } from '../utils/AppError.js';
+import { reserveRewardVoucherForOrder } from './loyaltyService.js';
 import { createSepayPaymentLinkForOrder } from './sepayPaymentService.js';
 
 function normalizeOrderItems(itemsData = [], menuItems = []) {
   const menuMap = new Map(menuItems.map((item) => [String(item._id), item]));
-  let totalAmount = 0;
+  let subtotalAmount = 0;
 
   const processedItems = itemsData.map((item) => {
     const menuItem = menuMap.get(String(item.menu_item_id));
@@ -16,7 +17,7 @@ function normalizeOrderItems(itemsData = [], menuItems = []) {
     }
 
     const quantity = Number(item.quantity || 1);
-    totalAmount += menuItem.price * quantity;
+    subtotalAmount += menuItem.price * quantity;
 
     return {
       menu_item: menuItem._id,
@@ -27,7 +28,7 @@ function normalizeOrderItems(itemsData = [], menuItems = []) {
     };
   });
 
-  return { processedItems, totalAmount };
+  return { processedItems, subtotalAmount };
 }
 
 async function getAvailableMenuItems(itemsData, session) {
@@ -39,7 +40,7 @@ async function getAvailableMenuItems(itemsData, session) {
 }
 
 const createTakeawayOrder = async (
-  { customer_name, customer_phone, delivery_address, payment_method = 'cod', items },
+  { customer_name, customer_phone, delivery_address, payment_method = 'cod', reward_voucher_id, items },
   userId,
 ) => {
   if (!userId) {
@@ -53,7 +54,7 @@ const createTakeawayOrder = async (
   try {
     await session.withTransaction(async () => {
       const menuItems = await getAvailableMenuItems(items, session);
-      const { processedItems, totalAmount } = normalizeOrderItems(items, menuItems);
+      const { processedItems, subtotalAmount } = normalizeOrderItems(items, menuItems);
 
       const [order] = await Order.create(
         [
@@ -64,11 +65,39 @@ const createTakeawayOrder = async (
             customer_phone,
             delivery_address,
             items: processedItems,
-            total_amount: totalAmount,
+            subtotal_amount: subtotalAmount,
+            total_amount: subtotalAmount,
+            loyalty: {
+              phone: customer_phone,
+            },
           },
         ],
         { session },
       );
+
+      if (reward_voucher_id) {
+        const { profile, discountAmount, rewardRedemption } = await reserveRewardVoucherForOrder(
+          {
+            phone: customer_phone,
+            voucherId: reward_voucher_id,
+            subtotal: subtotalAmount,
+            orderId: order._id,
+            customerName: customer_name,
+            userId,
+          },
+          { session },
+        );
+
+        order.discount_amount = discountAmount;
+        order.total_amount = Math.max(0, subtotalAmount - discountAmount);
+        order.loyalty = {
+          ...order.loyalty?.toObject?.(),
+          phone: customer_phone,
+          profile: profile?._id,
+          reward_redemption: rewardRedemption || undefined,
+        };
+        await order.save({ session });
+      }
 
       savedOrderId = order._id;
 

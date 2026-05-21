@@ -2,6 +2,7 @@ import { Button, Card, Empty, Segmented, Spin, Tag, Typography, message } from '
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getMyTableOrders, getUserOrderHistory } from '../services/orderApi.js'
+import { getMyLoyaltySummary, previewLoyalty } from '../services/loyaltyApi.js'
 import { getUserAccessToken } from '../utils/authSession.js'
 import { getOrderSource } from '../utils/orderSource.js'
 import { ensureTableToken } from '../utils/tableSession.js'
@@ -11,6 +12,15 @@ const currency = new Intl.NumberFormat('vi-VN', {
   currency: 'VND',
   maximumFractionDigits: 0,
 })
+
+const LAST_LOYALTY_PHONE_KEY = 'armenuweb_last_loyalty_phone'
+function getStoredLoyaltyPhone() {
+  try {
+    return localStorage.getItem(LAST_LOYALTY_PHONE_KEY) || ''
+  } catch {
+    return ''
+  }
+}
 
 function normalizeOrders(payload) {
   const list = Array.isArray(payload?.data) ? payload.data : []
@@ -37,6 +47,8 @@ export default function OrderHistoryPage() {
   const orderSource = getOrderSource(searchParams)
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState([])
+  const [loyaltySummary, setLoyaltySummary] = useState(null)
+  const [loyaltyLoading, setLoyaltyLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState('all')
   const [expandedOrderId, setExpandedOrderId] = useState(null)
 
@@ -84,6 +96,43 @@ export default function OrderHistoryPage() {
     }
   }, [orderSource.mode, orderSource.tableCode])
 
+  useEffect(() => {
+    let cancelled = false
+    const userToken = getUserAccessToken()
+    const storedPhone = getStoredLoyaltyPhone()
+
+    if (!userToken && !storedPhone) {
+      setLoyaltySummary(null)
+      setLoyaltyLoading(false)
+      return
+    }
+
+    setLoyaltyLoading(true)
+    const request = userToken
+      ? getMyLoyaltySummary().then(async (payload) => {
+          const data = payload?.data || null
+          if (data?.profile || !storedPhone) return data
+          const fallback = await previewLoyalty(storedPhone, 0)
+          return fallback?.data || null
+        })
+      : previewLoyalty(storedPhone, 0).then((payload) => payload?.data || null)
+
+    request
+      .then((data) => {
+        if (!cancelled) setLoyaltySummary(data)
+      })
+      .catch(() => {
+        if (!cancelled) setLoyaltySummary(null)
+      })
+      .finally(() => {
+        if (!cancelled) setLoyaltyLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [orderSource.mode])
+
   const visibleOrders = useMemo(() => {
     if (activeFilter === 'all') return orders
     return orders.filter((order) => order.order_type === activeFilter)
@@ -125,6 +174,49 @@ export default function OrderHistoryPage() {
       </div>
 
       <Card className="ui-card !bg-[#fbfbfc]">
+        {getUserAccessToken() ? (
+          <div className="mb-5 rounded-2xl border border-[#f3d6dc] bg-[linear-gradient(135deg,#fff8f7_0%,#fff2ef_100%)] p-4">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#b3132b]">Loyalty theo số điện thoại</div>
+                <div className="mt-2 text-2xl font-extrabold text-slate-900">
+                  {loyaltyLoading
+                    ? 'Đang tải điểm...'
+                    : loyaltySummary?.profile
+                      ? `${Number(loyaltySummary.profile.available_points || 0).toLocaleString('vi-VN')} điểm`
+                      : 'Chưa có điểm tích lũy'}
+                </div>
+                <p className="mt-1 mb-0 text-sm text-slate-600">
+                  {loyaltySummary?.profile
+                    ? `Số điện thoại ${loyaltySummary.phone || 'đã liên kết'} đang dùng để tích điểm và đổi voucher.`
+                    : 'Hoàn tất đơn có số điện thoại để hệ thống cộng điểm. Sau đó bạn có thể quay lại đây hoặc vào giỏ hàng để kiểm tra.'}
+                </p>
+              </div>
+
+              {loyaltySummary?.profile ? (
+                <div className="grid min-w-[260px] flex-1 grid-cols-2 gap-3 md:max-w-[420px]">
+                  <div className="rounded-xl border border-white/70 bg-white/80 p-3">
+                    <div className="text-[11px] uppercase tracking-[0.12em] text-slate-400">Tổng điểm đã tích</div>
+                    <div className="mt-1 text-lg font-bold text-slate-900">{Number(loyaltySummary.profile.total_points_earned || 0).toLocaleString('vi-VN')}</div>
+                  </div>
+                  <div className="rounded-xl border border-white/70 bg-white/80 p-3">
+                    <div className="text-[11px] uppercase tracking-[0.12em] text-slate-400">Điểm đã đổi</div>
+                    <div className="mt-1 text-lg font-bold text-slate-900">{Number(loyaltySummary.profile.total_points_redeemed || 0).toLocaleString('vi-VN')}</div>
+                  </div>
+                  <div className="rounded-xl border border-white/70 bg-white/80 p-3">
+                    <div className="text-[11px] uppercase tracking-[0.12em] text-slate-400">Đơn đã cộng điểm</div>
+                    <div className="mt-1 text-lg font-bold text-slate-900">{Number(loyaltySummary.profile.total_orders_paid || 0).toLocaleString('vi-VN')}</div>
+                  </div>
+                  <div className="rounded-xl border border-white/70 bg-white/80 p-3">
+                    <div className="text-[11px] uppercase tracking-[0.12em] text-slate-400">Chi tiêu tích lũy</div>
+                    <div className="mt-1 text-lg font-bold text-slate-900">{currency.format(loyaltySummary.profile.lifetime_spend || 0)}</div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
         {loading ? (
           <div className="flex items-center justify-center py-14">
             <Spin />
@@ -161,6 +253,11 @@ export default function OrderHistoryPage() {
                         {(order.items || []).slice(0, 2).map((line) => line.menu_item?.name || 'Món ăn').join(', ')}
                         {(order.items || []).length > 2 ? ` +${(order.items || []).length - 2} món` : ''}
                       </div>
+                      {Number(order?.loyalty?.points_earned || 0) > 0 ? (
+                        <div className="mt-2">
+                          <Tag color="gold">+{Number(order.loyalty.points_earned || 0).toLocaleString('vi-VN')} điểm</Tag>
+                        </div>
+                      ) : null}
                     </div>
 
                     <div className="min-w-[130px] text-right">
@@ -189,6 +286,23 @@ export default function OrderHistoryPage() {
                           </div>
                         ))}
                       </div>
+                      {order?.loyalty?.phone || Number(order?.loyalty?.points_earned || 0) > 0 ? (
+                        <div className="mt-3 rounded-lg border border-[#f0d7dd] bg-white p-3 text-sm">
+                          <div className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#b3132b]">Tích điểm</div>
+                          {order?.loyalty?.phone ? (
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="text-slate-600">Số điện thoại</span>
+                              <span className="font-semibold text-slate-900">{order.loyalty.phone}</span>
+                            </div>
+                          ) : null}
+                          {Number(order?.loyalty?.points_earned || 0) > 0 ? (
+                            <div className="mt-1 flex items-center justify-between gap-3">
+                              <span className="text-slate-600">Điểm đã cộng</span>
+                              <span className="font-semibold text-slate-900">+{Number(order.loyalty.points_earned || 0).toLocaleString('vi-VN')} điểm</span>
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                 </button>

@@ -8,8 +8,16 @@ import {
 
 const createOrder = asyncHandler(async (req, res) => {
   const { table_id } = req.table; 
-  const { items, customer_phone } = req.body;
-  const order = await svcCreateNewOrder(table_id, items, req.user?.id, customer_phone, req.tableSession?._id);
+  const { items, customer_phone, reward_voucher_id } = req.body;
+  const order = await svcCreateNewOrder(
+    table_id,
+    items,
+    req.user?.id,
+    customer_phone,
+    req.tableSession?._id,
+    reward_voucher_id,
+    req.user?.phone,
+  );
   
   if (req.io) req.io.to('admin').emit('new_order_received', order);
   res.status(201).json({ success: true, data: order });

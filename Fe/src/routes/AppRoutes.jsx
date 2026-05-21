@@ -26,6 +26,7 @@ import FoodManagementAdminPage from '../pages/admin/FoodManagementAdminPage.jsx'
 import OrderManagementAdminPage from '../pages/admin/OrderManagementAdminPage.jsx'
 import StaticResourcesAdminPage from '../pages/admin/StaticResourcesAdminPage.jsx'
 import TableManagementAdminPage from '../pages/admin/TableManagementAdminPage.jsx'
+import LoyaltyAdminPage from '../pages/admin/LoyaltyAdminPage.jsx'
 import UserManagementAdminPage from '../pages/admin/UserManagementAdminPage.jsx'
 import AdminLoginPage from '../pages/auth/AdminLoginPage.jsx'
 import ClientLoginPage from '../pages/auth/ClientLoginPage.jsx'
@@ -75,6 +76,7 @@ export default function AppRoutes() {
             <Route path="content" element={<ContentManagementAdminPage />} />
             <Route path="resources" element={<StaticResourcesAdminPage />} />
             <Route path="users" element={<UserManagementAdminPage />} />
+            <Route path="loyalty" element={<LoyaltyAdminPage />} />
             <Route path="admins" element={<AdminManagementAdminPage />} />
             <Route path="monitoring" element={<AiMonitoringAdminPage />} />
           </Route>

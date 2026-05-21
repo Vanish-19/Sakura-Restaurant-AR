@@ -1,8 +1,9 @@
-import { Alert, Card, Empty, Form, Input, Radio, Space, Typography, message } from 'antd'
+import { Alert, Card, Empty, Form, Input, Radio, Space, Tag, Typography, message } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import CartItemRow from '../components/molecules/CartItemRow.jsx'
 import { useCart } from '../contexts/CartContext.jsx'
+import { previewLoyalty } from '../services/loyaltyApi.js'
 import { createDineInOrderWithUser, createTakeawayOrder, getMenuItems } from '../services/orderApi.js'
 import { getUserAccessToken, isUserLoggedIn } from '../utils/authSession.js'
 import { ensureTableToken } from '../utils/tableSession.js'
@@ -13,6 +14,12 @@ const currency = new Intl.NumberFormat('vi-VN', {
   currency: 'VND',
   maximumFractionDigits: 0,
 })
+
+const LAST_LOYALTY_PHONE_KEY = 'armenuweb_last_loyalty_phone'
+
+function calculatePointsPreview(amount) {
+  return Math.max(0, Math.floor((Number(amount) || 0) / 10000))
+}
 
 export default function CartPage() {
   const { entries, removeItem, setQuantity, clearCart } = useCart()
@@ -26,6 +33,12 @@ export default function CartPage() {
   const [deliveryForm] = Form.useForm()
   const [dineInIdentityForm] = Form.useForm()
   const [paymentMethod, setPaymentMethod] = useState('cod')
+  const [loyaltyPreview, setLoyaltyPreview] = useState(null)
+  const [loyaltyLoading, setLoyaltyLoading] = useState(false)
+  const [selectedVoucherId, setSelectedVoucherId] = useState('')
+
+  const dineInPhone = Form.useWatch('customer_phone', dineInIdentityForm)
+  const deliveryPhone = Form.useWatch('customer_phone', deliveryForm)
 
   useEffect(() => {
     let mounted = true
@@ -49,8 +62,52 @@ export default function CartPage() {
     return lines.reduce((sum, line) => sum + line.item.price * line.quantity, 0)
   }, [lines])
 
-  const tax = useMemo(() => subtotal * 0.1, [subtotal])
-  const total = useMemo(() => subtotal + tax, [subtotal, tax])
+  const activeLoyaltyPhone = orderSource.mode === 'dine-in' ? dineInPhone : deliveryPhone
+
+  const selectedRewardVoucher = useMemo(() => {
+    const vouchers = loyaltyPreview?.available_vouchers || []
+    return vouchers.find((item) => item.id === selectedVoucherId) || null
+  }, [loyaltyPreview?.available_vouchers, selectedVoucherId])
+
+  const discountAmount = Number(selectedRewardVoucher?.discount_amount || 0)
+  const discountedSubtotal = useMemo(() => Math.max(0, subtotal - discountAmount), [subtotal, discountAmount])
+  const tax = useMemo(() => discountedSubtotal * 0.1, [discountedSubtotal])
+  const total = useMemo(() => discountedSubtotal + tax, [discountedSubtotal, tax])
+
+  useEffect(() => {
+    const normalizedPhone = String(activeLoyaltyPhone || '').trim()
+    if (normalizedPhone.length < 8 || subtotal <= 0) {
+      setLoyaltyPreview(null)
+      setSelectedVoucherId('')
+      setLoyaltyLoading(false)
+      return
+    }
+
+    let mounted = true
+    setLoyaltyLoading(true)
+    previewLoyalty(normalizedPhone, subtotal)
+      .then((response) => {
+        if (!mounted) return
+        const preview = response?.data || null
+        setLoyaltyPreview(preview)
+        const stillValid = (preview?.available_vouchers || []).some((item) => item.id === selectedVoucherId && item.is_eligible)
+        if (!stillValid) {
+          setSelectedVoucherId('')
+        }
+      })
+      .catch(() => {
+        if (!mounted) return
+        setLoyaltyPreview(null)
+        setSelectedVoucherId('')
+      })
+      .finally(() => {
+        if (mounted) setLoyaltyLoading(false)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [activeLoyaltyPhone, selectedVoucherId, subtotal])
 
   const continueShoppingTo = {
     pathname: orderSource.mode === 'dine-in' ? '/order' : '/',
@@ -110,12 +167,18 @@ export default function CartPage() {
       })),
       pricing: {
         subtotal: Math.round(subtotal),
+        discount: Math.round(discountAmount),
         tax: Math.round(tax),
         total: Math.round(total),
       },
+      loyalty: {
+        phone: String(activeLoyaltyPhone || '').trim(),
+        voucherId: selectedRewardVoucher?.id || '',
+        voucherCode: selectedRewardVoucher?.code || '',
+      },
       createdAt: new Date().toISOString(),
     }
-  }, [lines, orderSource.label, orderSource.mode, orderSource.tableCode, paymentMethod, subtotal, tax, total])
+  }, [activeLoyaltyPhone, discountAmount, lines, orderSource.label, orderSource.mode, orderSource.tableCode, paymentMethod, selectedRewardVoucher?.code, selectedRewardVoucher?.id, subtotal, tax, total])
 
   const handleCheckout = () => {
     return (async () => {
@@ -151,6 +214,7 @@ export default function CartPage() {
             {
               userAccessToken: activeUserToken,
               customerPhone: loyaltyPhone,
+              rewardVoucherId: selectedRewardVoucher?.id || '',
             },
           )
         } else {
@@ -161,6 +225,7 @@ export default function CartPage() {
             customer_phone: values.customer_phone,
             delivery_address: values.delivery_address,
             payment_method: paymentMethod,
+            ...(selectedRewardVoucher?.id ? { reward_voucher_id: selectedRewardVoucher.id } : {}),
             items: lines.map((line) => ({
               menu_item_id: line.id,
               quantity: line.quantity,
@@ -173,6 +238,22 @@ export default function CartPage() {
 
             if (!orderId) {
               throw new Error('Không tạo được đơn thanh toán online')
+            }
+
+            try {
+              const loyaltyPhoneToStore = String(values.customer_phone || '').trim()
+              if (loyaltyPhoneToStore) {
+                localStorage.setItem(LAST_LOYALTY_PHONE_KEY, loyaltyPhoneToStore)
+              }
+              localStorage.setItem(
+                'armenuweb_last_checkout_payload',
+                JSON.stringify({
+                  request: checkoutPayload,
+                  response,
+                }),
+              )
+            } catch {
+              // ignore if storage is unavailable
             }
 
             navigate(
@@ -207,6 +288,10 @@ export default function CartPage() {
         }
 
         try {
+          const loyaltyPhoneToStore = String(activeLoyaltyPhone || '').trim()
+          if (loyaltyPhoneToStore) {
+            localStorage.setItem(LAST_LOYALTY_PHONE_KEY, loyaltyPhoneToStore)
+          }
           localStorage.setItem(
             'armenuweb_last_checkout_payload',
             JSON.stringify({
@@ -275,6 +360,117 @@ export default function CartPage() {
             Khách ăn tại chỗ có thể bỏ qua bước này. Nếu nhập số điện thoại, hệ thống sẽ ghi nhận tích điểm cho bạn.
           </div>
         </Form>
+      </Card>
+    )
+  }
+
+  const renderLoyaltyCard = () => {
+    const phone = String(activeLoyaltyPhone || '').trim()
+    const vouchers = loyaltyPreview?.available_vouchers || []
+    const availablePoints = Number(loyaltyPreview?.profile?.available_points || 0)
+    const estimatedPoints = selectedRewardVoucher?.points_to_earn_after_redeem ?? loyaltyPreview?.points_to_earn ?? calculatePointsPreview(discountedSubtotal)
+
+    return (
+      <Card className="ui-form-card" title="Tích điểm & đổi voucher">
+        {phone.length < 8 ? (
+          <Alert
+            type="info"
+            showIcon
+            message="Nhập số điện thoại để xem số điểm hiện có và đổi voucher thưởng."
+          />
+        ) : loyaltyLoading ? (
+          <div className="space-y-3">
+            <div className="h-4 w-40 animate-pulse rounded bg-zinc-100" />
+            <div className="h-16 animate-pulse rounded-2xl bg-zinc-50" />
+            <div className="h-16 animate-pulse rounded-2xl bg-zinc-50" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-[#f3d3d8] bg-[linear-gradient(135deg,#fff8f4_0%,#fff_45%,#fff0f1_100%)] px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#b64b57]">Số điểm hiện có</div>
+                  <div className="mt-1 text-2xl font-black text-[#941225]">{availablePoints.toLocaleString('vi-VN')}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Điểm dự kiến từ đơn này</div>
+                  <div className="mt-1 text-lg font-bold text-zinc-900">+{estimatedPoints.toLocaleString('vi-VN')}</div>
+                </div>
+              </div>
+              {selectedRewardVoucher ? (
+                <div className="mt-3 rounded-xl border border-[#f5c0c8] bg-white/85 px-3 py-2 text-sm text-zinc-700">
+                  Đang áp dụng <span className="font-semibold text-[#9d1223]">{selectedRewardVoucher.code}</span> giảm{' '}
+                  <span className="font-semibold text-[#9d1223]">{currency.format(discountAmount)}</span>.
+                </div>
+              ) : null}
+            </div>
+
+            {vouchers.length === 0 ? (
+              <Alert
+                type="warning"
+                showIcon
+                message="Hiện chưa có voucher đổi thưởng khả dụng cho số điện thoại này."
+              />
+            ) : (
+              <div className="space-y-2">
+                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Voucher đổi thưởng</div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedVoucherId('')}
+                  className={[
+                    'w-full rounded-2xl border px-4 py-3 text-left transition',
+                    selectedVoucherId
+                      ? 'border-zinc-200 bg-white hover:border-[#d4b7bc]'
+                      : 'border-[#b11127] bg-[#fff4f5] shadow-[0_8px_20px_rgba(177,17,39,0.08)]',
+                  ].join(' ')}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="font-semibold text-zinc-900">Không dùng voucher</div>
+                      <div className="mt-1 text-sm text-zinc-500">Giữ nguyên điểm và tích lũy cho đơn hiện tại.</div>
+                    </div>
+                    {!selectedVoucherId ? <Tag color="red">Đang chọn</Tag> : null}
+                  </div>
+                </button>
+                {vouchers.map((voucher) => {
+                  const selected = selectedVoucherId === voucher.id
+                  return (
+                    <button
+                      key={voucher.id}
+                      type="button"
+                      disabled={!voucher.is_eligible}
+                      onClick={() => setSelectedVoucherId(voucher.id)}
+                      className={[
+                        'w-full rounded-2xl border px-4 py-3 text-left transition',
+                        voucher.is_eligible ? 'hover:border-[#d88a95] hover:bg-[#fff8f8]' : 'cursor-not-allowed opacity-60',
+                        selected ? 'border-[#b11127] bg-[#fff4f5] shadow-[0_8px_20px_rgba(177,17,39,0.08)]' : 'border-zinc-200 bg-white',
+                      ].join(' ')}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold text-zinc-900">{voucher.title}</span>
+                            <Tag color="gold">{voucher.points_cost} điểm</Tag>
+                            {voucher.code ? <Tag>{voucher.code}</Tag> : null}
+                          </div>
+                          <div className="mt-1 text-sm text-zinc-500">{voucher.description || 'Áp dụng trực tiếp trên đơn hiện tại.'}</div>
+                          <div className="mt-2 text-sm font-medium text-[#9d1223]">
+                            Giảm {currency.format(voucher.discount_amount)}
+                            {voucher.min_order_amount > 0 ? ` • Đơn từ ${currency.format(voucher.min_order_amount)}` : ''}
+                          </div>
+                          {!voucher.is_eligible && voucher.reasons?.length ? (
+                            <div className="mt-2 text-xs text-[#b45309]">{voucher.reasons[0]}</div>
+                          ) : null}
+                        </div>
+                        {selected ? <Tag color="red">Đang chọn</Tag> : null}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </Card>
     )
   }
@@ -399,6 +595,12 @@ export default function CartPage() {
           <div className="text-slate-500">Tạm tính</div>
           <div className="font-medium text-slate-700">{currency.format(subtotal)}</div>
         </div>
+        {discountAmount > 0 ? (
+          <div className="flex items-center justify-between">
+            <div className="text-slate-500">Ưu đãi voucher</div>
+            <div className="font-medium text-emerald-600">-{currency.format(discountAmount)}</div>
+          </div>
+        ) : null}
         <div className="flex items-center justify-between">
           <div className="text-slate-500">Thuế (10%)</div>
           <div className="font-medium text-slate-700">{currency.format(tax)}</div>
@@ -407,6 +609,9 @@ export default function CartPage() {
         <div className="flex items-center justify-between pt-1">
           <div className="text-3xl font-bold text-slate-900">Tổng cộng</div>
           <div className="text-3xl font-extrabold text-red-600">{currency.format(total)}</div>
+        </div>
+        <div className="rounded-xl border border-[#f4e7ca] bg-[#fff8ea] px-3 py-2 text-xs text-[#8a6130]">
+          Điểm tích lũy dự kiến sau thanh toán: <span className="font-semibold">{(selectedRewardVoucher?.points_to_earn_after_redeem ?? loyaltyPreview?.points_to_earn ?? calculatePointsPreview(discountedSubtotal)).toLocaleString('vi-VN')}</span>
         </div>
 
         <button
@@ -474,14 +679,18 @@ export default function CartPage() {
                 />
               ))}
 
-              {orderSource.mode === 'delivery' ? (
-                <div className="space-y-4">
-                  {renderDeliveryForm()}
-                  {renderPaymentMethods()}
-                </div>
-              ) : (
-                renderDineInIdentityForm()
-              )}
+                {orderSource.mode === 'delivery' ? (
+                  <div className="space-y-4">
+                    {renderDeliveryForm()}
+                    {renderPaymentMethods()}
+                    {renderLoyaltyCard()}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {renderDineInIdentityForm()}
+                    {renderLoyaltyCard()}
+                  </div>
+                )}
 
               {renderSummaryCard()}
             </div>
@@ -503,14 +712,20 @@ export default function CartPage() {
 
                 {orderSource.mode === 'delivery' ? (
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <div>{renderDeliveryForm()}</div>
+                    <div className="space-y-4">
+                      {renderDeliveryForm()}
+                      {renderLoyaltyCard()}
+                    </div>
                     <div className="space-y-4">
                       {renderPaymentMethods()}
                       {renderDeliverySummary()}
                     </div>
                   </div>
                 ) : (
-                  <div>{renderDineInIdentityForm()}</div>
+                  <div className="space-y-4">
+                    {renderDineInIdentityForm()}
+                    {renderLoyaltyCard()}
+                  </div>
                 )}
               </div>
 

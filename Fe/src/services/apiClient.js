@@ -91,6 +91,7 @@ export async function apiRequest(path, { method = 'GET', headers, body, _retry =
   const needsUserAuth =
     normalizedPath.startsWith('/takeaway/orders') ||
     normalizedPath.startsWith('/user/') ||
+    normalizedPath === '/loyalty/me' ||
     normalizedPath === '/auth/logout'
 
   const adminToken = typeof window !== 'undefined' ? getToken('admin_access_token') : null
