@@ -18,6 +18,43 @@ import useStaticPageContent from '../../hooks/useStaticPageContent.js'
 const { Paragraph, Text, Title } = Typography
 
 const pressKitPath = '/presskit'
+const sakuraLogoSvg = {
+  primary: `<svg width="700" height="220" viewBox="0 0 700 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .main-text {
+      font-family: 'Arial Black', sans-serif;
+      font-size: 96px;
+      font-weight: 900;
+      letter-spacing: -4px;
+    }
+  </style>
+  <text x="103" y="130" class="main-text" fill="#E6492D">SAKURA</text>
+  <text x="95" y="122" class="main-text" fill="#0F1E33">SAKURA</text>
+</svg>`,
+  dark: `<svg width="700" height="220" viewBox="0 0 700 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .main-text {
+      font-family: 'Arial Black', sans-serif;
+      font-size: 96px;
+      font-weight: 900;
+      letter-spacing: -4px;
+    }
+  </style>
+  <text x="95" y="122" class="main-text" fill="#0F1E33">SAKURA</text>
+</svg>`,
+  light: `<svg width="700" height="220" viewBox="0 0 700 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="700" height="220" fill="#000000"/>
+  <style>
+    .main-text {
+      font-family: 'Arial Black', sans-serif;
+      font-size: 96px;
+      font-weight: 900;
+      letter-spacing: -4px;
+    }
+  </style>
+  <text x="95" y="122" class="main-text" fill="#FFFFFF">SAKURA</text>
+</svg>`,
+}
 
 const defaultPressKitContent = {
   hero: {
@@ -61,9 +98,27 @@ const defaultPressKitContent = {
     },
   ],
   logoAssets: [
-    { label: 'Primary Red', brandClass: 'text-[#e0001d]', bgClass: 'bg-white', format: 'SVG' },
-    { label: 'Monochrome Dark', brandClass: 'text-[#111111]', bgClass: 'bg-white', format: 'SVG' },
-    { label: 'Monochrome Light', brandClass: 'text-white', bgClass: 'bg-[#101010]', format: 'SVG' },
+    {
+      label: 'Primary Red',
+      bgClass: 'bg-white',
+      format: 'SVG',
+      variant: 'primary',
+      downloadName: 'sakura-logo-primary.svg',
+    },
+    {
+      label: 'Monochrome Dark',
+      bgClass: 'bg-white',
+      format: 'SVG',
+      variant: 'dark',
+      downloadName: 'sakura-logo-dark.svg',
+    },
+    {
+      label: 'Monochrome Light',
+      bgClass: 'bg-[#101010]',
+      format: 'SVG',
+      variant: 'light',
+      downloadName: 'sakura-logo-light.svg',
+    },
   ],
   mediaAssets: [
     {
@@ -71,12 +126,14 @@ const defaultPressKitContent = {
       text: 'Độ phân giải cao. Chụp chuẩn cho sử dụng in ấn và digital.',
       image: `${pressKitPath}/sushi.png`,
       format: 'JPG',
+      downloadName: 'sakura-press-culinary-art.png',
     },
     {
       title: 'Kiến Trúc Không Gian',
       text: 'Nội thất mang phong cách The Modern Ikikaitone.',
       image: `${pressKitPath}/canhSushi.png`,
       format: 'JPG',
+      downloadName: 'sakura-press-restaurant-space.png',
     },
   ],
   usageGuides: [
@@ -122,6 +179,31 @@ const PRESS_ICON_MAP = {
   'share-alt': <ShareAltOutlined />,
 }
 
+function getLogoAssets(contentAssets) {
+  return defaultPressKitContent.logoAssets.map((fallback, index) => ({
+    ...fallback,
+    ...(contentAssets?.[index] || {}),
+    bgClass: fallback.bgClass,
+    downloadName: fallback.downloadName,
+    format: fallback.format,
+    variant: fallback.variant,
+  }))
+}
+
+function getMediaAssets(contentAssets) {
+  return defaultPressKitContent.mediaAssets.map((fallback, index) => ({
+    ...fallback,
+    ...(contentAssets?.[index] || {}),
+    image: fallback.image,
+    downloadName: fallback.downloadName,
+    format: fallback.format,
+  }))
+}
+
+function svgToDownloadHref(svg) {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
 export default function PressKitPage() {
   const pageContent = useStaticPageContent('press-kit', defaultPressKitContent)
   const hero = pageContent.hero || defaultPressKitContent.hero
@@ -131,8 +213,8 @@ export default function PressKitPage() {
     ...(pageContent.mediaContactLabels || {}),
   }
   const overviewCards = pageContent.overviewCards || defaultPressKitContent.overviewCards
-  const logoAssets = pageContent.logoAssets || defaultPressKitContent.logoAssets
-  const mediaAssets = pageContent.mediaAssets || defaultPressKitContent.mediaAssets
+  const logoAssets = getLogoAssets(pageContent.logoAssets)
+  const mediaAssets = getMediaAssets(pageContent.mediaAssets)
   const usageGuides = pageContent.usageGuides || defaultPressKitContent.usageGuides
   const brandAssetsSection = pageContent.brandAssetsSection || defaultPressKitContent.brandAssetsSection
   const contactCta = pageContent.contactCta || defaultPressKitContent.contactCta
@@ -302,18 +384,76 @@ function Subheading({ marker, title, text }) {
 }
 
 function LogoCard({ item }) {
+  const isDark = item.bgClass === 'bg-[#101010]'
+  const svg = sakuraLogoSvg[item.variant] || sakuraLogoSvg.primary
+
   return (
     <Card className="!overflow-hidden !rounded-lg !border-[#eee3e3] !shadow-[0_12px_30px_rgba(17,24,39,0.06)]" bodyStyle={{ padding: 0 }}>
-      <div className={`${item.bgClass} flex aspect-[1.75] items-center justify-center px-8`}>
-        <Text className={`!text-4xl !font-black !tracking-tight ${item.brandClass}`}>SAKURA</Text>
+      <div className={`${item.bgClass || 'bg-white'} flex aspect-[1.75] items-center justify-center px-8`}>
+        <SakuraLogoSvg variant={item.variant} />
       </div>
-      <div className={`flex items-center justify-between border-t px-5 py-4 ${item.bgClass === 'bg-[#101010]' ? 'border-white/10 bg-[#101010] text-white' : 'border-slate-100 bg-white'}`}>
-        <Text className={item.bgClass === 'bg-[#101010]' ? '!font-semibold !text-white/86' : '!font-semibold !text-slate-700'}>{item.label}</Text>
-        <Button type="text" className="!h-auto !p-0 !font-black !text-[#d8001e] hover:!bg-transparent hover:!text-[#a80018]" icon={<DownloadOutlined />}>
+      <div className={`flex items-center justify-between border-t px-5 py-4 ${isDark ? 'border-white/10 bg-[#101010] text-white' : 'border-slate-100 bg-white'}`}>
+        <Text className={isDark ? '!font-semibold !text-white/86' : '!font-semibold !text-slate-700'}>{item.label}</Text>
+        <a
+          href={svgToDownloadHref(svg)}
+          download={item.downloadName}
+          className="!h-auto !p-0 !font-black !text-[#d8001e] hover:!bg-transparent hover:!text-[#a80018]"
+        >
+          <DownloadOutlined className="mr-2" />
           {item.format}
-        </Button>
+        </a>
       </div>
     </Card>
+  )
+}
+
+function SakuraLogoSvg({ variant }) {
+  if (variant === 'light') {
+    return (
+      <svg width="700" height="220" viewBox="0 0 700 220" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-auto w-full max-w-[340px]">
+        <rect width="700" height="220" fill="#000000" />
+        <style>{`
+          .press-kit-logo-text {
+            font-family: 'Arial Black', sans-serif;
+            font-size: 96px;
+            font-weight: 900;
+            letter-spacing: -4px;
+          }
+        `}</style>
+        <text x="95" y="122" className="press-kit-logo-text" fill="#FFFFFF">SAKURA</text>
+      </svg>
+    )
+  }
+
+  if (variant === 'dark') {
+    return (
+      <svg width="700" height="220" viewBox="0 0 700 220" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-auto w-full max-w-[340px]">
+        <style>{`
+          .press-kit-logo-text {
+            font-family: 'Arial Black', sans-serif;
+            font-size: 96px;
+            font-weight: 900;
+            letter-spacing: -4px;
+          }
+        `}</style>
+        <text x="95" y="122" className="press-kit-logo-text" fill="#0F1E33">SAKURA</text>
+      </svg>
+    )
+  }
+
+  return (
+    <svg width="700" height="220" viewBox="0 0 700 220" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-auto w-full max-w-[340px]">
+      <style>{`
+        .press-kit-logo-text {
+          font-family: 'Arial Black', sans-serif;
+          font-size: 96px;
+          font-weight: 900;
+          letter-spacing: -4px;
+        }
+      `}</style>
+      <text x="103" y="130" className="press-kit-logo-text" fill="#E6492D">SAKURA</text>
+      <text x="95" y="122" className="press-kit-logo-text" fill="#0F1E33">SAKURA</text>
+    </svg>
   )
 }
 
@@ -328,9 +468,14 @@ function MediaCard({ item }) {
           </Title>
           <Paragraph className="!mb-0 !text-sm !font-semibold !text-slate-600">{item.text}</Paragraph>
         </div>
-        <Button type="text" className="!h-auto !p-0 !font-black !text-[#d8001e] hover:!bg-transparent hover:!text-[#a80018]" icon={<DownloadOutlined />}>
+        <a
+          href={item.image}
+          download={item.downloadName}
+          className="inline-flex items-center !h-auto !p-0 !font-black !text-[#d8001e] hover:!bg-transparent hover:!text-[#a80018]"
+        >
+          <DownloadOutlined className="mr-2" />
           {item.format}
-        </Button>
+        </a>
       </div>
     </div>
   )
