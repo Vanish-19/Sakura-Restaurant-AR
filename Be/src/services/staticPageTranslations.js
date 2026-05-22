@@ -912,6 +912,7 @@ export const STATIC_PAGE_TRANSLATIONS = {
           { key: 'home', label: 'Home', to: '/', match: ['/', '/order'] },
           { key: 'about', label: 'About', to: '/about', match: ['/about'] },
           { key: 'blog', label: 'Blog', to: '/blog', match: ['/blog'] },
+          { key: 'voucher', label: 'Voucher', to: '/vouchers', match: ['/vouchers'] },
           { key: 'contact', label: 'Contact', to: '/contact', match: ['/contact'] },
         ],
         actions: {
@@ -966,6 +967,7 @@ export const STATIC_PAGE_TRANSLATIONS = {
           { key: 'home', label: 'Home', to: '/', match: ['/', '/order'] },
           { key: 'about', label: 'About', to: '/about', match: ['/about'] },
           { key: 'blog', label: 'Blog', to: '/blog', match: ['/blog'] },
+          { key: 'voucher', label: 'Voucher', to: '/vouchers', match: ['/vouchers'] },
           { key: 'contact', label: 'Contact', to: '/contact', match: ['/contact'] },
         ],
         actions: {

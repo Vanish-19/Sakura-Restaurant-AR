@@ -179,13 +179,49 @@ app.get('/api/v1/payments/sepay/return', async (req, res) => {
   }
 });
 
+function summarizeSepayWebhookPayload(payload, authorization) {
+  const body = payload && typeof payload === 'object' ? payload : {};
+  const amount = body.amount || body.transferAmount || body.amount_in || body.total;
+
+  return {
+    hasAuthorization: Boolean(authorization),
+    keys: Object.keys(body),
+    transferType: body.transferType,
+    status: body.status,
+    amount,
+    content: body.transferContent || body.content || body.description,
+  };
+}
+
+function summarizeSepayWebhookResult(result) {
+  const payment = result?.payment;
+  const order = payment?.order;
+
+  return {
+    handled: Boolean(result?.handled),
+    code: result?.rspCode || '00',
+    message: result?.message || 'Confirm Success',
+    paymentId: payment?._id?.toString?.() || payment?._id,
+    orderId: order?._id?.toString?.() || order?.toString?.() || order,
+  };
+}
+
 app.post('/api/v1/payments/sepay/webhook', async (req, res) => {
   try {
     const authorization = req.headers.authorization || '';
+    console.info('SePay webhook received:', summarizeSepayWebhookPayload(req.body || {}, authorization));
+
     const result = await handleSepayWebhookEvent(req.body || {}, authorization);
+    const summary = summarizeSepayWebhookResult(result);
 
     if (req.io && result?.payment) {
       req.io.to('admin').emit('payment_completed', result.payment);
+    }
+
+    if (result.handled) {
+      console.info('SePay webhook handled:', summary);
+    } else {
+      console.warn('SePay webhook rejected:', summary);
     }
 
     return res.status(result.handled ? 200 : 400).json({
@@ -285,6 +321,7 @@ app.use((error, _req, res, _next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+const HOST = process.env.HOST || '0.0.0.0';
+httpServer.listen(PORT, HOST, () => {
+  console.log(`Server is running on http://${HOST}:${PORT}`);
 });

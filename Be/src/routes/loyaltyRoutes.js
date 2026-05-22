@@ -6,6 +6,7 @@ import * as loyaltyController from '../controllers/loyaltyController.js';
 
 const router = express.Router();
 
+router.get('/vouchers', loyaltyController.vouchers);
 router.post('/preview', validateParams(previewLoyaltySchema), loyaltyController.preview);
 router.get('/me', verifyUser, loyaltyController.me);
 

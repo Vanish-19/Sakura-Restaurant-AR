@@ -135,9 +135,19 @@ export async function getTakeawayOrderById(id) {
   return apiRequest(`/takeaway/orders/${id}`)
 }
 
-export async function cancelTakeawayOrder(id) {
+export async function cancelTakeawayOrder(id, cancelReason = '', cancelledBy = 'user') {
   return apiRequest(`/takeaway/orders/${id}/cancel`, {
     method: 'PATCH',
+    body: cancelReason
+      ? { cancel_reason: cancelReason, cancelled_by: cancelledBy }
+      : undefined,
+  })
+}
+
+export async function cancelUserOrder(id, cancelReason) {
+  return apiRequest(`/user/orders/${id}/cancel`, {
+    method: 'PATCH',
+    body: { cancel_reason: cancelReason },
   })
 }
 

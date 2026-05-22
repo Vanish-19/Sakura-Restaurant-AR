@@ -3,7 +3,7 @@ import MenuItem from '../models/MenuItem.js';
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
 import { createHttpError } from '../utils/AppError.js';
-import { reserveRewardVoucherForOrder } from './loyaltyService.js';
+import { reserveRewardVoucherForOrder, revertLoyaltyForCancelledOrder } from './loyaltyService.js';
 import { createSepayPaymentLinkForOrder } from './sepayPaymentService.js';
 
 function normalizeOrderItems(itemsData = [], menuItems = []) {
@@ -168,7 +168,7 @@ const getTakeawayOrderById = async (id, userId) => {
   };
 };
 
-const cancelTakeawayOrder = async (id, userId) => {
+const cancelTakeawayOrder = async (id, userId, { reason = '', cancelledBy = 'user' } = {}) => {
   const orderQuery = { _id: id, order_type: 'takeaway' };
   if (userId) orderQuery.user = userId;
 
@@ -182,7 +182,16 @@ const cancelTakeawayOrder = async (id, userId) => {
   }
 
   order.status = 'cancelled';
+  order.cancellation = {
+    reason: String(reason || 'Người dùng hủy đơn giao hàng').trim(),
+    cancelled_by: cancelledBy,
+    cancelled_at: new Date(),
+  };
+  order.items.forEach((item) => {
+    item.status = 'cancelled';
+  });
   const cancelledOrder = await order.save();
+  await revertLoyaltyForCancelledOrder(cancelledOrder._id);
 
   return Order.findById(cancelledOrder._id)
     .populate('items.menu_item', 'name image_url price category');

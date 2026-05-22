@@ -51,7 +51,7 @@ export default function AdminTopbar({
     <div className="w-[340px] max-w-[calc(100vw-32px)]">
       <div className="mb-2 flex items-center justify-between gap-3 border-b border-zinc-100 pb-2">
         <div>
-          <p className="m-0 text-sm font-bold text-zinc-900">Thông báo đặt bàn</p>
+          <p className="m-0 text-sm font-bold text-zinc-900">Thông báo vận hành</p>
           <p className="m-0 text-[11px] text-zinc-500">{notifications.length} thông báo gần nhất</p>
         </div>
         <Button size="small" type="text" onClick={onClearNotifications} disabled={notifications.length === 0}>
@@ -124,7 +124,7 @@ export default function AdminTopbar({
           }}
         >
           <Badge count={unreadNotificationCount} size="small" offset={[-2, 4]}>
-            <button className="grid h-8 w-8 place-items-center rounded-md text-zinc-600 hover:bg-zinc-100" type="button" aria-label="thông báo đặt bàn">
+            <button className="grid h-8 w-8 place-items-center rounded-md text-zinc-600 hover:bg-zinc-100" type="button" aria-label="thông báo vận hành">
               <BellFilled className="text-[13px]" />
             </button>
           </Badge>

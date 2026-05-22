@@ -49,19 +49,40 @@ function verifyWebhookAuthorization(authorization, apiKey) {
   return normalized === expectedApikey || normalized === expectedBearer;
 }
 
-function extractTxnRef(payload) {
-  const direct =
-    payload?.txnRef ||
-    payload?.orderCode ||
-    payload?.reference ||
-    payload?.referenceCode ||
-    payload?.code;
-  if (direct) return String(direct);
+function findTxnRefInText(value) {
+  const text = String(value || '').trim();
+  if (/^\d{10,16}$/.test(text)) return text;
 
-  const fromContent = payload?.transferContent || payload?.content || payload?.description || '';
-  const text = String(fromContent);
   const matched = text.match(/\b\d{10,16}\b/);
   return matched ? matched[0] : '';
+}
+
+function extractTxnRef(payload) {
+  const directCandidates = [
+    payload?.txnRef,
+    payload?.orderCode,
+    payload?.reference,
+  ];
+
+  for (const value of directCandidates) {
+    const txnRef = findTxnRefInText(value);
+    if (txnRef) return txnRef;
+  }
+
+  const contentCandidates = [
+    payload?.transferContent,
+    payload?.content,
+    payload?.description,
+    payload?.code,
+    payload?.referenceCode,
+  ];
+
+  for (const value of contentCandidates) {
+    const txnRef = findTxnRefInText(value);
+    if (txnRef) return txnRef;
+  }
+
+  return '';
 }
 
 function isIncomingTransfer(payload) {

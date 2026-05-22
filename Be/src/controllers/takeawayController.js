@@ -26,7 +26,11 @@ const getTakeawayOrderById = asyncHandler(async (req, res) => {
 
 const cancelTakeawayOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const order = await svcCancelTakeawayOrder(id, req.user?.id);
+  const order = await svcCancelTakeawayOrder(id, req.user?.id, {
+    reason: req.body?.cancel_reason,
+    cancelledBy: req.body?.cancelled_by === 'system' ? 'system' : 'user',
+  });
+  if (req.io) req.io.to('admin').emit('user_order_cancelled', order);
   res.status(200).json({ success: true, data: order });
 });
 

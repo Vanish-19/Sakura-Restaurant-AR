@@ -36,9 +36,17 @@ export default function AppHeader({ variant = 'desktop' }) {
     { key: 'home', label: t('navigation.home'), to: homePath, match: ['/', '/order'] },
     { key: 'about', label: t('navigation.about'), to: '/about', match: ['/about'] },
     { key: 'blog', label: t('navigation.blog'), to: '/blog', match: ['/blog'] },
+    { key: 'voucher', label: t('navigation.voucher', { defaultValue: 'Voucher' }), to: '/vouchers', match: ['/vouchers'] },
     { key: 'contact', label: t('navigation.contact'), to: '/contact', match: ['/contact'] },
   ]
-  const navItems = headerContent.navItems?.length ? headerContent.navItems : defaultNavItems
+  const configuredNavItems = headerContent.navItems?.length ? headerContent.navItems : defaultNavItems
+  const navItems = configuredNavItems.some((item) => item.key === 'voucher' || item.to === '/vouchers')
+    ? configuredNavItems
+    : [
+        ...configuredNavItems.slice(0, 3),
+        defaultNavItems.find((item) => item.key === 'voucher'),
+        ...configuredNavItems.slice(3),
+      ].filter(Boolean)
   const resolvedNavItems = navItems.map((item) => ({
     ...item,
     label: item.key ? t(`navigation.${item.key}`, { defaultValue: item.label }) : item.label,

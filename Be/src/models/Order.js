@@ -28,6 +28,11 @@ const orderSchema = new mongoose.Schema(
     subtotal_amount: { type: Number, required: true, default: 0 },
     discount_amount: { type: Number, required: true, default: 0 },
     total_amount: { type: Number, required: true, default: 0 },
+    cancellation: {
+      reason: { type: String, trim: true, maxlength: 500 },
+      cancelled_by: { type: String, enum: ['user', 'admin', 'system'] },
+      cancelled_at: { type: Date },
+    },
     loyalty: {
       phone: { type: String },
       profile: { type: mongoose.Schema.Types.ObjectId, ref: 'LoyaltyProfile' },

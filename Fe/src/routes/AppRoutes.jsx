@@ -17,6 +17,7 @@ import PaymentPage from '../pages/PaymentPage.jsx'
 import PrivacyPolicyPage from '../pages/static/PrivacyPolicyPage.jsx'
 import PressKitPage from '../pages/static/PressKitPage.jsx'
 import TermsOfServicePage from '../pages/static/TermsOfServicePage.jsx'
+import VoucherPage from '../pages/VoucherPage.jsx'
 import ArScenePage from '../pages/ArScenePage.jsx'
 import AdminManagementAdminPage from '../pages/admin/AdminManagementAdminPage.jsx'
 import AiMonitoringAdminPage from '../pages/admin/AiMonitoringAdminPage.jsx'
@@ -45,6 +46,7 @@ export default function AppRoutes() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/career" element={<CareerPage />} />
+          <Route path="/vouchers" element={<VoucherPage />} />
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/blog/:id" element={<BlogDetailPage />} />
           <Route path="/order" element={<HomePage />} />

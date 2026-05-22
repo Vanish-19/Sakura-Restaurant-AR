@@ -71,8 +71,7 @@ export default function CartPage() {
 
   const discountAmount = Number(selectedRewardVoucher?.discount_amount || 0)
   const discountedSubtotal = useMemo(() => Math.max(0, subtotal - discountAmount), [subtotal, discountAmount])
-  const tax = useMemo(() => discountedSubtotal * 0.1, [discountedSubtotal])
-  const total = useMemo(() => discountedSubtotal + tax, [discountedSubtotal, tax])
+  const total = discountedSubtotal
 
   useEffect(() => {
     const normalizedPhone = String(activeLoyaltyPhone || '').trim()
@@ -168,7 +167,6 @@ export default function CartPage() {
       pricing: {
         subtotal: Math.round(subtotal),
         discount: Math.round(discountAmount),
-        tax: Math.round(tax),
         total: Math.round(total),
       },
       loyalty: {
@@ -178,7 +176,7 @@ export default function CartPage() {
       },
       createdAt: new Date().toISOString(),
     }
-  }, [activeLoyaltyPhone, discountAmount, lines, orderSource.label, orderSource.mode, orderSource.tableCode, paymentMethod, selectedRewardVoucher?.code, selectedRewardVoucher?.id, subtotal, tax, total])
+  }, [activeLoyaltyPhone, discountAmount, lines, orderSource.label, orderSource.mode, orderSource.tableCode, paymentMethod, selectedRewardVoucher?.code, selectedRewardVoucher?.id, subtotal, total])
 
   const handleCheckout = () => {
     return (async () => {
@@ -601,10 +599,6 @@ export default function CartPage() {
             <div className="font-medium text-emerald-600">-{currency.format(discountAmount)}</div>
           </div>
         ) : null}
-        <div className="flex items-center justify-between">
-          <div className="text-slate-500">Thuế (10%)</div>
-          <div className="font-medium text-slate-700">{currency.format(tax)}</div>
-        </div>
         <div className="border-t border-[#e5e7eb]" />
         <div className="flex items-center justify-between gap-3 pt-1">
           <div className="text-xl font-bold text-slate-900 sm:text-3xl">Tổng cộng</div>

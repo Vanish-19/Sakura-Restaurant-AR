@@ -67,6 +67,27 @@ function buildVoucherPreview(voucher, subtotal, availablePoints) {
   };
 }
 
+function buildPublicVoucher(voucher) {
+  const quantity = Number(voucher.quantity || 0);
+  const usedCount = Number(voucher.used_count || 0);
+  const quantityLeft = quantity > 0 ? Math.max(0, quantity - usedCount) : 0;
+
+  return {
+    id: String(voucher._id),
+    code: voucher.code,
+    title: voucher.title,
+    description: voucher.description || '',
+    points_cost: Number(voucher.points_cost || 0),
+    discount_type: voucher.discount_type,
+    discount_value: Number(voucher.discount_value || 0),
+    min_order_amount: Number(voucher.min_order_amount || 0),
+    max_discount_amount: Number(voucher.max_discount_amount || 0),
+    expires_at: voucher.expires_at || null,
+    quantity_left: quantity > 0 ? quantityLeft : null,
+    is_unlimited: quantity === 0,
+  };
+}
+
 async function queryActiveVouchers({ session } = {}) {
   const query = RewardVoucher.find({
     is_active: true,
@@ -162,6 +183,13 @@ export async function getLoyaltyPreview({ phone, subtotal = 0 }) {
     points_to_earn: calculateEarnPoints(safeSubtotal),
     available_vouchers: vouchers.map((voucher) => buildVoucherPreview(voucher, safeSubtotal, availablePoints)),
   };
+}
+
+export async function getAvailableRewardVouchers() {
+  const vouchers = await queryActiveVouchers();
+  return vouchers
+    .filter((voucher) => Number(voucher.quantity || 0) === 0 || Number(voucher.quantity || 0) > Number(voucher.used_count || 0))
+    .map(buildPublicVoucher);
 }
 
 export async function getMyLoyaltySummary({ userId = '', phone = '' } = {}) {

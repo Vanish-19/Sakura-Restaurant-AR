@@ -1,7 +1,7 @@
-import { Button, Card, Empty, Segmented, Spin, Tag, Typography, message } from 'antd'
+import { Button, Card, Empty, Input, Modal, Segmented, Spin, Tag, Typography, message } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { getMyTableOrders, getUserOrderHistory } from '../services/orderApi.js'
+import { cancelUserOrder, getMyTableOrders, getUserOrderHistory } from '../services/orderApi.js'
 import { getMyLoyaltySummary, previewLoyalty } from '../services/loyaltyApi.js'
 import { getUserAccessToken } from '../utils/authSession.js'
 import { getOrderSource } from '../utils/orderSource.js'
@@ -42,6 +42,10 @@ function statusColor(status) {
   }
 }
 
+function canUserCancelOrder(order) {
+  return Boolean(getUserAccessToken()) && Boolean(order?.user) && order?.status === 'pending'
+}
+
 export default function OrderHistoryPage() {
   const [searchParams] = useSearchParams()
   const orderSource = getOrderSource(searchParams)
@@ -51,6 +55,9 @@ export default function OrderHistoryPage() {
   const [loyaltyLoading, setLoyaltyLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState('all')
   const [expandedOrderId, setExpandedOrderId] = useState(null)
+  const [cancelTargetOrder, setCancelTargetOrder] = useState(null)
+  const [cancelReason, setCancelReason] = useState('')
+  const [isCancelling, setIsCancelling] = useState(false)
 
   const modeLabel = useMemo(() => {
     if (orderSource.mode === 'dine-in') return orderSource.label || 'Ăn tại bàn'
@@ -137,6 +144,43 @@ export default function OrderHistoryPage() {
     if (activeFilter === 'all') return orders
     return orders.filter((order) => order.order_type === activeFilter)
   }, [activeFilter, orders])
+
+  const openCancelModal = (order) => {
+    setCancelTargetOrder(order)
+    setCancelReason('')
+  }
+
+  const closeCancelModal = () => {
+    if (isCancelling) return
+    setCancelTargetOrder(null)
+    setCancelReason('')
+  }
+
+  const handleCancelOrder = async () => {
+    const reason = cancelReason.trim()
+    if (reason.length < 3) {
+      message.warning('Vui lòng nhập lý do hủy đơn')
+      return
+    }
+
+    if (!cancelTargetOrder?._id) return
+
+    try {
+      setIsCancelling(true)
+      const response = await cancelUserOrder(cancelTargetOrder._id, reason)
+      const nextOrder = response?.data
+      if (nextOrder?._id) {
+        setOrders((current) => current.map((order) => (order._id === nextOrder._id ? nextOrder : order)))
+      }
+      message.success('Đã hủy đơn hàng')
+      setCancelTargetOrder(null)
+      setCancelReason('')
+    } catch (error) {
+      message.error(error?.message || 'Không thể hủy đơn hàng')
+    } finally {
+      setIsCancelling(false)
+    }
+  }
 
   const firstItemImage = (order) => {
     const first = order?.items?.[0]
@@ -229,10 +273,17 @@ export default function OrderHistoryPage() {
               const isExpanded = expandedOrderId === order._id
 
               return (
-                <button
+                <div
                   key={order._id}
-                  type="button"
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setExpandedOrderId(isExpanded ? null : order._id)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setExpandedOrderId(isExpanded ? null : order._id)
+                    }
+                  }}
                   className="w-full rounded-2xl border border-[#ececf1] bg-white p-4 text-left transition hover:border-[#d6d6df] hover:shadow-[0_10px_24px_rgba(17,24,39,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-200"
                 >
                   <div className="flex flex-wrap items-start gap-4">
@@ -273,6 +324,19 @@ export default function OrderHistoryPage() {
                     <Button size="small" className="!h-8 !rounded-md !border !border-[#f3c2cb] !bg-[#fff1f4] !px-3 !font-semibold !text-[#b3132b]">
                       {isExpanded ? 'Ẩn chi tiết' : 'Xem chi tiết'}
                     </Button>
+                    {canUserCancelOrder(order) ? (
+                      <Button
+                        size="small"
+                        danger
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          openCancelModal(order)
+                        }}
+                        className="!h-8 !rounded-md !px-3 !font-semibold"
+                      >
+                        Hủy đơn
+                      </Button>
+                    ) : null}
                   </div>
 
                   {isExpanded ? (
@@ -303,14 +367,46 @@ export default function OrderHistoryPage() {
                           ) : null}
                         </div>
                       ) : null}
+                      {order?.cancellation?.reason ? (
+                        <div className="mt-3 rounded-lg border border-red-100 bg-red-50 p-3 text-sm">
+                          <div className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-red-600">Lý do hủy</div>
+                          <div className="text-slate-700">{order.cancellation.reason}</div>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
-                </button>
+                </div>
               )
             })}
           </div>
         )}
       </Card>
+
+      <Modal
+        title="Hủy đơn hàng"
+        open={Boolean(cancelTargetOrder)}
+        onCancel={closeCancelModal}
+        onOk={handleCancelOrder}
+        okText="Xác nhận hủy"
+        cancelText="Giữ đơn"
+        okButtonProps={{ danger: true, loading: isCancelling }}
+        confirmLoading={isCancelling}
+      >
+        <div className="space-y-3">
+          <p className="m-0 text-sm text-slate-600">
+            Vui lòng nhập lý do hủy đơn #{String(cancelTargetOrder?._id || '').slice(-6).toUpperCase()} để nhà hàng xử lý và thông báo cho quản trị viên.
+          </p>
+          <Input.TextArea
+            value={cancelReason}
+            onChange={(event) => setCancelReason(event.target.value)}
+            rows={4}
+            maxLength={500}
+            showCount
+            placeholder="Ví dụ: Tôi đặt nhầm món, muốn thay đổi địa chỉ giao hàng..."
+            disabled={isCancelling}
+          />
+        </div>
+      </Modal>
     </div>
   )
 }

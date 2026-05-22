@@ -96,7 +96,7 @@ export default function PaymentPage() {
       if (intervalId) window.clearInterval(intervalId)
 
       try {
-        await cancelTakeawayOrder(orderId)
+        await cancelTakeawayOrder(orderId, 'Hết thời gian thanh toán online', 'system')
       } catch {
         // ignore cancel failure and still return to cart
       }

@@ -71,6 +71,12 @@ export default function OrderManagementAdminPage() {
     fetchOrders()
   }, [adminSearchQuery])
 
+  useEffect(() => {
+    const handleOrderUpdate = () => fetchOrders()
+    window.addEventListener('admin-order-updated', handleOrderUpdate)
+    return () => window.removeEventListener('admin-order-updated', handleOrderUpdate)
+  }, [adminSearchQuery])
+
   const handleStatusChange = async (id, newStatus) => {
     try {
       await updateOrderStatus(id, newStatus)

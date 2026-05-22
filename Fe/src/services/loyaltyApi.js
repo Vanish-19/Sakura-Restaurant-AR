@@ -1,5 +1,11 @@
 import { apiRequest } from './apiClient.js'
 
+export async function getAvailableRewardVouchers() {
+  return apiRequest('/loyalty/vouchers', {
+    method: 'GET',
+  })
+}
+
 export async function previewLoyalty(phone, subtotal = 0) {
   return apiRequest('/loyalty/preview', {
     method: 'POST',

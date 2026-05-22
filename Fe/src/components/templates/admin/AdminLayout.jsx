@@ -51,6 +51,30 @@ function dispatchReservationUpdate(type, reservation) {
   }))
 }
 
+function dispatchOrderUpdate(type, order) {
+  window.dispatchEvent(new CustomEvent('admin-order-updated', {
+    detail: { type, order },
+  }))
+}
+
+function formatOrderType(order) {
+  return order?.order_type === 'takeaway' ? 'giao hàng' : 'ăn tại chỗ'
+}
+
+function buildCancelledOrderDescription(order) {
+  const shortId = String(order?._id || '').slice(-6).toUpperCase() || '------'
+  const customer =
+    order?.customer_name ||
+    order?.customer_phone ||
+    order?.user?.name ||
+    'Khách hàng'
+  const reason = order?.cancellation?.reason
+    ? ` Lý do: ${order.cancellation.reason}`
+    : ''
+
+  return `${customer} vừa hủy đơn ${formatOrderType(order)} #${shortId}.${reason}`
+}
+
 export default function AdminLayout() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -161,7 +185,32 @@ export default function AdminLayout() {
       dispatchReservationUpdate('updated', reservation)
     })
 
+    const handleUserOrderCancelled = (order) => {
+      const title = 'Khách đã hủy đơn hàng'
+      const description = buildCancelledOrderDescription(order)
+
+      addAdminNotification({
+        type: 'user_order_cancelled',
+        orderId: order?._id,
+        href: '/admin/orders',
+        title,
+        description,
+      })
+      showReservationNotification(notificationApi, {
+        type: 'warning',
+        message: title,
+        description,
+        duration: 8,
+        actionLabel: 'Xem đơn hàng',
+        onAction: () => navigate('/admin/orders'),
+      })
+      dispatchOrderUpdate('cancelled', order)
+    }
+
+    socket.on('user_order_cancelled', handleUserOrderCancelled)
+
     return () => {
+      socket.off('user_order_cancelled', handleUserOrderCancelled)
       socket.disconnect()
     }
   }, [addAdminNotification, navigate, notificationApi])
