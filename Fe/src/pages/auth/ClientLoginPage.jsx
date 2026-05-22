@@ -1,8 +1,9 @@
 import { ArrowRightOutlined } from '@ant-design/icons'
 import { Button, Checkbox, Form, Input, notification } from 'antd'
+import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { userLogin } from '../../services/authApi.js'
+import { getGoogleOAuthUrl, userLogin } from '../../services/authApi.js'
 import { setUserSession } from '../../utils/authSession.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -12,7 +13,9 @@ export default function ClientLoginPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const oauthErrorShownRef = useRef(false)
   const redirectPath = searchParams.get('redirect') || ''
+  const hasOAuthError = searchParams.get('oauth') === 'error'
   const registerHref = redirectPath
     ? `/auth/register?redirect=${encodeURIComponent(redirectPath)}`
     : '/auth/register'
@@ -35,6 +38,17 @@ export default function ClientLoginPage() {
     { required: true, message: t('auth.validation.passwordRequired') },
     { min: 6, message: t('auth.validation.passwordMin6') },
   ]
+
+  useEffect(() => {
+    if (!hasOAuthError || oauthErrorShownRef.current) return
+    oauthErrorShownRef.current = true
+
+    notification.error({
+      message: t('auth.loginFailed'),
+      description: t('auth.loginErrorDescription'),
+      placement: 'topRight',
+    })
+  }, [hasOAuthError, t])
 
   const onFinish = async (values) => {
     const identity = values.identity?.trim()
@@ -67,6 +81,10 @@ export default function ClientLoginPage() {
         placement: 'topRight',
       })
     }
+  }
+
+  const onGoogleLogin = () => {
+    window.location.assign(getGoogleOAuthUrl(redirectPath || '/'))
   }
 
   return (
@@ -161,6 +179,7 @@ export default function ClientLoginPage() {
         <div className="grid grid-cols-2 gap-2.5 mb-6">
           <button
             type="button"
+            onClick={onGoogleLogin}
             className="h-10 border border-[#e5e5e5] rounded-lg bg-white text-[#444] text-[13px] font-semibold cursor-pointer transition-all duration-200 hover:border-[#d5b0b5] hover:text-[#900020] hover:bg-[#fff8f8] flex items-center justify-center gap-2"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">

@@ -1,4 +1,4 @@
-import { apiRequest } from './apiClient.js'
+import { apiRequest, buildApiRedirectUrl } from './apiClient.js'
 
 export async function userRegister(payload) {
   const response = await apiRequest('/auth/register', {
@@ -31,6 +31,14 @@ export async function userPhoneToken(phone, name) {
   })
 
   return response?.data ?? response
+}
+
+export function getGoogleOAuthUrl(redirectPath = '/') {
+  const params = new URLSearchParams()
+  const redirect = String(redirectPath || '/').trim() || '/'
+  params.set('redirect', redirect)
+
+  return buildApiRedirectUrl(`/auth/google?${params.toString()}`)
 }
 
 export async function userRefreshToken(refreshToken) {
