@@ -57,6 +57,7 @@ export default function HomePage() {
   const [previewItem, setPreviewItem] = useState(null)
   const [serviceModalOpen, setServiceModalOpen] = useState(false)
   const [isScanningQr, setIsScanningQr] = useState(false)
+  const [menuScrollRequest, setMenuScrollRequest] = useState(0)
   const guestRefreshResetRef = useRef(false)
 
   useEffect(() => {
@@ -128,7 +129,28 @@ export default function HomePage() {
       next.set('category', nextCategory)
     }
     setSearchParams(next, { replace: true })
+    setMenuScrollRequest((value) => value + 1)
   }
+
+  useEffect(() => {
+    if (!menuScrollRequest) return
+
+    window.requestAnimationFrame(() => {
+      const menuItems = document.getElementById('menu-items')
+      const categoryBar = document.getElementById('menu-categories')
+      if (!menuItems) return
+
+      const headerOffset = 64
+      const stickyCategoryHeight = categoryBar?.getBoundingClientRect().height ?? 0
+      const targetTop =
+        menuItems.getBoundingClientRect().top +
+        window.scrollY -
+        headerOffset -
+        stickyCategoryHeight -
+        24
+      window.scrollTo({ top: Math.max(0, targetTop), left: 0, behavior: 'smooth' })
+    })
+  }, [filteredItems.length, menuScrollRequest])
 
   useEffect(() => {
     let cancelled = false
@@ -320,6 +342,7 @@ export default function HomePage() {
       <section className="bg-[#fafaf6]">
         <div className="mx-auto max-w-6xl px-6 py-14 md:px-8 md:py-20">
           <div
+            id="menu-items"
             className={
               isAndroidPreview
                 ? 'grid grid-cols-1 gap-4'

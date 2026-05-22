@@ -2,7 +2,7 @@ import { Button } from 'antd'
 
 export default function CategoryBar({ categories, activeKey, onChange }) {
   return (
-    <div className="sticky top-16 z-40 border-b border-red-100/60 bg-gradient-to-b from-white/90 to-rose-50/90 backdrop-blur">
+    <div id="menu-categories" className="sticky top-16 z-40 border-b border-red-100/60 bg-gradient-to-b from-white/90 to-rose-50/90 backdrop-blur">
       <div className="mx-auto max-w-6xl px-6 py-5 md:px-8">
         <div className="flex items-center gap-2 overflow-x-auto rounded-full bg-white/80 p-2 ring-1 ring-red-100">
           {categories.map((category) => {
