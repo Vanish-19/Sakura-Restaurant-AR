@@ -606,9 +606,9 @@ export default function CartPage() {
           <div className="font-medium text-slate-700">{currency.format(tax)}</div>
         </div>
         <div className="border-t border-[#e5e7eb]" />
-        <div className="flex items-center justify-between pt-1">
-          <div className="text-3xl font-bold text-slate-900">Tổng cộng</div>
-          <div className="text-3xl font-extrabold text-red-600">{currency.format(total)}</div>
+        <div className="flex items-center justify-between gap-3 pt-1">
+          <div className="text-xl font-bold text-slate-900 sm:text-3xl">Tổng cộng</div>
+          <div className="text-xl font-extrabold text-red-600 sm:text-3xl">{currency.format(total)}</div>
         </div>
         <div className="rounded-xl border border-[#f4e7ca] bg-[#fff8ea] px-3 py-2 text-xs text-[#8a6130]">
           Điểm tích lũy dự kiến sau thanh toán: <span className="font-semibold">{(selectedRewardVoucher?.points_to_earn_after_redeem ?? loyaltyPreview?.points_to_earn ?? calculatePointsPreview(discountedSubtotal)).toLocaleString('vi-VN')}</span>
@@ -635,7 +635,7 @@ export default function CartPage() {
   )
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-10 md:px-8 md:py-14">
+    <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-10 md:px-8 md:py-14">
       <div className="mb-5">
         <Typography.Title
           level={2}
