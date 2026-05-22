@@ -93,6 +93,10 @@ export default function MenuItemDetailPage() {
     ].filter(Boolean)
   }, [canViewAr, item])
 
+  const totalPrice = useMemo(() => {
+    return Math.max(0, Number(item?.price || 0) * Number(quantity || 1))
+  }, [item?.price, quantity])
+
   const handleAddToCart = () => {
     if (!item?.id) return
     addItem(item.id, quantity)
@@ -178,7 +182,7 @@ export default function MenuItemDetailPage() {
                 <div>
                   <p className="m-0 text-xs font-bold uppercase tracking-[0.2em] text-[#9f6d4d]">Giá bán</p>
                   <p className="mt-2 mb-0 text-3xl font-black leading-none text-[#8b0000]">
-                    {currency.format(item.price)}
+                    {currency.format(totalPrice)}
                   </p>
                 </div>
                 {canViewAr ? (
