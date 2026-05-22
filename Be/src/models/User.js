@@ -6,6 +6,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String, unique: true, sparse: true },
   phone: { type: String, unique: true, sparse: true },
   password: { type: String, select: false },
+  googleId: { type: String, unique: true, sparse: true },
+  avatar: { type: String, default: '' },
   refreshToken: { type: String, default: '', select: false },
   role: { type: String, default: 'Guest' }, // Guest, Pro Member, Platinum Member
   status: { type: String, default: 'Pending' }, // Pending, Verified, Inactive

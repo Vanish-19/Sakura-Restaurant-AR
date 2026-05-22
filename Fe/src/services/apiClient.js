@@ -1,9 +1,21 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
+function getDefaultDirectApiBaseUrl() {
+  if (!import.meta.env.DEV) return ''
+
+  if (typeof window === 'undefined') {
+    return 'http://localhost:3000/api/v1'
+  }
+
+  const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:'
+  const hostname = window.location.hostname || 'localhost'
+  return `${protocol}//${hostname}:3000/api/v1`
+}
+
 const DIRECT_API_BASE_URL =
   import.meta.env.VITE_API_DIRECT_BASE_URL ||
-  (import.meta.env.DEV ? 'http://127.0.0.1:3000/api/v1' : '')
+  getDefaultDirectApiBaseUrl()
 
 function getToken(key) {
   try {
@@ -16,6 +28,18 @@ function getToken(key) {
 function joinUrl(base, path) {
   if (!path.startsWith('/')) return `${base}/${path}`
   return `${base}${path}`
+}
+
+export function buildApiUrl(path) {
+  return joinUrl(API_BASE_URL, path)
+}
+
+export function buildApiRedirectUrl(path) {
+  const base =
+    API_BASE_URL.startsWith('/') && DIRECT_API_BASE_URL
+      ? DIRECT_API_BASE_URL
+      : API_BASE_URL
+  return joinUrl(base, path)
 }
 
 function getPreferredBases() {

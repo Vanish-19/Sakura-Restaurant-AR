@@ -31,6 +31,7 @@ import UserManagementAdminPage from '../pages/admin/UserManagementAdminPage.jsx'
 import AdminLoginPage from '../pages/auth/AdminLoginPage.jsx'
 import ClientLoginPage from '../pages/auth/ClientLoginPage.jsx'
 import ClientRegisterPage from '../pages/auth/ClientRegisterPage.jsx'
+import OAuthCallbackPage from '../pages/auth/OAuthCallbackPage.jsx'
 import ScrollToTop from './ScrollToTop.jsx'
 
 export default function AppRoutes() {
@@ -60,6 +61,7 @@ export default function AppRoutes() {
         <Route path="/auth" element={<ClientAuthLayout />}>
           <Route path="login" element={<ClientLoginPage />} />
           <Route path="register" element={<ClientRegisterPage />} />
+          <Route path="oauth-callback" element={<OAuthCallbackPage />} />
         </Route>
 
         <Route element={<AdminLoginGuard />}>
