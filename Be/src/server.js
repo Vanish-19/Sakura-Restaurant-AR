@@ -5,7 +5,9 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
 import { connectDB } from './config/db.js';
+import { swaggerSpec, swaggerUiOptions } from './docs/swagger.js';
 
 // Routes
 import orderRoutes from './routes/orderRoutes.js';
@@ -146,6 +148,13 @@ async function publishExpiredReservations() {
 const reservationExpiryInterval = setInterval(publishExpiredReservations, 60 * 1000);
 reservationExpiryInterval.unref?.();
 publishExpiredReservations();
+
+app.get('/api-docs.json', (_req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+app.get(['/docs', '/swagger', '/api/v1/docs'], (_req, res) => res.redirect('/api-docs'));
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors(corsOptions));
