@@ -5,6 +5,7 @@ import AdminDataTable from '../../components/molecules/admin/AdminDataTable.jsx'
 import AdminSectionHeader from '../../components/molecules/admin/AdminSectionHeader.jsx'
 import AdminStatCard from '../../components/molecules/admin/AdminStatCard.jsx'
 import { cancelOrder, deleteOrder, getAllOrders, getOrderStats, updateOrderStatus } from '../../services/adminOrderApi.js'
+import { confirmCodPayment, createPayment } from '../../services/adminPaymentApi.js'
 
 function formatPrice(num) {
   return new Intl.NumberFormat('vi-VN', {
@@ -35,6 +36,7 @@ export default function OrderManagementAdminPage() {
   const [stats, setStats] = useState(null)
   const [statusFilter, setStatusFilter] = useState('all')
   const [loading, setLoading] = useState(true)
+  const [confirmingPaidOrderIds, setConfirmingPaidOrderIds] = useState([])
 
   const fetchOrders = async () => {
     const keyword = String(adminSearchQuery || '').trim()
@@ -110,6 +112,41 @@ export default function OrderManagementAdminPage() {
     }
   }
 
+  const setConfirmingPaidOrder = (orderId, confirming) => {
+    setConfirmingPaidOrderIds((current) => {
+      if (confirming) return Array.from(new Set([...current, orderId]))
+      return current.filter((id) => id !== orderId)
+    })
+  }
+
+  const handleConfirmCodPayment = async (record) => {
+    const orderId = record?._id
+    if (!orderId) return
+
+    try {
+      setConfirmingPaidOrder(orderId, true)
+      let paymentId = record?.payment?.id
+
+      if (!paymentId) {
+        const created = await createPayment(orderId, 'cod')
+        paymentId = created?.data?._id || created?.data?.id
+      }
+
+      if (!paymentId) {
+        throw new Error('Không nhận được mã thanh toán COD')
+      }
+
+      await confirmCodPayment(paymentId)
+      message.success('Đã xác nhận khách đã thanh toán')
+      fetchOrders()
+    } catch (err) {
+      console.error(err)
+      message.error(err.message || 'Không thể xác nhận thanh toán')
+    } finally {
+      setConfirmingPaidOrder(orderId, false)
+    }
+  }
+
   const renderStatus = (status) => {
     let color = 'default'
     if (['served', 'picked_up', 'paid'].includes(status)) color = 'green'
@@ -121,19 +158,23 @@ export default function OrderManagementAdminPage() {
 
   const renderPaidStatus = (paidStatus, orderStatus, record) => {
     const paid = paidStatus === 'paid' || orderStatus === 'paid'
+    const paymentMethod = record?.payment?.method || record?.payment_method
+    const confirming = confirmingPaidOrderIds.includes(record?._id)
     const canMarkPaid =
       record?.order_type === 'takeaway' &&
-      record?.payment_method !== 'online' &&
+      paymentMethod !== 'online' &&
       !paid &&
-      orderStatus === 'picked_up'
+      orderStatus !== 'cancelled'
 
     return (
       <Space size="small">
         <Tag color={paid ? 'green' : 'default'}>{paid ? 'ĐÃ TRẢ' : 'CHƯA TRẢ'}</Tag>
         {canMarkPaid && (
-          <Button size="small" type="primary" onClick={() => handleStatusChange(record._id, 'paid')}>
-            Đánh dấu đã trả
-          </Button>
+          <Popconfirm title="Xác nhận khách đã thanh toán đơn này?" onConfirm={() => handleConfirmCodPayment(record)}>
+            <Button size="small" type="primary" loading={confirming}>
+              Đánh dấu đã trả
+            </Button>
+          </Popconfirm>
         )}
       </Space>
     )
