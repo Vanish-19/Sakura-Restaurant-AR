@@ -22,8 +22,15 @@ function buildQrHashCandidates(tableCode) {
   if (digits) {
     const twoDigits = digits.padStart(2, '0')
     const threeDigits = digits.padStart(3, '0')
-    list.push(`table-${twoDigits}-sakura`)
-    list.push(`table-${threeDigits}-sakura`)
+    const numericDigits = digits.replace(/^0+/, '') || '0'
+    const variants = Array.from(new Set([digits, twoDigits, threeDigits, numericDigits]))
+
+    for (const value of variants) {
+      list.push(`t-${value}`)
+      list.push(`table-${value}`)
+      list.push(`table-${value}-qr`)
+      list.push(`table-${value}-sakura`)
+    }
   }
 
   return Array.from(new Set(list.filter(Boolean)))
