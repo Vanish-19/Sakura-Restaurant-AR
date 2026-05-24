@@ -17,10 +17,14 @@ export default function LanguageSwitcher() {
   const location = useLocation()
   const activeLanguage = i18n.resolvedLanguage || i18n.language || 'vi'
   const activeItem = languages.find((item) => item.key === activeLanguage) || languages[0]
+  const isAdminPage = location.pathname.startsWith('/admin')
   const isStandalonePage =
     location.pathname.startsWith('/auth') ||
-    location.pathname === '/admin/login' ||
     location.pathname === '/ar'
+
+  if (isAdminPage) {
+    return null
+  }
 
   const items = languages.map((item) => ({
     key: item.key,
