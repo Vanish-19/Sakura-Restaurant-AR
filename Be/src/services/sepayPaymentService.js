@@ -49,6 +49,18 @@ function verifyWebhookAuthorization(authorization, apiKey) {
   return normalized === expectedApikey || normalized === expectedBearer;
 }
 
+function escapeRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function buildFlexibleTextPattern(value) {
+  return String(value || '')
+    .trim()
+    .split(/\s+/)
+    .map(escapeRegExp)
+    .join('\\s+');
+}
+
 function findTxnRefInText(value) {
   const text = String(value || '').trim();
   if (/^\d{10,16}$/.test(text)) return text;
@@ -57,7 +69,16 @@ function findTxnRefInText(value) {
   return matched ? matched[0] : '';
 }
 
-function extractTxnRef(payload) {
+function findTxnRefAfterPrefix(value, prefix) {
+  const text = String(value || '').trim();
+  const prefixPattern = buildFlexibleTextPattern(prefix);
+  if (!text || !prefixPattern) return '';
+
+  const matched = text.match(new RegExp(`${prefixPattern}[\\s\\S]*?\\b(\\d{10,16})\\b`, 'i'));
+  return matched ? matched[1] : '';
+}
+
+function extractTxnRef(payload, config = getSepayConfig()) {
   const directCandidates = [
     payload?.txnRef,
     payload?.orderCode,
@@ -76,6 +97,11 @@ function extractTxnRef(payload) {
     payload?.code,
     payload?.referenceCode,
   ];
+
+  for (const value of contentCandidates) {
+    const txnRef = findTxnRefAfterPrefix(value, config.qrDescriptionPrefix);
+    if (txnRef) return txnRef;
+  }
 
   for (const value of contentCandidates) {
     const txnRef = findTxnRefInText(value);
@@ -177,7 +203,7 @@ export async function handleSepayWebhookEvent(payload, authorization) {
     return { handled: false, rspCode: '97', message: 'Invalid authorization' };
   }
 
-  const txnRef = extractTxnRef(payload);
+  const txnRef = extractTxnRef(payload, config);
   if (!txnRef) {
     return { handled: false, rspCode: '01', message: 'Transaction reference missing' };
   }
