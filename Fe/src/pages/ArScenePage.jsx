@@ -6,6 +6,8 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { getMenuItems } from '../services/orderApi.js'
 
+const DEFAULT_AR_MODEL_SIZE_METERS = 0.28
+
 function makeReticle() {
   const geometry = new THREE.RingGeometry(0.08, 0.1, 32)
   geometry.rotateX(-Math.PI / 2)
@@ -25,6 +27,12 @@ function isIOSDevice() {
 
 function isAndroidDevice() {
   return /Android/i.test(navigator.userAgent || '')
+}
+
+function getObjectMaxDimension(object) {
+  const box = new THREE.Box3().setFromObject(object)
+  const size = box.getSize(new THREE.Vector3())
+  return Math.max(size.x, size.y, size.z) || 1
 }
 
 function openIosQuickLook(usdzUrl) {
@@ -74,7 +82,7 @@ export default function ArScenePage() {
   const [supportReason, setSupportReason] = useState('')
   const [isArActive, setIsArActive] = useState(false)
   const [isLoadingModel, setIsLoadingModel] = useState(false)
-  const [modelScale, setModelScale] = useState(0.2)
+  const [modelScale, setModelScale] = useState(DEFAULT_AR_MODEL_SIZE_METERS)
 
   const arItems = useMemo(() => {
     const fromQuery = menuItems.find((item) => item.id === itemIdFromQuery)
@@ -313,7 +321,7 @@ export default function ArScenePage() {
       model.position.setFromMatrixPosition(reticle.matrix)
       model.quaternion.setFromRotationMatrix(reticle.matrix)
       model.rotation.x = 0
-      model.scale.setScalar(modelScale)
+      model.scale.setScalar(modelScale / getObjectMaxDimension(model))
 
       scene.add(model)
 
@@ -506,17 +514,17 @@ export default function ArScenePage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span>Scale</span>
+            <span>Size</span>
             <input
               type="range"
-              min="0.05"
-              max="0.7"
+              min="0.08"
+              max="0.6"
               step="0.01"
               value={modelScale}
               onChange={(e) => setModelScale(Number(e.target.value))}
               className="w-24"
             />
-            <span>{modelScale.toFixed(2)}x</span>
+            <span>{Math.round(modelScale * 100)}cm</span>
           </div>
         </div>
 
