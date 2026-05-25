@@ -45,12 +45,16 @@ function fitCameraToObject(camera, controls, object) {
   const maxDim = Math.max(size.x, size.y, size.z) || 1
   const fov = camera.fov * (Math.PI / 180)
   const cameraDistance = Math.abs((maxDim / 2) / Math.tan(fov / 2)) * 1.8
+  const minDistance = Math.max(cameraDistance / 25, 0.05)
+  const maxDistance = Math.max(cameraDistance * 6, maxDim * 4, 12)
 
   camera.position.set(center.x + cameraDistance * 0.35, center.y + cameraDistance * 0.25, center.z + cameraDistance)
   camera.near = Math.max(cameraDistance / 100, 0.01)
-  camera.far = cameraDistance * 20
+  camera.far = Math.max(cameraDistance * 20, maxDim * 10, MIN_PREVIEW_STAGE_RADIUS * 3)
   camera.updateProjectionMatrix()
 
+  controls.minDistance = minDistance
+  controls.maxDistance = maxDistance
   controls.target.copy(center)
   controls.update()
 
