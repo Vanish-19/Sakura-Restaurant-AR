@@ -6,13 +6,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 
 const PREVIEW_STAGE_BACKGROUND = '/bgBody.png'
+const MIN_PREVIEW_STAGE_RADIUS = 45
 
 function createPreviewStage() {
   const group = new THREE.Group()
   const texture = new THREE.TextureLoader().load(PREVIEW_STAGE_BACKGROUND)
   texture.colorSpace = THREE.SRGBColorSpace
 
-  const geometry = new THREE.SphereGeometry(30, 64, 32)
+  const geometry = new THREE.SphereGeometry(1, 64, 32)
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     side: THREE.BackSide,
@@ -21,9 +22,11 @@ function createPreviewStage() {
 
   const backdrop = new THREE.Mesh(geometry, material)
   backdrop.rotation.y = Math.PI
+  backdrop.scale.setScalar(MIN_PREVIEW_STAGE_RADIUS)
   group.add(backdrop)
 
   group.userData.disposables = [texture, geometry, material]
+  group.userData.backdrop = backdrop
   return group
 }
 
@@ -50,6 +53,22 @@ function fitCameraToObject(camera, controls, object) {
 
   controls.target.copy(center)
   controls.update()
+
+  return { center, cameraDistance, maxDim }
+}
+
+function fitPreviewStageToObject(stage, frameInfo) {
+  if (!stage || !frameInfo) return
+
+  const { center, cameraDistance, maxDim } = frameInfo
+  const radius = Math.max(
+    MIN_PREVIEW_STAGE_RADIUS,
+    cameraDistance * 2.6,
+    maxDim * 2.6,
+  )
+
+  stage.position.copy(center)
+  stage.userData.backdrop?.scale?.setScalar(radius)
 }
 
 function Model3DViewer({ glbUrl, setLoading, setErrorText }) {
@@ -68,7 +87,7 @@ function Model3DViewer({ glbUrl, setLoading, setErrorText }) {
     if (!mountEl) return
 
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color('#111111')
+    scene.background = new THREE.Color('#f5f1e8')
 
     const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 200)
     camera.position.set(0, 1.2, 2.8)
@@ -191,9 +210,8 @@ function Model3DViewer({ glbUrl, setLoading, setErrorText }) {
 
         scene.add(root)
         modelRef.current = root
-        const center = new THREE.Box3().setFromObject(root).getCenter(new THREE.Vector3())
-        if (stageRef.current) stageRef.current.position.copy(center)
-        fitCameraToObject(camera, controls, root)
+        const frameInfo = fitCameraToObject(camera, controls, root)
+        fitPreviewStageToObject(stageRef.current, frameInfo)
         setLoading(false)
       },
       undefined,
